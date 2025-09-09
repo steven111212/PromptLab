@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM評測平台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .main-content {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+        .config-editor {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .result-item {
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        .config-item {
+            transition: all 0.3s ease;
+        }
+        .config-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        .config-item.border-primary {
+            border-color: #667eea !important;
+            background-color: rgba(102, 126, 234, 0.1) !important;
+        }
+        .score-badge {
+            font-size: 1.1em;
+            padding: 0.5em 1em;
+        }
+        .loading {
+            display: none;
+        }
+        .loading.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 側邊欄 -->
+            <div class="col-md-3 col-lg-2 sidebar p-0">
+                <div class="p-3">
+                    <h4 class="text-white mb-4">
+                        <i class="fas fa-robot me-2"></i>
+                        LLM評測平台
+                    </h4>
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#" data-tab="config">
+                            <i class="fas fa-cog me-2"></i>配置管理
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- 主要內容區 -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <div class="p-4">
+                    <!-- 配置管理 -->
+                    <div id="config" class="tab-content">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2><i class="fas fa-cog me-2"></i>配置管理</h2>
+                            <div class="btn-group">
+                                <button class="btn btn-primary" onclick="showNewConfigForm()">
+                                    <i class="fas fa-plus me-2"></i>新增配置
+                                </button>
+                                <button class="btn btn-outline-secondary" onclick="showAdvancedConfig()">
+                                    <i class="fas fa-code me-2"></i>進階編輯
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5>配置列表</h5>
+                                        <button class="btn btn-primary btn-sm" onclick="showNewConfigForm()">
+                                            <i class="fas fa-plus"></i> 新增配置
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="configList">
+                                            <p class="text-muted">載入中...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 id="configFormTitle">配置詳情</h5>
+                                        <div id="configFormActions" class="btn-group btn-group-sm" style="display: none;">
+                                            <button class="btn btn-outline-success" onclick="saveConfigForm()">
+                                                <i class="fas fa-save"></i> 保存
+                                            </button>
+                                            <button class="btn btn-outline-secondary" onclick="cancelConfigForm()">
+                                                <i class="fas fa-times"></i> 取消
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="configDetails">
+                                            <p class="text-muted">請選擇一個配置檔案查看詳情，或點擊「新增配置」創建新配置</p>
+                                        </div>
+                                        <div id="configForm" style="display: none;">
+                                            <!-- 配置表單將在這裡動態載入 -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 友善配置模態框 -->
+    <div class="modal fade" id="friendlyConfigModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">創建評測配置</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="friendlyConfigForm" onsubmit="return false;">
+                        <!-- 基本資訊 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary"><i class="fas fa-info-circle me-2"></i>基本資訊</h6>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">配置名稱 *</label>
+                                <input type="text" class="form-control" id="configName" placeholder="例如：台電客服評測" required>
+                                <small class="form-text text-muted">請勿使用特殊字符: < > : " / \ | ? *</small>
+                            </div>
+                        </div>
+
+                        <!-- 被測API配置 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary"><i class="fas fa-robot me-2"></i>被測API配置</h6>
+                                <p class="text-muted small">配置要測試的API端點</p>
+                            </div>
+                        </div>
+
+                        <!-- HTTP Request 配置 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label class="form-label">HTTP Request 配置 *</label>
+                                <div class="card">
+                                    <div class="card-body">
+                                        <!-- HTTP 方法 -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-bold">POST</label>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <input type="text" class="form-control" id="httpPath" placeholder="/eval HTTP/1.1" required>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Host -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-bold">Host:</label>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <input type="text" class="form-control" id="httpHost" placeholder="localhost:5000" required>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Content-Type -->
+                                        <div class="row mb-3">
+                                            <div class="col-md-3">
+                                                <label class="form-label fw-bold">Content-Type:</label>
+                                            </div>
+                                            <div class="col-md-9">
+                                                <input type="text" class="form-control" id="httpContentType" placeholder="application/json" value="application/json" required>
+                                            </div>
+                                        </div>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Request Body -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label class="form-label">Request Body *</label>
+                                <textarea class="form-control" id="requestBody" rows="4" placeholder='{"question": "{{prompt}}"}'
+                                          required></textarea>
+                                <small class="form-text text-muted">必須包含 {{prompt}} 變量</small>
+                            </div>
+                        </div>
+
+                        <!-- 進階配置 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary"><i class="fas fa-cogs me-2"></i>進階配置</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Response Transform</label>
+                                <input type="text" class="form-control" id="transformResponse" placeholder="json.response" value="json.response">
+                                <small class="form-text text-muted">例如：json.response, json.choices[0].message.content</small>
+                            </div>
+                        </div>
+
+
+
+                        <!-- 測試問題 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary"><i class="fas fa-question-circle me-2"></i>測試問題</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">問題來源</label>
+                                <select class="form-select" id="questionSource" onchange="toggleQuestionInput()">
+                                    <option value="manual">手動輸入</option>
+                                    <option value="upload">上傳檔案</option>
+                                </select>
+                                <div id="questionSourceHint" class="mt-2" style="display: none;">
+                                    <small class="text-info">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        <span id="questionSourceHintText"></span>
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="fileUploadSection">
+                                <label class="form-label">上傳問題檔案</label>
+                                <input type="file" class="form-control" id="questionFile" accept=".csv,.txt,.json">
+                                <small class="form-text text-muted">支援 CSV, TXT, JSON 格式</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4" id="manualQuestionsSection">
+                            <div class="col-12">
+                                <label class="form-label">測試問題 *</label>
+                                <textarea class="form-control" id="testQuestions" rows="6" placeholder="每行一個問題，例如：&#10;如何申請停電通知？&#10;電費如何計算？&#10;如何報修電力故障？" required></textarea>
+                                <small class="form-text text-muted">每行一個問題，至少需要3個問題</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4" id="uploadedFileInfo">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>檔案上傳模式</strong><br>
+                                    已選擇檔案上傳，系統會自動將檔案複製到配置目錄並使用相對路徑引用。
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 評分標準 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary"><i class="fas fa-check-circle me-2"></i>評分標準</h6>
+                                <p class="text-muted small">選擇評分方式，可以同時使用多種評分標準</p>
+                            </div>
+                        </div>
+
+                        <!-- JavaScript 評分 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <input type="checkbox" id="enableJavascript" class="form-check-input me-2" onchange="toggleJavascriptConfig()">
+                                            <i class="fas fa-code me-2"></i>JavaScript 驗證
+                                        </h6>
+                                    </div>
+                                    <div class="card-body" id="javascriptConfig" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label">驗證條件</label>
+                                                <select class="form-select" id="javascriptCondition" onchange="updateJavascriptCondition()">
+                                                    <option value="length">回覆長度檢查</option>
+                                                    <option value="custom">自定義條件</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6" id="lengthConfig">
+                                                <label class="form-label">最小長度</label>
+                                                <input type="number" class="form-control" id="minLength" value="100" min="1">
+                                            </div>
+                                            <div class="col-md-12" id="customConfig" style="display: none;">
+                                                <label class="form-label">自定義 JavaScript 表達式</label>
+                                                <textarea class="form-control" id="customJavascript" rows="2" placeholder="例如：output.length >= 100 && output.includes('旅行')"></textarea>
+                                                <small class="form-text text-muted">使用 output 變量代表API回覆內容</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- G-Eval 評分 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <input type="checkbox" id="enableGEval" class="form-check-input me-2" onchange="toggleGEvalConfig()">
+                                            <i class="fas fa-brain me-2"></i>G-Eval (LLM評分)
+                                        </h6>
+                                    </div>
+                                    <div class="card-body" id="gevalConfig" style="display: none;">
+                                        <!-- 評分標準 -->
+                                        <div class="row mb-3">
+                                            <div class="col-12">
+                                                <label class="form-label">評分標準</label>
+                                                <div id="gevalCriteriaList">
+                                                    <div class="input-group mb-2">
+                                                        <input type="text" class="form-control" placeholder="例如：不回答與旅行無關的問題">
+                                                        <button type="button" class="btn btn-outline-danger" onclick="removeGEvalCriteria(this)">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addGEvalCriteria()">
+                                                    <i class="fas fa-plus me-1"></i>添加評分標準
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- 評分模型配置 -->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <label class="form-label">評分模型類型</label>
+                                                <select class="form-select" id="gradingModelType" onchange="updateGradingModelFields()">
+                                                    <option value="openai">OpenAI</option>
+                                                    <option value="http">HTTP API</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6" id="openaiConfig">
+                                                <label class="form-label">OpenAI 模型</label>
+                                                <select class="form-select" id="openaiModel">
+                                                    <option value="gpt-4">GPT-4</option>
+                                                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                                    <option value="gpt-4o">GPT-4o</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- HTTP API 配置 -->
+                                        <div class="row mt-3" id="httpGradingConfig" style="display: none;">
+                                            <div class="col-md-6">
+                                                <label class="form-label">評分 API URL</label>
+                                                <input type="url" class="form-control" id="gradingApiUrl" placeholder="https://api.deepseek.com/chat/completions">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">API Key</label>
+                                                <input type="password" class="form-control" id="gradingApiKey" placeholder="Bearer your-api-key">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">模型名稱</label>
+                                                <input type="text" class="form-control" id="gradingModel" placeholder="deepseek-chat">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">響應轉換路徑</label>
+                                                <input type="text" class="form-control" id="gradingTransformResponse" placeholder="json.choices[0].message.content" value="json.choices[0].message.content">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 進階設定 -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary"><i class="fas fa-cogs me-2"></i>進階設定</h6>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">超時時間 (秒)</label>
+                                <input type="number" class="form-control" id="timeout" min="30" max="300" value="120">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">最大重試次數</label>
+                                <input type="number" class="form-control" id="maxRetries" min="0" max="5" value="2">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-outline-info" onclick="previewConfig()">預覽配置</button>
+                    <button type="button" class="btn btn-primary" onclick="saveFriendlyConfig()">創建配置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配置預覽模態框 -->
+    <div class="modal fade" id="configPreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">配置預覽</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <pre id="configPreview" class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                    <button type="button" class="btn btn-primary" onclick="saveFriendlyConfig()">確認創建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 配置模板模態框 -->
+    <div class="modal fade" id="configTemplatesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">配置模板</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row" id="templateList">
+                        <!-- 模板列表將動態載入 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
