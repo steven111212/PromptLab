@@ -8,13 +8,26 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css" rel="stylesheet">
     <style>
-        .sidebar {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            border: none;
+            background-color: transparent;
+            transition: all 0.3s ease;
+        }
+        .nav-tabs .nav-link:hover {
+            color: #0d6efd;
+            background-color: rgba(13, 110, 253, 0.05);
+            text-decoration: none;
+        }
+        .nav-tabs .nav-link.active {
+            color: #0d6efd !important;
+            background-color: rgba(13, 110, 253, 0.1) !important;
+            border-bottom: 2px solid #0d6efd !important;
+            text-decoration: none;
         }
         .main-content {
             background-color: #f8f9fa;
-            min-height: 100vh;
+            min-height: calc(100vh - 64px);
         }
         .card {
             border: none;
@@ -73,24 +86,31 @@
 </head>
 <body>
     <div class="container-fluid">
-        <div class="row">
-            <!-- 側邊欄 -->
-            <div class="col-md-3 col-lg-2 sidebar p-0">
-                <div class="p-3">
-                    <h4 class="text-white mb-4">
-                        <i class="fas fa-robot me-2"></i>
-                        LLM評測平台
+        <!-- 頂部導航欄 -->
+        <div class="row bg-white border-bottom">
+            <div class="col-12">
+                <div class="d-flex align-items-center py-2 px-3">
+                    <h4 class="mb-0 me-4">
+                        <i class="fas fa-robot me-2 text-primary"></i>
+                        <span class="text-primary">LLM評測平台</span>
                     </h4>
-                    <nav class="nav flex-column">
-                        <a class="nav-link active" href="#" data-tab="config">
+                    <div class="nav nav-tabs border-0">
+                        <a class="nav-link active px-4 py-3 border-0" href="#" data-tab="config" 
+                           style="font-weight: 500;">
                             <i class="fas fa-cog me-2"></i>配置管理
                         </a>
-                    </nav>
+                        <a class="nav-link px-4 py-3 border-0" href="#" data-tab="results"
+                           style="font-weight: 500;">
+                            <i class="fas fa-chart-bar me-2"></i>評估結果
+                        </a>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- 主要內容區 -->
-            <div class="col-md-9 col-lg-10 main-content">
+        <!-- 主要內容區 -->
+        <div class="row">
+            <div class="col-12">
                 <div class="p-4">
                     <!-- 配置管理 -->
                     <div id="config" class="tab-content">
@@ -144,6 +164,136 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 評估結果 -->
+                    <div id="results" class="tab-content" style="display: none;">
+                        <!-- 標題和評估按鈕 -->
+                        <div class="d-flex justify-content-between align-items-center mb-3 px-3">
+                            <div class="d-flex align-items-center">
+                                <div class="dropdown me-2">
+                                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-play me-1"></i>
+                                        Eval
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="startEvaluation('quick')">
+                                            <i class="fas fa-bolt me-2"></i>Quick Eval
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="startEvaluation('full')">
+                                            <i class="fas fa-check-double me-2"></i>Full Eval
+                                        </a></li>
+                                    </ul>
+                                </div>
+                                <button class="btn btn-outline-secondary" onclick="refreshResults()">
+                                    <i class="fas fa-sync-alt me-1"></i>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 工具列 -->
+                        <div class="border-bottom bg-white py-2 px-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-3">
+                                    <!-- 縮放控制 -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            100% <i class="fas fa-chevron-down ms-1"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#">150%</a></li>
+                                            <li><a class="dropdown-item" href="#">100%</a></li>
+                                            <li><a class="dropdown-item" href="#">75%</a></li>
+                                            <li><a class="dropdown-item" href="#">50%</a></li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <!-- 顯示控制 -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Show all results <i class="fas fa-chevron-down ms-1"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#">Show all results</a></li>
+                                            <li><a class="dropdown-item" href="#">Show failures only</a></li>
+                                            <li><a class="dropdown-item" href="#">Show successes only</a></li>
+                                        </ul>
+                                    </div>
+
+                                    <!-- 搜尋框 -->
+                                    <div class="input-group input-group-sm" style="width: 200px;">
+                                        <span class="input-group-text bg-white border-end-0">
+                                            <i class="fas fa-search text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-start-0" placeholder="Text or regex">
+                                        <button class="btn btn-outline-secondary" type="button">
+                                            <i class="fas fa-filter"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center gap-2">
+                                    <!-- 欄位設定 -->
+                                    <button class="btn btn-outline-secondary btn-sm" title="欄位設定">
+                                        <i class="fas fa-columns me-1"></i>
+                                        Columns (4)
+                                    </button>
+                                    
+                                    <!-- 表格設定 -->
+                                    <button class="btn btn-outline-secondary btn-sm" title="表格設定">
+                                        <i class="fas fa-table me-1"></i>
+                                        Table Settings
+                                    </button>
+
+                                    <!-- 評估動作 -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            Eval actions <i class="fas fa-chevron-down ms-1"></i>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li><a class="dropdown-item" href="#" onclick="refreshResults()">
+                                                <i class="fas fa-sync-alt me-2"></i>重新整理
+                                            </a></li>
+                                            <li><a class="dropdown-item" href="#">
+                                                <i class="fas fa-file-export me-2"></i>匯出結果
+                                            </a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 結果列表 -->
+                        <div class="px-3">
+                            <div id="resultsTable">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">載入中...</span>
+                                    </div>
+                                    <p class="mt-2">載入評估結果中...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 評估詳細結果頁面 -->
+                    <div id="result-detail" class="tab-content" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h2 id="evaluationDetailTitle"><i class="fas fa-chart-line me-2"></i>評估詳細結果</h2>
+                            <button id="backToResults" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>返回列表
+                            </button>
+                        </div>
+
+                        <div id="evaluationDetailContainer">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">載入中...</span>
+                                </div>
+                                <p class="mt-2">載入詳細結果中...</p>
                             </div>
                         </div>
                     </div>
@@ -470,7 +620,32 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script>
+        // 確保 Chart.js 載入完成
+        window.addEventListener('load', function() {
+            if (typeof Chart !== 'undefined') {
+                console.log('Chart.js 載入成功，版本:', Chart.version);
+            } else {
+                console.error('Chart.js 載入失敗');
+                // 嘗試從備用 CDN 載入
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/chart.js@3.9.1/dist/chart.min.js';
+                script.onload = function() {
+                    console.log('Chart.js 從備用 CDN 載入成功');
+                };
+                script.onerror = function() {
+                    console.error('Chart.js 從所有 CDN 載入都失敗');
+                };
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+    <!-- 模組化的 JavaScript 文件 -->
+    <script src="{{ url_for('static', filename='evaluation-api.js') }}"></script>
+    <script src="{{ url_for('static', filename='chart-manager.js') }}"></script>
+    <script src="{{ url_for('static', filename='modal-charts.js') }}"></script>
+    <script src="{{ url_for('static', filename='evaluation-results.js') }}"></script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>

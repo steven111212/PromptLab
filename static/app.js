@@ -25,8 +25,50 @@ function setupEventListeners() {
     });
 }
 
-// 切換標籤頁功能已移至 utils.js
-
+// 切換標籤頁
+function switchTab(tab) {
+    // 隱藏所有標籤內容
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.style.display = 'none';
+    });
+    
+    // 移除所有導航連結的 active 類別
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+    
+    // 顯示選中的標籤內容
+    const targetContent = document.getElementById(tab);
+    if (targetContent) {
+        targetContent.style.display = 'block';
+    }
+    
+    // 添加 active 類別到選中的導航連結
+    const targetLink = document.querySelector(`[data-tab="${tab}"]`);
+    if (targetLink) {
+        targetLink.classList.add('active');
+    }
+    
+    // 根據標籤執行相應的初始化
+    if (tab === 'results') {
+        // 確保 loadEvaluationResults 函數已載入
+        if (typeof loadEvaluationResults === 'function') {
+            loadEvaluationResults();
+        } else {
+            console.warn('loadEvaluationResults 函數尚未載入');
+            // 延遲重試
+            setTimeout(() => {
+                if (typeof loadEvaluationResults === 'function') {
+                    loadEvaluationResults();
+                } else {
+                    console.error('loadEvaluationResults 函數載入失敗');
+                }
+            }, 100);
+        }
+    } else if (tab === 'result-detail') {
+        // 詳細頁面的初始化在 navigateToEvaluationDetail 中處理
+    }
+}
 
 // 載入配置列表
 async function loadConfigs() {
@@ -1519,6 +1561,8 @@ function displayResultDetails(result) {
     // 滾動到詳情面板
     detailsContainer.scrollIntoView({ behavior: 'smooth' });
 }
+
+// 評估結果相關功能已移至 evaluation-results.js
 
 // 隱藏結果詳情
 function hideResultDetails() {
