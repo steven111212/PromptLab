@@ -54,42 +54,48 @@ def clean_filename(filename):
 
 @app.route('/api/evaluation-results', methods=['GET'])
 def get_evaluation_results():
-    """獲取評估結果摘要"""
+    """獲取評估結果摘要（直接從資料庫讀取）"""
     try:
-        # 檢查 df2_enhanced.csv 是否存在
-        df2_enhanced_path = 'temp/df2_enhanced.csv'
-        if not os.path.exists(df2_enhanced_path):
-            return jsonify({'error': '找不到評估結果摘要檔案 df2_enhanced.csv'}), 404
+        # 連接資料庫
+        db_path = r'C:\Users\stevenwu\.promptfoo\promptfoo.db'
+        if not os.path.exists(db_path):
+            return jsonify({'error': f'找不到資料庫檔案: {db_path}'}), 404
         
-        # 讀取 df2_enhanced.csv
-        try:
-            df = pd.read_csv(df2_enhanced_path)
-        except Exception as csv_error:
-            print(f"CSV 讀取錯誤: {csv_error}")
-            # 嘗試其他讀取方式
-            try:
-                df = pd.read_csv(df2_enhanced_path, quotechar='"', escapechar='\\')
-            except Exception as csv_error2:
-                print(f"CSV 讀取錯誤2: {csv_error2}")
-                return jsonify({'error': f'無法讀取 CSV 檔案: {str(csv_error2)}'}), 500
+        conn = sqlite3.connect(db_path)
         
-        if len(df) == 0:
-            return jsonify({'error': '評估結果摘要檔案為空'}), 404
+        # 讀取 evals 表格資料
+        evals_df = pd.read_sql_query("SELECT * FROM evals", conn)
+        
+        # 讀取 eval_results 表格資料以計算統計指標
+        eval_results_df = pd.read_sql_query("SELECT * FROM eval_results", conn)
+        
+        conn.close()
+        
+        print(f"從資料庫讀取到 {len(evals_df)} 個評估記錄")
+        print(f"從資料庫讀取到 {len(eval_results_df)} 個評估結果記錄")
+        
+        if len(evals_df) == 0:
+            return jsonify({'error': '資料庫中沒有評估資料'}), 404
         
         # 轉換資料格式
         results = []
-        print(f"開始處理 {len(df)} 個評估記錄")
         
-        for _, row in df.iterrows():
+        for _, row in evals_df.iterrows():
             eval_id = row['id']
             print(f"處理評估: {eval_id}")
             
-            # 檢查對應的詳細檔案是否存在（Windows 檔案系統將冒號替換為底線）
-            file_safe_eval_id = eval_id.replace(':', '_')
-            detail_file_path = f'temp/eval_id/{file_safe_eval_id}.csv'
-            if not os.path.exists(detail_file_path):
-                print(f"跳過評估 {eval_id}，因為找不到對應的詳細檔案: {detail_file_path}")
+            # 計算該 eval_id 的統計指標
+            eval_data = eval_results_df[eval_results_df['eval_id'] == eval_id]
+            
+            if len(eval_data) == 0:
+                print(f"跳過評估 {eval_id}，因為沒有對應的評估結果資料")
                 continue
+            
+            # 計算統計指標
+            dataset_count = len(eval_data)
+            success_count = eval_data['success'].sum()
+            pass_rate = success_count / dataset_count if dataset_count > 0 else 0.0
+            pass_rate_str = f"{pass_rate*100:.2f}%"
             
             # 解析時間戳
             created_time = '未知'
@@ -104,15 +110,6 @@ def get_evaluation_results():
             
             # 獲取描述
             description = str(row.get('description', '')) if pd.notna(row.get('description')) else '無描述'
-            
-            # 獲取通過率
-            pass_rate = row.get('pass_rate', 0.0)
-            if pd.isna(pass_rate):
-                pass_rate = 0.0
-            pass_rate_str = f"{pass_rate*100:.2f}%" if pass_rate <= 1.0 else f"{pass_rate:.2f}%"
-            
-            # 獲取資料集數量
-            dataset_count = int(row.get('dataset_count', 0)) if pd.notna(row.get('dataset_count')) else 0
             
             results.append({
                 'id': eval_id,
@@ -137,7 +134,7 @@ def get_evaluation_results():
 
 @app.route('/api/evaluation-results/<eval_id>', methods=['GET'])
 def get_evaluation_detail(eval_id):
-    """獲取特定評估的詳細結果"""
+    """獲取特定評估的詳細結果（直接從資料庫讀取）"""
     try:
         # URL 解碼 eval_id（處理前端 encodeURIComponent 編碼的問題）
         import urllib.parse
@@ -145,29 +142,26 @@ def get_evaluation_detail(eval_id):
         print(f"原始 eval_id: {eval_id}")
         print(f"解碼後 eval_id: {decoded_eval_id}")
         
-        # Windows 檔案系統不允許冒號，需要將冒號替換為底線
-        file_safe_eval_id = decoded_eval_id.replace(':', '_')
-        csv_file_path = f'temp/eval_id/{file_safe_eval_id}.csv'
-        print(f"檔案安全的 eval_id: {file_safe_eval_id}")
-        print(f"檔案路徑: {csv_file_path}")
+        # 連接資料庫
+        db_path = r'C:\Users\stevenwu\.promptfoo\promptfoo.db'
+        if not os.path.exists(db_path):
+            return jsonify({'error': f'找不到資料庫檔案: {db_path}'}), 404
         
-        if not os.path.exists(csv_file_path):
-            print(f"找不到評估詳細檔案: {csv_file_path}")
-            # 嘗試列出 eval_id 資料夾中的檔案來調試
-            try:
-                eval_files = [f for f in os.listdir('temp/eval_id') if f.endswith('.csv')]
-                print(f"eval_id 資料夾中的檔案: {eval_files}")
-            except:
-                pass
+        conn = sqlite3.connect(db_path)
+        
+        # 從資料庫讀取特定 eval_id 的詳細資料
+        query = "SELECT * FROM eval_results WHERE eval_id = ?"
+        df = pd.read_sql_query(query, conn, params=[decoded_eval_id])
+        
+        conn.close()
+        
+        if len(df) == 0:
+            print(f"找不到評估 {decoded_eval_id} 的詳細資料")
             return jsonify({
-                'error': f'找不到評估 {decoded_eval_id} 的詳細資料檔案',
-                'details': f'檔案路徑: {csv_file_path}',
+                'error': f'找不到評估 {decoded_eval_id} 的詳細資料',
                 'eval_id': decoded_eval_id,
-                'message': '此評估可能沒有對應的詳細資料檔案'
+                'message': '此評估在資料庫中沒有對應的詳細資料'
             }), 404
-        
-        # 讀取詳細資料
-        df = pd.read_csv(csv_file_path)
         
         # 檢查可用欄位
         print(f"詳細資料欄位: {df.columns.tolist()}")

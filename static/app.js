@@ -80,27 +80,56 @@ async function loadConfigs() {
         const container = document.getElementById('configList');
         
         if (currentConfigs.length === 0) {
-            container.innerHTML = '<p class="text-muted">暫無配置檔案</p>';
+            container.innerHTML = `
+                <div class="list-group-item border-0 text-center py-4">
+                    <i class="fas fa-folder-open text-muted mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
+                    <p class="text-muted small mb-3">暫無配置檔案</p>
+                    <button class="btn btn-primary btn-sm" onclick="showNewConfigForm()">
+                        <i class="fas fa-plus me-1"></i>新增第一個配置
+                    </button>
+                </div>
+            `;
             return;
         }
         
         const html = currentConfigs.map(config => `
-            <div class="card mb-2 config-item" data-config-id="${config.id}" onclick="selectConfig('${config.id}')" style="cursor: pointer;">
-                <div class="card-body p-3">
-                    <h6 class="card-title">${config.name}</h6>
-                    <p class="card-text small text-muted">
-                        <i class="fas fa-file me-1"></i>配置檔案: ${config.filename}
-                    </p>
-                    <div class="btn-group btn-group-sm" onclick="event.stopPropagation();">
-                        <button class="btn btn-outline-success" onclick="runConfig('${config.id}')">
-                            <i class="fas fa-play"></i> 執行
+            <div class="list-group-item list-group-item-action border-0 config-item" 
+                 data-config-id="${config.id}" 
+                 onclick="selectConfig('${config.id}')" 
+                 style="cursor: pointer; transition: all 0.2s;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1 text-dark">${config.name}</h6>
+                        <p class="mb-1 small text-muted">
+                            <i class="fas fa-file-code me-1"></i>${config.filename}
+                        </p>
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>最近修改
+                        </small>
+                    </div>
+                    <div class="dropdown" onclick="event.stopPropagation();">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
                         </button>
-                        <button class="btn btn-outline-primary" onclick="editConfig('${config.id}')">
-                            <i class="fas fa-edit"></i> 編輯
-                        </button>
-                        <button class="btn btn-outline-danger" onclick="deleteConfig('${config.id}')">
-                            <i class="fas fa-trash"></i> 刪除
-                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="runConfig('${config.id}')">
+                                    <i class="fas fa-play me-2 text-success"></i>執行
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="editConfig('${config.id}')">
+                                    <i class="fas fa-edit me-2 text-primary"></i>編輯
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="#" onclick="deleteConfig('${config.id}')">
+                                    <i class="fas fa-trash me-2"></i>刪除
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -119,9 +148,9 @@ async function selectConfig(configId) {
     try {
         // 更新選中狀態
         document.querySelectorAll('.config-item').forEach(item => {
-            item.classList.remove('border-primary', 'bg-light');
+            item.classList.remove('active');
         });
-        document.querySelector(`[data-config-id="${configId}"]`).classList.add('border-primary', 'bg-light');
+        document.querySelector(`[data-config-id="${configId}"]`).classList.add('active');
         
         const response = await fetch(`/api/configs/${configId}`);
         const config = await response.json();
@@ -152,33 +181,66 @@ function showConfigDetails(config) {
     
     // 顯示配置詳情
     configDetails.innerHTML = `
-        <div class="row">
-            <div class="col-12">
-                <h6 class="text-primary mb-3">${config.name}</h6>
-            <div class="mb-3">
-                    <strong>配置檔案:</strong> ${config.filename}
-            </div>
-            <div class="mb-3">
-                    <strong>創建時間:</strong> ${new Date(config.created_at).toLocaleString('zh-TW')}
-            </div>
-                <div class="mb-3">
-                    <strong>配置內容:</strong>
-                    <pre class="bg-light p-3 rounded mt-2" style="max-height: 400px; overflow-y: auto;">${config.content}</pre>
+        <div class="config-detail-view">
+            <!-- 配置標題區域 -->
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <h3 class="text-dark mb-2">${config.name}</h3>
+                    <div class="d-flex align-items-center text-muted">
+                        <i class="fas fa-file-code me-2"></i>
+                        <span class="me-3">${config.filename}</span>
+                        <i class="fas fa-clock me-2"></i>
+                        <span>最近修改</span>
+                    </div>
                 </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-primary" onclick="editConfig('${config.id}')">
-                        <i class="fas fa-edit"></i> 編輯配置
-                </button>
+                <div class="btn-group">
                     <button class="btn btn-success" onclick="runConfig('${config.id}')">
-                        <i class="fas fa-play"></i> 執行配置
+                        <i class="fas fa-play me-2"></i>執行配置
                     </button>
-                    <button class="btn btn-danger" onclick="deleteConfig('${config.id}')">
-                        <i class="fas fa-trash"></i> 刪除配置
-                </button>
+                    <button class="btn btn-primary" onclick="editConfig('${config.id}')">
+                        <i class="fas fa-edit me-2"></i>編輯配置
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteConfig('${config.id}')">
+                                <i class="fas fa-trash me-2"></i>刪除配置
+                            </a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
+
+            <!-- 配置預覽卡片 -->
+            <div class="card border-0 bg-light">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 text-secondary">
+                        <i class="fas fa-code me-2"></i>配置內容預覽
+                    </h6>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="copyConfigContent('${config.id}')">
+                        <i class="fas fa-copy me-1"></i>複製
+                    </button>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-white p-3 rounded border" style="max-height: 400px; overflow-y: auto; font-size: 0.875rem;"><code>${config.content}</code></pre>
+                </div>
             </div>
-        `;
+        </div>
+    `;
+}
+
+// 複製配置內容
+function copyConfigContent(configId) {
+    const config = currentConfigs.find(c => c.id === configId);
+    if (config) {
+        navigator.clipboard.writeText(config.content).then(() => {
+            showAlert('配置內容已複製到剪貼簿', 'success');
+        }).catch(() => {
+            showAlert('複製失敗', 'danger');
+        });
+    }
 }
 
 // 編輯配置
@@ -227,235 +289,543 @@ async function showConfigForm(config, isEdit) {
         // 新增模式，重置表單
         resetScoringCriteriaList();
     }
+    
 }
 
 // 生成配置表單HTML
 function generateConfigFormHTML() {
     return `
-        <form id="configFormContent" onsubmit="return false;">
-            <!-- 基本資訊 -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h6 class="text-primary"><i class="fas fa-info-circle me-2"></i>基本資訊</h6>
-                </div>
-                <div class="col-md-12">
-                    <label class="form-label">配置名稱 *</label>
-                    <input type="text" class="form-control" id="configName" placeholder="例如：台電客服評測" required>
-                    <small class="form-text text-muted">請勿使用特殊字符: < > : " / \\ | ? *</small>
+        <div class="config-form-container">
+            <!-- 進度指示器 -->
+            <div class="progress-steps mb-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="step active clickable" data-step="1" onclick="jumpToStep(1)">
+                        <span class="step-number">1</span>
+                        <span class="step-label">基本設定</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step clickable" data-step="2" onclick="jumpToStep(2)">
+                        <span class="step-number">2</span>
+                        <span class="step-label">API配置</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step clickable" data-step="3" onclick="jumpToStep(3)">
+                        <span class="step-number">3</span>
+                        <span class="step-label">測試問題</span>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step clickable" data-step="4" onclick="jumpToStep(4)">
+                        <span class="step-number">4</span>
+                        <span class="step-label">評分標準</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- 被測API配置 -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h6 class="text-primary"><i class="fas fa-robot me-2"></i>被測API配置</h6>
-                    <p class="text-muted small">配置要測試的API端點</p>
+            <form id="configFormContent" onsubmit="return false;">
+                <!-- 步驟 1: 基本資訊 -->
+                <div class="form-step" id="step1" style="display: block;">
+                    <div class="step-header mb-4">
+                        <h5 class="text-primary"><i class="fas fa-info-circle me-2"></i>基本資訊</h5>
+                        <p class="text-muted">設定你的評測配置基本資訊</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label">配置名稱 *</label>
+                            <input type="text" class="form-control form-control-lg" id="configName" placeholder="例如：台電客服評測" required>
+                            <small class="form-text text-muted">請勿使用特殊字符: < > : " / \\ | ? *</small>
+                        </div>
+                    </div>
+                    
+                    <div class="step-navigation mt-4">
+                        <button type="button" class="btn btn-primary" onclick="nextStep(2)">
+                            下一步：API配置 <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <!-- HTTP Request 配置 -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <label class="form-label">HTTP Request 配置 *</label>
-                    <div class="card">
-                        <div class="card-body">
-                            <!-- HTTP 方法 -->
-                            <div class="row mb-3">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">POST</label>
-                                </div>
-                                <div class="col-md-9">
-                                    <input type="text" class="form-control" id="httpPath" placeholder="/eval HTTP/1.1" required>
-                                </div>
+                <!-- 步驟 2: API配置 -->
+                <div class="form-step" id="step2" style="display: none;">
+                    <div class="step-header mb-4">
+                        <h5 class="text-primary"><i class="fas fa-robot me-2"></i>被測API配置</h5>
+                        <p class="text-muted">配置要測試的API端點和請求格式</p>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <label class="form-label">API URL *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">POST</span>
+                                <input type="text" class="form-control" id="apiUrl" placeholder="http://localhost:5000/eval" required>
                             </div>
-                            
-                            <!-- Host -->
-                            <div class="row mb-3">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Host:</label>
-                                </div>
-                                <div class="col-md-9">
-                                    <input type="text" class="form-control" id="httpHost" placeholder="localhost:5000" required>
-                                </div>
+                            <small class="form-text text-muted">完整的API端點URL</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <label class="form-label">請求內容 (JSON) *</label>
+                            <textarea class="form-control" id="requestBody" rows="4" placeholder='{"question": "{{prompt}}"}' required></textarea>
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                必須包含 <code>{{prompt}}</code> 變量作為測試問題的占位符
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <label class="form-label">回應提取路徑</label>
+                            <input type="text" class="form-control" id="transformResponse" value="json.response" placeholder="json.response">
+                            <small class="form-text text-muted">從API回應JSON中提取內容的路徑</small>
+                        </div>
+                    </div>
+                    
+                    <div class="step-navigation mt-4">
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="prevStep(1)">
+                            <i class="fas fa-arrow-left me-2"></i>上一步
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="nextStep(3)">
+                            下一步：測試問題 <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 步驟 3: 測試問題配置 -->
+                <div class="form-step" id="step3" style="display: none;">
+                    <div class="step-header mb-4">
+                        <h5 class="text-primary"><i class="fas fa-question-circle me-2"></i>測試問題配置</h5>
+                        <p class="text-muted">選擇測試問題的來源</p>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="questionSource" id="questionSourceManual" value="manual" checked onchange="toggleQuestionInput()">
+                                <label class="form-check-label" for="questionSourceManual">
+                                    <i class="fas fa-keyboard me-2"></i>手動輸入
+                                </label>
                             </div>
-                            
-                            <!-- Content-Type -->
-                            <div class="row mb-3">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Content-Type:</label>
-                                </div>
-                                <div class="col-md-9">
-                                    <input type="text" class="form-control" id="httpContentType" placeholder="application/json" required>
-                                </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="questionSource" id="questionSourceUpload" value="upload" onchange="toggleQuestionInput()">
+                                <label class="form-check-label" for="questionSourceUpload">
+                                    <i class="fas fa-file-csv me-2"></i>上傳CSV檔案
+                                </label>
                             </div>
-                            
-                            <!-- Request Body -->
-                            <div class="row mb-3">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Request Body:</label>
-                                </div>
-                                <div class="col-md-9">
-                                    <textarea class="form-control" id="requestBody" rows="4" placeholder='{"question": "{{prompt}}"}' required></textarea>
-                                    <small class="form-text text-muted">必須包含 {{prompt}} 變量</small>
-                                </div>
+                        </div>
+                    </div>
+
+                    <!-- 手動輸入問題 -->
+                    <div id="manualQuestionsSection" class="mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-edit me-2"></i>手動輸入測試問題
+                                </h6>
                             </div>
-                            
-                            <!-- Transform Response -->
-                            <div class="row mb-3">
-                                <div class="col-md-3">
-                                    <label class="form-label fw-bold">Transform Response:</label>
+                            <div class="card-body">
+                                <label class="form-label">測試問題</label>
+                                <textarea class="form-control" id="testQuestions" rows="6" placeholder="請輸入測試問題，每行一個問題&#10;例如：&#10;什麼是台電？&#10;如何申請用電？&#10;電費如何計算？"></textarea>
+                                <small class="form-text text-muted">每行一個問題</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 上傳測試集檔案 -->
+                    <div id="uploadQuestionsSection" class="mb-4" style="display: none;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-upload me-2"></i>上傳測試集檔案
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <input type="file" class="form-control" id="csvFile" accept=".csv" onchange="handleCSVUpload(this)">
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        CSV檔案應包含 "prompt" 欄位，可選包含 "expected" 欄位作為期望答案
+                                    </small>
                                 </div>
-                                <div class="col-md-9">
-                                    <input type="text" class="form-control" id="transformResponse" placeholder="json.response" required>
-                                    <small class="form-text text-muted">從API回應中提取內容的JavaScript表達式</small>
+                                <div id="csvPreview" style="display: none;">
+                                    <h6>檔案預覽：</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered" id="csvPreviewTable">
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- 測試問題配置 -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h6 class="text-primary"><i class="fas fa-question-circle me-2"></i>測試問題配置</h6>
-                    <p class="text-muted small">選擇測試問題的來源</p>
-                </div>
-                <div class="col-md-12">
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="questionSource" id="questionSourceManual" value="manual" checked onchange="toggleQuestionInput()">
-                        <label class="form-check-label" for="questionSourceManual">手動輸入</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="questionSource" id="questionSourceUpload" value="upload" onchange="toggleQuestionInput()">
-                        <label class="form-check-label" for="questionSourceUpload">上傳CSV檔案</label>
+                    
+                    <div class="step-navigation mt-4">
+                        <button type="button" class="btn btn-outline-secondary me-2" onclick="prevStep(2)">
+                            <i class="fas fa-arrow-left me-2"></i>上一步
+                        </button>
+                        <button type="button" class="btn btn-outline-success me-2" onclick="nextStep(4)">
+                            下一步：評分標準（可選） <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="saveConfiguration()">
+                            <i class="fas fa-save me-2"></i>儲存配置
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- 手動輸入問題 -->
-            <div id="manualQuestionsSection" class="row mb-4">
-                <div class="col-12">
-                    <label class="form-label">測試問題</label>
-                    <textarea class="form-control" id="testQuestions" rows="6" placeholder="請輸入測試問題，每行一個問題&#10;例如：&#10;什麼是台電？&#10;如何申請用電？&#10;電費如何計算？&#10;&#10;注意：如果配置中已有 tests 檔案，此處可留空"></textarea>
-                    <small class="form-text text-muted">每行一個問題（可選，如果已有測試檔案可留空）</small>
-                </div>
-            </div>
-
-            <!-- 檔案上傳 -->
-            <div id="fileUploadSection" class="row mb-4" style="display: none;">
-                <div class="col-12">
-                    <label class="form-label">上傳CSV檔案</label>
-                    <input type="file" class="form-control" id="questionFile" accept=".csv" onchange="handleFileUpload()">
-                    <small class="form-text text-muted">CSV檔案格式：第一行為標題（如：question），後續行為問題內容（可選）</small>
-                </div>
-            </div>
-
-            <!-- 評分標準配置 -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <h6 class="text-primary"><i class="fas fa-star me-2"></i>評分標準配置</h6>
-                    <p class="text-muted small">選擇評分方式</p>
-                </div>
-                <div class="col-md-12">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="enableJavascript" onchange="toggleJavascriptConfig()">
-                        <label class="form-check-label" for="enableJavascript">JavaScript 驗證</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="enableGEval" onchange="toggleGEvalConfig()">
-                        <label class="form-check-label" for="enableGEval">G-Eval (LLM評分)</label>
+            <!-- 步驟 4: 評分標準配置（可選） -->
+            <div class="form-step" id="step4" style="display: none;">
+                <div class="step-header mb-4">
+                    <h5 class="text-success"><i class="fas fa-chart-line me-2"></i>評分標準配置</h5>
+                    <p class="text-muted">這個步驟是可選的。你可以跳過此步驟直接儲存配置，或者設定評分標準來自動評估API回覆品質。</p>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>提示：</strong>如果你只想測試API是否正常運作，可以跳過評分配置。如果你想要量化評估回覆品質，建議設定評分標準。
                     </div>
                 </div>
-            </div>
 
-            <!-- JavaScript 配置 -->
-            <div id="javascriptConfig" class="row mb-4" style="display: none;">
-                <div class="col-12">
-                    <div class="card">
+                <!-- 評分標準配置區域 -->
+                <div class="row">
+                    <!-- 左欄：Metric 評分 -->
+                    <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-chart-line me-2"></i>metric評分
+                            </h6>
+                        </div>
                         <div class="card-body">
-                            <h6 class="card-title">JavaScript 驗證配置</h6>
+                            <p class="text-muted small mb-3">選擇一個或多個內建評分指標</p>
+
+                            <!-- JavaScript 驗證 -->
                             <div class="mb-3">
-                                <label class="form-label">驗證條件</label>
-                                <select class="form-select" id="javascriptCondition" onchange="updateJavascriptCondition()">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableJavascript" onchange="toggleJavascriptConfig()">
+                                    <label class="form-check-label" for="enableJavascript">
+                                        <i class="fas fa-code me-2"></i>JavaScript 驗證
+                                    </label>
+                                </div>
+                                <div id="javascriptConfig" style="display: none;" class="mt-2 ps-4">
+                                    <div class="row">
+                                        <div class="col-12 mb-2">
+                                            <label class="form-label small">驗證條件</label>
+                                            <select class="form-select form-select-sm" id="javascriptCondition" onchange="updateJavascriptCondition()">
                                     <option value="length">回覆長度檢查</option>
                                     <option value="custom">自定義條件</option>
                                 </select>
                             </div>
-                            <div id="lengthConfig">
-                                <label class="form-label">最小長度</label>
-                                <input type="number" class="form-control" id="minLength" value="100" min="1">
+                                        <div class="col-12" id="lengthConfig">
+                                            <label class="form-label small">最小長度</label>
+                                            <input type="number" class="form-control form-control-sm" id="minLength" value="100" min="1">
                             </div>
-                            <div id="customConfig" style="display: none;">
-                                <label class="form-label">自定義JavaScript表達式</label>
-                                <input type="text" class="form-control" id="customJavascript" placeholder="例如：output.includes('台電')">
-                                <small class="form-text text-muted">使用JavaScript表達式，output變數代表AI回答</small>
+                                        <div class="col-12" id="customConfig" style="display: none;">
+                                            <label class="form-label small">自定義表達式</label>
+                                            <textarea class="form-control form-control-sm" id="customJavascript" rows="2" placeholder="output.length >= 100"></textarea>
                             </div>
                         </div>
                     </div>
+                            </div>
+
+                            <!-- 其他 Metric 評分選項 -->
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableFactuality">
+                                    <label class="form-check-label" for="enableFactuality">
+                                        <i class="fas fa-check-double me-2"></i>事實性檢查
+                                    </label>
                 </div>
             </div>
 
-            <!-- G-Eval 配置 -->
-            <div id="gevalConfig" class="row mb-4" style="display: none;">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6 class="card-title">G-Eval 評分配置</h6>
-                            <div class="mb-3">
-                                <label class="form-label">評分標準</label>
-                                <div id="gevalCriteriaList">
-                                    <div class="input-group mb-2">
-                                        <input type="text" class="form-control" placeholder="例如：不回答與旅行無關的問題">
-                                        <button type="button" class="btn btn-outline-danger" onclick="removeGEvalCriteria(this)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="addGEvalCriteria()">
-                                    <i class="fas fa-plus"></i> 添加評分標準
-                                </button>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">評分模型類型</label>
-                                <select class="form-select" id="gradingModelType" onchange="updateGradingModelFields()">
-                                    <option value="openai">OpenAI</option>
-                                    <option value="http">HTTP API</option>
-                                </select>
-                            </div>
-                            <div id="openaiConfig">
-                                <div class="mb-3">
-                                    <label class="form-label">OpenAI 模型</label>
-                                    <select class="form-select" id="openaiModel">
-                                        <option value="gpt-4">GPT-4</option>
-                                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                                    </select>
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableSimilarity">
+                                    <label class="form-check-label" for="enableSimilarity">
+                                        <i class="fas fa-search me-2"></i>語義相似度
+                                    </label>
                                 </div>
                             </div>
-                            <div id="httpGradingConfig" style="display: none;">
-                                <div class="mb-3">
-                                    <label class="form-label">評分API URL</label>
-                                    <input type="url" class="form-control" id="gradingApiUrl" placeholder="https://api.openai.com/v1/chat/completions">
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableBertScore">
+                                    <label class="form-check-label" for="enableBertScore">
+                                        <i class="fas fa-calculator me-2"></i>BERT Score
+                                    </label>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">API Key</label>
-                                    <input type="text" class="form-control" id="gradingApiKey" placeholder="Bearer your-api-key">
+                            </div>
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableRouge">
+                                    <label class="form-check-label" for="enableRouge">
+                                        <i class="fas fa-align-left me-2"></i>ROUGE Score
+                                    </label>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">模型名稱</label>
-                                    <input type="text" class="form-control" id="gradingModel" placeholder="gpt-4">
+                            </div>
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableContains">
+                                    <label class="form-check-label" for="enableContains">
+                                        <i class="fas fa-search-plus me-2"></i>包含檢查
+                                    </label>
                                 </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Transform Response</label>
-                                    <input type="text" class="form-control" id="gradingTransformResponse" value="json.choices[0].message.content">
+                            </div>
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableRegex">
+                                    <label class="form-check-label" for="enableRegex">
+                                        <i class="fas fa-code me-2"></i>正則表達式
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableWordCount">
+                                    <label class="form-check-label" for="enableWordCount">
+                                        <i class="fas fa-calculator me-2"></i>字數統計
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableSentiment">
+                                    <label class="form-check-label" for="enableSentiment">
+                                        <i class="fas fa-heart me-2"></i>情感分析
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableToxicity">
+                                    <label class="form-check-label" for="enableToxicity">
+                                        <i class="fas fa-shield-alt me-2"></i>毒性檢測
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableReadability">
+                                    <label class="form-check-label" for="enableReadability">
+                                        <i class="fas fa-eye me-2"></i>可讀性評估
+                                    </label>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- 右欄：Grader 評分 -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0">
+                                <i class="fas fa-brain me-2"></i>grader評分
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                如果你要使用 grader 評分，你需要配置 grader provider（評分者提供商），例如選用 OpenAI 並填寫對應的 API Key 和選擇模型等。
+                            </div>
+
+                            <!-- G-Eval 評分 -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableGEval" onchange="toggleGEvalConfig()">
+                                    <label class="form-check-label" for="enableGEval">
+                                        <i class="fas fa-brain me-2"></i>G-Eval (LLM評分)
+                                    </label>
+                                </div>
+                                <div id="gevalConfig" style="display: none;" class="mt-3">
+                                    <div class="mb-3">
+                                        <label class="form-label small">評分標準</label>
+                                        <div id="gevalCriteriaList">
+                                            <div class="input-group mb-2">
+                                                <input type="text" class="form-control form-control-sm" placeholder="例如：回覆內容是否準確回答了用戶的問題">
+                                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeGEvalCriteria(this)">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="addGEvalCriteria()">
+                                            <i class="fas fa-plus"></i> 添加評分標準
+                                        </button>
+                                    </div>
+                                    
+                                    <hr class="my-3">
+                                    <h6 class="text-success mb-3">
+                                        <i class="fas fa-cogs me-2"></i>Grader Provider 配置
+                                    </h6>
+                                    <p class="text-muted small mb-3">選擇要使用哪個 LLM 服務來進行評分</p>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label small">選擇 LLM 提供者 *</label>
+                                        <select class="form-select form-select-sm" id="llmProvider" onchange="updateLLMProviderConfig()" required>
+                                            <option value="">請選擇 LLM 提供者</option>
+                                            <option value="openai">OpenAI</option>
+                                            <option value="anthropic">Anthropic (Claude)</option>
+                                            <option value="azure-openai">Azure OpenAI</option>
+                                            <option value="google">Google (Gemini)</option>
+                                            <option value="custom">自定義 HTTP API</option>
+                                        </select>
+                                        <small class="form-text text-muted">這個 LLM 將用來評估被測試 API 的回覆品質</small>
+                                    </div>
+                                    
+                                    <!-- LLM 提供者配置區域會在這裡動態顯示 -->
+                                        <div id="llmProviderConfigArea"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step-navigation mt-4">
+                    <button type="button" class="btn btn-outline-secondary me-2" onclick="prevStep(3)">
+                        <i class="fas fa-arrow-left me-2"></i>上一步
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveConfiguration()">
+                        <i class="fas fa-save me-2"></i>儲存配置
+                    </button>
+                </div>
             </div>
-        </form>
+
+            </form>
+        </div>
     `;
+}
+
+// 步驟導航函數
+function nextStep(stepNumber) {
+    // 隱藏當前步驟
+    const currentStep = document.querySelector('.form-step[style*="display: block"]');
+    if (currentStep) {
+        currentStep.style.display = 'none';
+    }
+    
+    // 顯示目標步驟
+    const targetStep = document.getElementById('step' + stepNumber);
+    if (targetStep) {
+        targetStep.style.display = 'block';
+    }
+    
+    // 更新進度指示器
+    updateProgressSteps(stepNumber);
+}
+
+function prevStep(stepNumber) {
+    // 隱藏當前步驟
+    const currentStep = document.querySelector('.form-step[style*="display: block"]');
+    if (currentStep) {
+        currentStep.style.display = 'none';
+    }
+    
+    // 顯示目標步驟
+    const targetStep = document.getElementById('step' + stepNumber);
+    if (targetStep) {
+        targetStep.style.display = 'block';
+    }
+    
+    // 更新進度指示器
+    updateProgressSteps(stepNumber);
+}
+
+function updateProgressSteps(activeStep) {
+    // 移除所有步驟的 active 類
+    const steps = document.querySelectorAll('.progress-steps .step');
+    steps.forEach(step => {
+        step.classList.remove('active', 'completed');
+    });
+    
+    // 標記完成的步驟和當前步驟
+    steps.forEach((step, index) => {
+        const stepNum = index + 1;
+        if (stepNum < activeStep) {
+            step.classList.add('completed');
+        } else if (stepNum === activeStep) {
+            step.classList.add('active');
+        }
+    });
+}
+
+// 直接跳轉到指定步驟
+function jumpToStep(stepNumber) {
+    // 隱藏當前步驟
+    const currentStep = document.querySelector('.form-step[style*="display: block"]');
+    if (currentStep) {
+        currentStep.style.display = 'none';
+    }
+    
+    // 顯示目標步驟
+    const targetStep = document.getElementById('step' + stepNumber);
+    if (targetStep) {
+        targetStep.style.display = 'block';
+    }
+    
+    // 更新進度指示器
+    updateProgressSteps(stepNumber);
+}
+
+
+// 處理CSV上傳
+function handleCSVUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const csv = e.target.result;
+        const lines = csv.split('\n');
+        const headers = lines[0].split(',').map(h => h.trim());
+        
+        // 檢查是否有 prompt 欄位
+        const promptIndex = headers.findIndex(h => h.toLowerCase() === 'prompt');
+        if (promptIndex === -1) {
+            showAlert('CSV檔案必須包含 "prompt" 欄位', 'danger');
+            return;
+        }
+        
+        // 顯示預覽
+        const preview = document.getElementById('csvPreview');
+        const table = document.getElementById('csvPreviewTable');
+        
+        let tableHTML = '<thead><tr>';
+        headers.forEach(header => {
+            tableHTML += `<th>${header}</th>`;
+        });
+        tableHTML += '</tr></thead><tbody>';
+        
+        // 顯示前5行數據
+        for (let i = 1; i < Math.min(6, lines.length); i++) {
+            if (lines[i].trim()) {
+                const cells = lines[i].split(',').map(c => c.trim());
+                tableHTML += '<tr>';
+                cells.forEach(cell => {
+                    tableHTML += `<td>${cell}</td>`;
+                });
+                tableHTML += '</tr>';
+            }
+        }
+        
+        tableHTML += '</tbody>';
+        table.innerHTML = tableHTML;
+        preview.style.display = 'block';
+        
+        showAlert(`成功載入CSV檔案，包含 ${lines.length - 1} 個測試問題`, 'success');
+    };
+    
+    reader.readAsText(file);
+}
+
+// 儲存配置
+function saveConfiguration() {
+    // 這個函數會在後面實現，現在先顯示提示
+    showAlert('配置儲存功能開發中...', 'info');
 }
 
 // 顯示當前測試問題信息
@@ -692,10 +1062,6 @@ async function loadConfigToForm(config) {
     }
 }
 
-// 顯示進階配置編輯
-function showAdvancedConfig() {
-    showAlert('進階編輯功能開發中...', 'info');
-}
 
 // 重置評分標準列表
 function resetScoringCriteriaList() {
@@ -766,11 +1132,45 @@ function generateConfigFromForm() {
     const configName = document.getElementById('configName').value;
     
     // 獲取被測API配置
+    const useHttps = document.getElementById('useHttps').checked;
+    const httpMethod = document.getElementById('httpMethod').value;
     const httpPath = document.getElementById('httpPath').value;
     const httpHost = document.getElementById('httpHost').value;
     const httpContentType = document.getElementById('httpContentType').value;
-    const requestBody = document.getElementById('requestBody').value;
+    const authType = document.getElementById('authType').value;
+    const authValue = document.getElementById('authValue').value;
+    const bodyFormat = document.getElementById('bodyFormat').value;
     const transformResponse = document.getElementById('transformResponse').value;
+    
+    // 獲取 Request Body
+    let requestBody = '';
+    if (bodyFormat === 'json') {
+        // 從結構化配置生成 JSON
+        const modelName = document.getElementById('modelName').value || 'deepseek-chat';
+        const maxTokens = document.getElementById('maxTokens').value || 300;
+        const temperature = document.getElementById('temperature').value;
+        const messageFormat = document.querySelector('input[name="messageFormat"]:checked').value;
+        
+        const bodyObj = {
+            model: modelName,
+            messages: [
+                {
+                    role: "user",
+                    content: "{{prompt}}"
+                }
+            ],
+            max_tokens: parseInt(maxTokens)
+        };
+        
+        if (temperature) {
+            bodyObj.temperature = parseFloat(temperature);
+        }
+        
+        requestBody = JSON.stringify(bodyObj, null, 2);
+    } else {
+        // 使用原始文本
+        requestBody = document.getElementById('requestBody').value;
+    }
     
     // 獲取測試問題配置
     const questionSourceRadio = document.querySelector('input[name="questionSource"]:checked');
@@ -797,13 +1197,50 @@ function generateConfigFromForm() {
     
     if (httpPath && httpHost && httpContentType && requestBody) {
         providersConfig = `providers:
-  - id: http
+  - id: https
     config:`;
         
+        // 添加 useHttps 配置
+        if (useHttps) {
+            providersConfig += `\n      useHttps: true`;
+        }
+        
         // 構建 request 內容
-        // 確保 requestBody 沒有開頭的空白行
         const trimmedRequestBody = requestBody.trim();
-        let requestContent = `POST ${httpPath}\nHost: ${httpHost}\nContent-Type: ${httpContentType}\n\n${trimmedRequestBody}`;
+        let requestContent = `${httpMethod} ${httpPath}\nHost: ${httpHost}\nContent-Type: ${httpContentType}`;
+        
+        // 添加 Authorization header
+        if (authType !== 'none' && authValue) {
+            let authHeader = '';
+            switch (authType) {
+                case 'bearer':
+                    authHeader = `Authorization: Bearer ${authValue}`;
+                    break;
+                case 'basic':
+                    authHeader = `Authorization: Basic ${authValue}`;
+                    break;
+                case 'apikey':
+                    authHeader = `Authorization: ${authValue}`;
+                    break;
+                case 'custom':
+                    authHeader = `Authorization: ${authValue}`;
+                    break;
+            }
+            if (authHeader) {
+                requestContent += `\n${authHeader}`;
+            }
+        }
+        
+        // 添加自定義 headers
+        const customHeaders = getCustomHeaders();
+        for (const header of customHeaders) {
+            if (header.name && header.value) {
+                requestContent += `\n${header.name}: ${header.value}`;
+            }
+        }
+        
+        // 添加空行和 body
+        requestContent += `\n\n${trimmedRequestBody}`;
         
         // 添加 request 配置
         providersConfig += `\n      request: |\n${requestContent.split('\n').map(line => `        ${line}`).join('\n')}`;
@@ -834,8 +1271,93 @@ function generateConfigFromForm() {
         }
     }
     
-    // G-Eval 評分
-    if (document.getElementById('enableGEval').checked) {
+    // 檢查是否有選擇任何 Metric 評分選項
+    const hasMetricScoring = document.getElementById('enableJavascript').checked ||
+                            document.getElementById('enableFactuality').checked ||
+                            document.getElementById('enableSimilarity').checked ||
+                            document.getElementById('enableBertScore').checked ||
+                            document.getElementById('enableRouge').checked ||
+                            document.getElementById('enableContains').checked ||
+                            document.getElementById('enableRegex').checked ||
+                            document.getElementById('enableWordCount').checked ||
+                            document.getElementById('enableSentiment').checked ||
+                            document.getElementById('enableToxicity').checked ||
+                            document.getElementById('enableReadability').checked;
+    
+    if (hasMetricScoring) {
+        // Metric 評分 - 添加各種預設指標
+        
+        // 事實性檢查
+        if (document.getElementById('enableFactuality') && document.getElementById('enableFactuality').checked) {
+            asserts.push(`  - type: factuality
+    value: "{{expected_answer}}"`);
+        }
+        
+        // 語義相似度
+        if (document.getElementById('enableSimilarity') && document.getElementById('enableSimilarity').checked) {
+            asserts.push(`  - type: similar
+    value: "{{expected_answer}}"
+    threshold: 0.8`);
+        }
+        
+        // BERT Score
+        if (document.getElementById('enableBertScore') && document.getElementById('enableBertScore').checked) {
+            asserts.push(`  - type: python
+    value: get_assert_bert_f1(output, "{{expected_answer}}")
+    threshold: 0.7`);
+        }
+        
+        // ROUGE Score
+        if (document.getElementById('enableRouge') && document.getElementById('enableRouge').checked) {
+            asserts.push(`  - type: rouge
+    value: "{{expected_answer}}"
+    threshold: 0.6`);
+        }
+        
+        // 包含檢查
+        if (document.getElementById('enableContains') && document.getElementById('enableContains').checked) {
+            asserts.push(`  - type: contains
+    value: "{{expected_keywords}}"`);
+        }
+        
+        // 正則表達式
+        if (document.getElementById('enableRegex') && document.getElementById('enableRegex').checked) {
+            asserts.push(`  - type: regex
+    value: "^[\\s\\S]*台電[\\s\\S]*$"`);
+        }
+        
+        // 字數統計
+        if (document.getElementById('enableWordCount') && document.getElementById('enableWordCount').checked) {
+            asserts.push(`  - type: javascript
+    value: output.length >= 50 && output.length <= 500`);
+        }
+        
+        // 情感分析
+        if (document.getElementById('enableSentiment') && document.getElementById('enableSentiment').checked) {
+            asserts.push(`  - type: sentiment
+    value: positive
+    threshold: 0.5`);
+        }
+        
+        // 毒性檢測
+        if (document.getElementById('enableToxicity') && document.getElementById('enableToxicity').checked) {
+            asserts.push(`  - type: toxicity
+    threshold: 0.1`);
+        }
+        
+        // 可讀性評估
+        if (document.getElementById('enableReadability') && document.getElementById('enableReadability').checked) {
+            asserts.push(`  - type: readability
+    threshold: 60`);
+        }
+    }
+    
+    // 檢查是否有選擇 LLM Grader 評分
+    const hasLLMScoring = document.getElementById('enableGEval').checked;
+    
+    if (hasLLMScoring) {
+        // LLM Grader 評分 - G-Eval
+        if (document.getElementById('enableGEval') && document.getElementById('enableGEval').checked) {
         const criteriaInputs = document.querySelectorAll('#gevalCriteriaList input[type="text"]');
         const criteria = [];
         criteriaInputs.forEach(input => {
@@ -851,38 +1373,37 @@ function generateConfigFromForm() {
                 gevalConfig += `\n      - ${criterion}`;
             });
             
-            // 添加評分模型配置
-            const gradingModelType = document.getElementById('gradingModelType').value;
-            if (gradingModelType === 'openai') {
-                const openaiModel = document.getElementById('openaiModel').value;
-                gevalConfig += `\n  options:
-    provider: openai:${openaiModel}`;
-            } else if (gradingModelType === 'http') {
-                const gradingApiUrl = document.getElementById('gradingApiUrl').value;
-                const gradingApiKey = document.getElementById('gradingApiKey').value;
-                const gradingModel = document.getElementById('gradingModel').value;
-                const gradingTransformResponse = document.getElementById('gradingTransformResponse').value;
-                
-                if (gradingApiUrl && gradingApiKey && gradingModel) {
-                    gevalConfig += `\n  options:
-    provider:
-      id: http
-    config:
-        url: ${gradingApiUrl}
-      method: POST
-      headers:
-        Content-Type: application/json
-          Authorization: ${gradingApiKey}
-      body:
-          model: ${gradingModel}
-        messages:
-          - role: user
-              content: "回覆時使用繁體中文，{{prompt}}"
-        transformResponse: ${gradingTransformResponse}`;
+                // 添加 LLM 提供者配置
+                const llmProvider = document.getElementById('llmProvider').value;
+                if (llmProvider) {
+                    gevalConfig += `\n    options:
+      provider: `;
+                    
+                    switch (llmProvider) {
+                        case 'openai':
+                            const openaiModel = document.getElementById('openaiModel').value;
+                            gevalConfig += `openai:${openaiModel}`;
+                            break;
+                        case 'anthropic':
+                            const anthropicModel = document.getElementById('anthropicModel').value;
+                            gevalConfig += `anthropic:${anthropicModel}`;
+                            break;
+                        case 'azure-openai':
+                            const azureDeployment = document.getElementById('azureDeployment').value;
+                            gevalConfig += `azure:${azureDeployment}`;
+                            break;
+                        case 'google':
+                            const googleModel = document.getElementById('googleModel').value;
+                            gevalConfig += `google:${googleModel}`;
+                            break;
+                        case 'custom':
+                            gevalConfig += `http`;
+                            break;
                 }
             }
             
             asserts.push(gevalConfig);
+            }
         }
     }
     
@@ -938,19 +1459,125 @@ function generateConfigFromForm() {
     // 如果有評分標準，使用 defaultTest 格式
     if (assertConfig) {
         // 檢查是否有 G-Eval 評分
-        const hasGEval = document.getElementById('enableGEval').checked;
+        const hasGEval = document.getElementById('enableGEval') && document.getElementById('enableGEval').checked;
         
         if (hasGEval) {
-            // 有 G-Eval 評分，需要完整的 options 配置
-            config += `\n\ndefaultTest:\n  options:\n    provider:\n      id: http\n  ${assertConfig}`;
+            // 有 LLM Grader 評分，需要添加 grader 提供者配置
+            const llmProvider = document.getElementById('llmProvider').value;
+            const graderConfig = generateGraderProviderConfig(llmProvider);
+            
+            if (graderConfig) {
+                config += `\n\n# LLM Grader 提供者配置\n${graderConfig}`;
+            }
+            
+            config += `\n\ndefaultTest:\n  ${assertConfig}`;
         } else {
-            // 沒有 G-Eval 評分，只需要 assert 配置，不包含 options
+            // 沒有 LLM Grader 評分，只需要 assert 配置
             config += `\n\ndefaultTest:\n  ${assertConfig}`;
         }
     }
     
     console.log('最終生成的配置:', config);
     return config;
+}
+
+// 生成 LLM Grader 提供者配置
+function generateGraderProviderConfig(provider) {
+    if (!provider) return null;
+    
+    let providerConfig = '';
+    
+    switch (provider) {
+        case 'openai':
+            const openaiModel = document.getElementById('openaiModel').value;
+            const openaiApiKey = document.getElementById('openaiApiKey').value;
+            const openaiTemperature = document.getElementById('openaiTemperature').value;
+            const openaiMaxTokens = document.getElementById('openaiMaxTokens').value;
+            const openaiBaseUrl = document.getElementById('openaiBaseUrl').value;
+            
+            providerConfig = `providers:
+  - id: openai:${openaiModel}
+    config:
+      temperature: ${openaiTemperature}
+      max_tokens: ${openaiMaxTokens}
+      apiKey: ${openaiApiKey || 'sk-abc123'}`;
+            
+            if (openaiBaseUrl) {
+                providerConfig += `\n      apiBaseUrl: ${openaiBaseUrl}`;
+            }
+            break;
+            
+        case 'anthropic':
+            const anthropicModel = document.getElementById('anthropicModel').value;
+            const anthropicApiKey = document.getElementById('anthropicApiKey').value;
+            const anthropicMaxTokens = document.getElementById('anthropicMaxTokens').value;
+            const anthropicTemperature = document.getElementById('anthropicTemperature').value;
+            
+            providerConfig = `providers:
+  - id: anthropic:${anthropicModel}
+    config:
+      temperature: ${anthropicTemperature}
+      max_tokens: ${anthropicMaxTokens}
+      apiKey: ${anthropicApiKey || 'sk-ant-abc123'}`;
+            break;
+            
+        case 'azure-openai':
+            const azureEndpoint = document.getElementById('azureEndpoint').value;
+            const azureApiKey = document.getElementById('azureApiKey').value;
+            const azureDeployment = document.getElementById('azureDeployment').value;
+            const azureTemperature = document.getElementById('azureTemperature').value;
+            const azureMaxTokens = document.getElementById('azureMaxTokens').value;
+            
+            providerConfig = `providers:
+  - id: azure:${azureDeployment}
+    config:
+      temperature: ${azureTemperature}
+      max_tokens: ${azureMaxTokens}
+      apiKey: ${azureApiKey || 'your-api-key'}
+      apiBaseUrl: ${azureEndpoint || 'https://your-resource.openai.azure.com'}`;
+            break;
+            
+        case 'google':
+            const googleModel = document.getElementById('googleModel').value;
+            const googleApiKey = document.getElementById('googleApiKey').value;
+            const googleTemperature = document.getElementById('googleTemperature').value;
+            const googleMaxTokens = document.getElementById('googleMaxTokens').value;
+            
+            providerConfig = `providers:
+  - id: google:${googleModel}
+    config:
+      temperature: ${googleTemperature}
+      max_tokens: ${googleMaxTokens}
+      apiKey: ${googleApiKey || 'your-google-api-key'}`;
+            break;
+            
+        case 'custom':
+            const customUrl = document.getElementById('customUrl').value;
+            const customApiKey = document.getElementById('customApiKey').value;
+            const customModel = document.getElementById('customModel').value;
+            const customTemperature = document.getElementById('customTemperature').value;
+            const customMaxTokens = document.getElementById('customMaxTokens').value;
+            
+            providerConfig = `providers:
+  - id: http
+    config:
+      url: ${customUrl || 'https://api.example.com/v1/chat/completions'}
+      method: POST
+      headers:
+        Content-Type: application/json
+        Authorization: Bearer ${customApiKey || 'your-api-key'}
+      body:
+        model: ${customModel || 'gpt-4'}
+        temperature: ${customTemperature}
+        max_tokens: ${customMaxTokens}
+        messages:
+          - role: user
+            content: "{{prompt}}"
+      transformResponse: json.choices[0].message.content`;
+            break;
+    }
+    
+    return providerConfig;
 }
 
 // 切換 JavaScript 配置顯示
@@ -1056,7 +1683,7 @@ function toggleQuestionInput() {
     
     const questionSourceValue = questionSource.value;
     const manualSection = document.getElementById('manualQuestionsSection');
-    const fileUploadSection = document.getElementById('fileUploadSection');
+    const uploadSection = document.getElementById('uploadQuestionsSection');
     const testQuestions = document.getElementById('testQuestions');
     
     console.log('切換問題輸入方式:', questionSourceValue);
@@ -1067,9 +1694,9 @@ function toggleQuestionInput() {
             manualSection.style.display = 'block';
             console.log('設置 manualSection display: block');
         }
-        if (fileUploadSection) {
-            fileUploadSection.style.display = 'none';
-            console.log('設置 fileUploadSection display: none');
+        if (uploadSection) {
+            uploadSection.style.display = 'none';
+            console.log('設置 uploadSection display: none');
         }
         if (testQuestions) testQuestions.required = false;
         console.log('切換到手動輸入模式');
@@ -1079,9 +1706,9 @@ function toggleQuestionInput() {
             manualSection.style.display = 'none';
             console.log('設置 manualSection display: none');
         }
-        if (fileUploadSection) {
-            fileUploadSection.style.display = 'block';
-            console.log('設置 fileUploadSection display: block');
+        if (uploadSection) {
+            uploadSection.style.display = 'block';
+            console.log('設置 uploadSection display: block');
         }
         if (testQuestions) testQuestions.required = false;
         console.log('切換到檔案上傳模式');
@@ -1588,4 +2215,432 @@ function showAlert(message, type = 'info') {
             alertDiv.parentNode.removeChild(alertDiv);
         }
     }, 5000);
+}
+
+// ==========================================
+// 評分配置相關函數
+// ==========================================
+
+// 切換 JavaScript 配置
+function toggleJavascriptConfig() {
+    const checkbox = document.getElementById('enableJavascript');
+    const config = document.getElementById('javascriptConfig');
+    config.style.display = checkbox.checked ? 'block' : 'none';
+}
+
+// 更新 JavaScript 條件
+function updateJavascriptCondition() {
+    const condition = document.getElementById('javascriptCondition').value;
+    const lengthConfig = document.getElementById('lengthConfig');
+    const customConfig = document.getElementById('customConfig');
+    
+    if (condition === 'length') {
+        lengthConfig.style.display = 'block';
+        customConfig.style.display = 'none';
+    } else {
+        lengthConfig.style.display = 'none';
+        customConfig.style.display = 'block';
+    }
+}
+
+// 切換 G-Eval 配置
+function toggleGEvalConfig() {
+    const checkbox = document.getElementById('enableGEval');
+    const config = document.getElementById('gevalConfig');
+    config.style.display = checkbox.checked ? 'block' : 'none';
+}
+
+// 添加 G-Eval 評分標準
+function addGEvalCriteria() {
+    const container = document.getElementById('gevalCriteriaList');
+    const newCriteria = document.createElement('div');
+    newCriteria.className = 'input-group mb-2';
+    newCriteria.innerHTML = `
+        <input type="text" class="form-control" placeholder="例如：回覆能有效地解決用戶的問題">
+        <button type="button" class="btn btn-outline-danger" onclick="removeGEvalCriteria(this)">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    container.appendChild(newCriteria);
+}
+
+// 移除 G-Eval 評分標準
+function removeGEvalCriteria(button) {
+    const container = document.getElementById('gevalCriteriaList');
+    if (container.children.length > 1) {
+        button.parentElement.remove();
+    } else {
+        showAlert('至少需要保留一個評分標準', 'warning');
+    }
+}
+
+// 更新 LLM 提供者配置
+function updateLLMProviderConfig() {
+    const provider = document.getElementById('llmProvider').value;
+    const configArea = document.getElementById('llmProviderConfigArea');
+    
+    if (!configArea) return;
+    
+    // 清空配置區域
+    configArea.innerHTML = '';
+    
+    if (!provider) return;
+    
+    let configHTML = '';
+    
+    switch (provider) {
+        case 'openai':
+            configHTML = `
+                <div class="alert alert-warning alert-sm mb-3">
+                    <small><i class="fas fa-key me-1"></i> 請填寫 OpenAI API 配置，這將用於 G-Eval 評分</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">OpenAI 模型 *</label>
+                    <select class="form-select form-select-sm" id="openaiModel" required>
+                        <option value="gpt-4o-mini">GPT-4o Mini (推薦，便宜快速)</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">API Key *</label>
+                    <input type="password" class="form-control form-control-sm" id="openaiApiKey" placeholder="sk-..." required>
+                    <small class="form-text text-muted">你的 OpenAI API Key</small>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-2">
+                        <label class="form-label small">Temperature</label>
+                        <input type="number" class="form-control form-control-sm" id="openaiTemperature" value="0" min="0" max="2" step="0.1">
+                        <small class="form-text text-muted">0 = 更一致</small>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label class="form-label small">Max Tokens</label>
+                        <input type="number" class="form-control form-control-sm" id="openaiMaxTokens" value="128" min="1" max="4096">
+                        <small class="form-text text-muted">評分回覆長度</small>
+                    </div>
+                </div>
+            `;
+            break;
+            
+        case 'anthropic':
+            configHTML = `
+                <div class="alert alert-warning alert-sm mb-3">
+                    <small><i class="fas fa-key me-1"></i> 請填寫 Anthropic API 配置，這將用於 G-Eval 評分</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">Anthropic 模型 *</label>
+                    <select class="form-select form-select-sm" id="anthropicModel" required>
+                        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet (推薦)</option>
+                        <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                        <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">API Key *</label>
+                    <input type="password" class="form-control form-control-sm" id="anthropicApiKey" placeholder="sk-ant-..." required>
+                    <small class="form-text text-muted">你的 Anthropic API Key</small>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-2">
+                        <label class="form-label small">Temperature</label>
+                        <input type="number" class="form-control form-control-sm" id="anthropicTemperature" value="0" min="0" max="1" step="0.1">
+                        <small class="form-text text-muted">0 = 更一致</small>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label class="form-label small">Max Tokens</label>
+                        <input type="number" class="form-control form-control-sm" id="anthropicMaxTokens" value="128" min="1" max="4096">
+                        <small class="form-text text-muted">評分回覆長度</small>
+                    </div>
+                </div>
+            `;
+            break;
+            
+        case 'azure-openai':
+            configHTML = `
+                <div class="alert alert-warning alert-sm mb-3">
+                    <small><i class="fas fa-key me-1"></i> 請填寫 Azure OpenAI 配置，這將用於 G-Eval 評分</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">Azure Endpoint *</label>
+                    <input type="url" class="form-control form-control-sm" id="azureEndpoint" placeholder="https://your-resource.openai.azure.com" required>
+                    <small class="form-text text-muted">你的 Azure OpenAI 端點</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">API Key *</label>
+                    <input type="password" class="form-control form-control-sm" id="azureApiKey" placeholder="your-api-key" required>
+                    <small class="form-text text-muted">你的 Azure OpenAI API Key</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">Deployment Name *</label>
+                    <input type="text" class="form-control form-control-sm" id="azureDeployment" placeholder="gpt-4o" required>
+                    <small class="form-text text-muted">你的模型部署名稱</small>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-2">
+                        <label class="form-label small">Temperature</label>
+                        <input type="number" class="form-control form-control-sm" id="azureTemperature" value="0" min="0" max="2" step="0.1">
+                        <small class="form-text text-muted">0 = 更一致</small>
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label class="form-label small">Max Tokens</label>
+                        <input type="number" class="form-control form-control-sm" id="azureMaxTokens" value="128" min="1" max="4096">
+                        <small class="form-text text-muted">評分回覆長度</small>
+                    </div>
+                </div>
+            `;
+            break;
+            
+        case 'google':
+            configHTML = `
+                <div class="mb-3">
+                    <label class="form-label small">Google 模型</label>
+                    <select class="form-select form-select-sm" id="googleModel">
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="gemini-pro">Gemini Pro</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">API Key</label>
+                    <input type="password" class="form-control form-control-sm" id="googleApiKey" placeholder="your-google-api-key">
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-2">
+                        <label class="form-label small">Temperature</label>
+                        <input type="number" class="form-control form-control-sm" id="googleTemperature" value="0" min="0" max="2" step="0.1">
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label class="form-label small">Max Tokens</label>
+                        <input type="number" class="form-control form-control-sm" id="googleMaxTokens" value="128" min="1" max="2048">
+                    </div>
+                </div>
+            `;
+            break;
+            
+        case 'custom':
+            configHTML = `
+                <div class="mb-3">
+                    <label class="form-label small">API URL</label>
+                    <input type="url" class="form-control form-control-sm" id="customUrl" placeholder="https://api.example.com/v1/chat/completions">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">API Key</label>
+                    <input type="password" class="form-control form-control-sm" id="customApiKey" placeholder="your-api-key">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">模型名稱</label>
+                    <input type="text" class="form-control form-control-sm" id="customModel" placeholder="gpt-4">
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-2">
+                        <label class="form-label small">Temperature</label>
+                        <input type="number" class="form-control form-control-sm" id="customTemperature" value="0" min="0" max="2" step="0.1">
+                    </div>
+                    <div class="col-6 mb-2">
+                        <label class="form-label small">Max Tokens</label>
+                        <input type="number" class="form-control form-control-sm" id="customMaxTokens" value="128" min="1" max="4096">
+                    </div>
+                </div>
+            `;
+            break;
+    }
+    
+    configArea.innerHTML = configHTML;
+}
+
+// 更新配置預覽
+function updateConfigPreview() {
+    const provider = document.getElementById('llmProvider').value;
+    const previewCode = document.getElementById('configPreviewCode');
+    
+    let config = {};
+    
+    switch (provider) {
+        case 'openai':
+            const model = document.getElementById('openaiModel').value;
+            const apiKey = document.getElementById('openaiApiKey').value;
+            const temperature = document.getElementById('openaiTemperature').value;
+            const maxTokens = document.getElementById('openaiMaxTokens').value;
+            const baseUrl = document.getElementById('openaiBaseUrl').value;
+            
+            config = {
+                providers: [{
+                    id: `openai:${model}`,
+                    config: {
+                        temperature: parseFloat(temperature),
+                        max_tokens: parseInt(maxTokens),
+                        apiKey: apiKey || 'sk-abc123'
+                    }
+                }]
+            };
+            
+            if (baseUrl) {
+                config.providers[0].config.apiBaseUrl = baseUrl;
+            }
+            break;
+            
+        case 'anthropic':
+            const anthropicModel = document.getElementById('anthropicModel').value;
+            const anthropicApiKey = document.getElementById('anthropicApiKey').value;
+            const anthropicMaxTokens = document.getElementById('anthropicMaxTokens').value;
+            const anthropicTemperature = document.getElementById('anthropicTemperature').value;
+            
+            config = {
+                providers: [{
+                    id: `anthropic:${anthropicModel}`,
+                    config: {
+                        temperature: parseFloat(anthropicTemperature),
+                        max_tokens: parseInt(anthropicMaxTokens),
+                        apiKey: anthropicApiKey || 'sk-ant-abc123'
+                    }
+                }]
+            };
+            break;
+            
+        case 'azure-openai':
+            const azureEndpoint = document.getElementById('azureEndpoint').value;
+            const azureApiKey = document.getElementById('azureApiKey').value;
+            const azureDeployment = document.getElementById('azureDeployment').value;
+            const azureTemperature = document.getElementById('azureTemperature').value;
+            const azureMaxTokens = document.getElementById('azureMaxTokens').value;
+            
+            config = {
+                providers: [{
+                    id: `azure:${azureDeployment}`,
+                    config: {
+                        temperature: parseFloat(azureTemperature),
+                        max_tokens: parseInt(azureMaxTokens),
+                        apiKey: azureApiKey || 'your-api-key',
+                        apiBaseUrl: azureEndpoint || 'https://your-resource.openai.azure.com'
+                    }
+                }]
+            };
+            break;
+            
+        case 'google':
+            const googleModel = document.getElementById('googleModel').value;
+            const googleApiKey = document.getElementById('googleApiKey').value;
+            const googleTemperature = document.getElementById('googleTemperature').value;
+            const googleMaxTokens = document.getElementById('googleMaxTokens').value;
+            
+            config = {
+                providers: [{
+                    id: `google:${googleModel}`,
+                    config: {
+                        temperature: parseFloat(googleTemperature),
+                        max_tokens: parseInt(googleMaxTokens),
+                        apiKey: googleApiKey || 'your-google-api-key'
+                    }
+                }]
+            };
+            break;
+            
+        case 'custom':
+            const customUrl = document.getElementById('customUrl').value;
+            const customApiKey = document.getElementById('customApiKey').value;
+            const customModel = document.getElementById('customModel').value;
+            const customTemperature = document.getElementById('customTemperature').value;
+            const customMaxTokens = document.getElementById('customMaxTokens').value;
+            
+            config = {
+                providers: [{
+                    id: 'http',
+                    config: {
+                        url: customUrl || 'https://api.example.com/v1/chat/completions',
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${customApiKey || 'your-api-key'}`
+                        },
+                        body: {
+                            model: customModel || 'gpt-4',
+                            temperature: parseFloat(customTemperature),
+                            max_tokens: parseInt(customMaxTokens),
+                            messages: [
+                                {
+                                    role: 'user',
+                                    content: '{{prompt}}'
+                                }
+                            ]
+                        },
+                        transformResponse: 'json.choices[0].message.content'
+                    }
+                }]
+            };
+            break;
+    }
+    
+    previewCode.textContent = JSON.stringify(config, null, 2);
+}
+
+// 監聽配置變更以更新預覽
+document.addEventListener('DOMContentLoaded', function() {
+    // 為所有配置輸入框添加變更監聽器
+    const configInputs = document.querySelectorAll('.provider-config input, .provider-config select');
+    configInputs.forEach(input => {
+        input.addEventListener('input', updateConfigPreview);
+        input.addEventListener('change', updateConfigPreview);
+    });
+});
+
+// 切換 Body 格式顯示
+function toggleBodyFormat() {
+    const bodyFormat = document.getElementById('bodyFormat').value;
+    const jsonConfig = document.getElementById('jsonBodyConfig');
+    const rawConfig = document.getElementById('rawBodyConfig');
+    
+    if (bodyFormat === 'json') {
+        jsonConfig.style.display = 'block';
+        rawConfig.style.display = 'none';
+    } else {
+        jsonConfig.style.display = 'none';
+        rawConfig.style.display = 'block';
+    }
+}
+
+// 添加自定義 Header
+function addCustomHeader() {
+    const customHeaders = document.getElementById('customHeaders');
+    const headerIndex = customHeaders.children.length;
+    
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'row mb-2';
+    headerDiv.innerHTML = `
+        <div class="col-md-4">
+            <input type="text" class="form-control custom-header-name" placeholder="Header 名稱" id="headerName${headerIndex}">
+        </div>
+        <div class="col-md-6">
+            <input type="text" class="form-control custom-header-value" placeholder="Header 值" id="headerValue${headerIndex}">
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCustomHeader(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    customHeaders.appendChild(headerDiv);
+}
+
+// 移除自定義 Header
+function removeCustomHeader(button) {
+    button.closest('.row').remove();
+}
+
+// 獲取所有自定義 Headers
+function getCustomHeaders() {
+    const headers = [];
+    const nameInputs = document.querySelectorAll('.custom-header-name');
+    const valueInputs = document.querySelectorAll('.custom-header-value');
+    
+    for (let i = 0; i < nameInputs.length; i++) {
+        const name = nameInputs[i].value.trim();
+        const value = valueInputs[i].value.trim();
+        if (name && value) {
+            headers.push({ name, value });
+        }
+    }
+    
+    return headers;
 }
