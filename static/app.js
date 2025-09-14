@@ -284,6 +284,25 @@ async function showConfigForm(config, isEdit) {
     // 生成表單HTML
     configForm.innerHTML = generateConfigFormHTML();
     
+    // 根據編輯模式設定按鈕文字
+    setTimeout(() => {
+        const saveButtonText = document.getElementById('saveButtonText');
+        const saveButtonTextStep4 = document.getElementById('saveButtonTextStep4');
+        
+        if (saveButtonText) {
+            saveButtonText.textContent = isEdit ? '儲存配置' : '創建配置';
+        }
+        if (saveButtonTextStep4) {
+            saveButtonTextStep4.textContent = isEdit ? '儲存配置' : '創建配置';
+        }
+        
+        // 更新頂部的保存按鈕文字
+        const topSaveButton = document.querySelector('#configFormActions .btn-success');
+        if (topSaveButton) {
+            topSaveButton.innerHTML = `<i class="fas fa-save me-2"></i>${isEdit ? '儲存配置' : '創建配置'}`;
+        }
+    }, 100);
+    
     // 如果是編輯模式，載入配置數據
     if (isEdit && config) {
         await loadConfigToForm(config);
@@ -340,9 +359,16 @@ function generateConfigFormHTML() {
                     </div>
                     
                     <div class="step-navigation mt-4">
+                        <div class="d-flex justify-content-end">
+                            <div class="btn-group">
                         <button type="button" class="btn btn-primary" onclick="nextStep(2)">
                             下一步：API配置 <i class="fas fa-arrow-right ms-2"></i>
                         </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="cancelConfigForm()">
+                                    <i class="fas fa-times me-2"></i>取消
+                        </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -467,13 +493,85 @@ function generateConfigFormHTML() {
                         </div>
                     </div>
                     
+                    <!-- API測試區域 -->
+                    <div class="card mb-4 border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0"><i class="fas fa-flask me-2"></i>API測試</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">測試您配置的API是否能正常運作</p>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <label class="form-label">測試問題</label>
+                                    <input type="text" class="form-control" id="testQuestion" placeholder="輸入一個測試問題，例如：你好，請自我介紹" value="你好，請自我介紹">
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="button" class="btn btn-info w-100" onclick="testAPI()" id="testAPIButton">
+                                        <i class="fas fa-play me-2"></i>測試API
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 測試結果區域 -->
+                            <div id="testResult" style="display: none;">
+                                <hr>
+                                <h6 class="text-success mb-3"><i class="fas fa-check-circle me-2"></i>測試結果</h6>
+                                
+                                <!-- 請求詳情 -->
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">請求詳情</label>
+                                    <div class="bg-light p-2 rounded">
+                                        <small id="requestDetails" class="text-muted"></small>
+                                    </div>
+                                </div>
+                                
+                                <!-- API回應 -->
+                                <div class="mb-3">
+                                    <label class="form-label small text-success">API回應</label>
+                                    <div class="bg-success bg-opacity-10 p-3 rounded border border-success">
+                                        <pre id="apiResponse" class="mb-0" style="white-space: pre-wrap; font-size: 14px;"></pre>
+                                    </div>
+                                </div>
+                                
+                                <!-- 處理後的結果 -->
+                                <div id="transformedResult" style="display: none;">
+                                    <label class="form-label small text-primary">處理後的結果</label>
+                                    <div class="bg-primary bg-opacity-10 p-3 rounded border border-primary">
+                                        <pre id="transformedResponse" class="mb-0" style="white-space: pre-wrap; font-size: 14px;"></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 錯誤結果區域 -->
+                            <div id="testError" style="display: none;">
+                                <hr>
+                                <h6 class="text-danger mb-3"><i class="fas fa-exclamation-circle me-2"></i>測試失敗</h6>
+                                <div class="alert alert-danger">
+                                    <strong>錯誤訊息：</strong>
+                                    <pre id="errorMessage" class="mb-0 mt-2" style="white-space: pre-wrap; font-size: 14px;"></pre>
+                                </div>
+                                <div class="text-muted">
+                                    <small><i class="fas fa-lightbulb me-1"></i>請檢查API配置是否正確，包括URL、認證資訊和請求格式</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="step-navigation mt-4">
-                        <button type="button" class="btn btn-outline-secondary me-2" onclick="prevStep(1)">
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary" onclick="prevStep(1)">
                             <i class="fas fa-arrow-left me-2"></i>上一步
                         </button>
+                            <div class="btn-group">
                         <button type="button" class="btn btn-primary" onclick="nextStep(3)">
                             下一步：測試問題 <i class="fas fa-arrow-right ms-2"></i>
                         </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="cancelConfigForm()">
+                                    <i class="fas fa-times me-2"></i>取消
+                        </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -545,15 +643,22 @@ function generateConfigFormHTML() {
                     </div>
                     
                     <div class="step-navigation mt-4">
-                        <button type="button" class="btn btn-outline-secondary me-2" onclick="prevStep(2)">
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">
                             <i class="fas fa-arrow-left me-2"></i>上一步
                         </button>
+                            <div class="btn-group">
                         <button type="button" class="btn btn-outline-success me-2" onclick="nextStep(4)">
                             下一步：評分標準（可選） <i class="fas fa-arrow-right ms-2"></i>
                         </button>
                         <button type="button" class="btn btn-primary" onclick="saveConfiguration()">
-                            <i class="fas fa-save me-2"></i>儲存配置
+                            <i class="fas fa-save me-2"></i><span id="saveButtonText">創建配置</span>
                         </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="cancelConfigForm()">
+                                    <i class="fas fa-times me-2"></i>取消
+                        </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -561,7 +666,7 @@ function generateConfigFormHTML() {
             <div class="form-step" id="step4" style="display: none;">
                 <div class="step-header mb-4">
                     <h5 class="text-success"><i class="fas fa-chart-line me-2"></i>評分標準配置</h5>
-                    <p class="text-muted">這個步驟是可選的。你可以跳過此步驟直接儲存配置，或者設定評分標準來自動評估API回覆品質。</p>
+                    <p class="text-muted">這個步驟是可選的。你可以跳過此步驟直接創建配置，或者設定評分標準來自動評估API回覆品質。</p>
                     
                     <div class="alert alert-info">
                         <i class="fas fa-lightbulb me-2"></i>
@@ -772,12 +877,19 @@ function generateConfigFormHTML() {
                 </div>
 
                 <div class="step-navigation mt-4">
-                    <button type="button" class="btn btn-outline-secondary me-2" onclick="prevStep(3)">
+                    <div class="d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" onclick="prevStep(3)">
                         <i class="fas fa-arrow-left me-2"></i>上一步
                     </button>
+                        <div class="btn-group">
                     <button type="button" class="btn btn-primary" onclick="saveConfiguration()">
-                        <i class="fas fa-save me-2"></i>儲存配置
+                                <i class="fas fa-save me-2"></i><span id="saveButtonTextStep4">創建配置</span>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="cancelConfigForm()">
+                                <i class="fas fa-times me-2"></i>取消
                     </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -923,7 +1035,300 @@ function handleCSVUpload(input) {
     reader.readAsText(file);
 }
 
-// 儲存配置
+// 測試API功能
+async function testAPI() {
+    const testButton = document.getElementById('testAPIButton');
+    const testResult = document.getElementById('testResult');
+    const testError = document.getElementById('testError');
+    const testQuestion = document.getElementById('testQuestion').value.trim();
+    
+    if (!testQuestion) {
+        showAlert('請輸入測試問題', 'warning');
+        return;
+    }
+    
+    // 隱藏之前的結果
+    testResult.style.display = 'none';
+    testError.style.display = 'none';
+    
+    // 設置按鈕為載入狀態
+    testButton.disabled = true;
+    testButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>測試中...';
+    
+    try {
+        // 收集API配置
+        const apiConfig = collectAPIConfig();
+        
+        console.log('收集到的API配置:', apiConfig);
+        
+        if (!apiConfig.isValid) {
+            throw new Error(apiConfig.error);
+        }
+        
+        // 構建請求
+        const requestConfig = buildAPIRequest(apiConfig, testQuestion);
+        
+        console.log('構建的請求配置:', requestConfig);
+        console.log('測試問題:', testQuestion);
+        console.log('Request Body 替換後:', requestConfig.body);
+        
+        // 顯示請求詳情
+        document.getElementById('requestDetails').textContent = 
+            `${requestConfig.method} ${requestConfig.url}`;
+        
+        // 發送測試請求
+        const startTime = Date.now();
+        const response = await fetch('/api/test-api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestConfig)
+        });
+        
+        const responseTime = Date.now() - startTime;
+        const result = await response.json();
+        
+        console.log('API測試結果:', result);
+        
+        if (response.ok && result.success) {
+            // 顯示成功結果
+            displayTestSuccess(result, responseTime, apiConfig.transformResponse);
+        } else {
+            // 顯示錯誤
+            throw new Error(result.error || '測試失敗');
+        }
+        
+    } catch (error) {
+        console.error('API測試錯誤:', error);
+        displayTestError(error.message);
+    } finally {
+        // 恢復按鈕狀態
+        testButton.disabled = false;
+        testButton.innerHTML = '<i class="fas fa-play me-2"></i>測試API';
+    }
+}
+
+// 收集API配置
+function collectAPIConfig() {
+    try {
+        // 從表單獲取基本配置
+        const useHttps = document.getElementById('useHttps')?.checked || false;
+        const httpMethod = document.getElementById('httpMethod')?.value || 'POST';
+        const httpPath = document.getElementById('httpPath')?.value?.trim();
+        const httpHost = document.getElementById('httpHost')?.value?.trim();
+        const httpContentType = document.getElementById('httpContentType')?.value?.trim();
+        const authType = document.getElementById('authType')?.value;
+        const authValue = document.getElementById('authValue')?.value?.trim();
+        const requestBody = document.getElementById('requestBody')?.value?.trim();
+        const transformResponse = document.getElementById('transformResponse')?.value?.trim();
+        
+        // 檢查必填欄位
+        if (!httpHost) {
+            return { isValid: false, error: '請填寫Host' };
+        }
+        
+        if (!httpPath) {
+            return { isValid: false, error: '請填寫HTTP路徑' };
+        }
+        
+        if (!requestBody) {
+            return { isValid: false, error: '請填寫Request Body' };
+        }
+        
+        if (!requestBody.includes('{{prompt}}')) {
+            return { isValid: false, error: 'Request Body必須包含{{prompt}}變量' };
+        }
+        
+        return {
+            isValid: true,
+            useHttps,
+            httpMethod,
+            httpPath,
+            httpHost,
+            httpContentType,
+            authType,
+            authValue,
+            requestBody,
+            transformResponse
+        };
+    } catch (error) {
+        return { isValid: false, error: '配置格式錯誤: ' + error.message };
+    }
+}
+
+// 解析原始HTTP請求格式
+function parseRawHttpRequest(requestText) {
+    try {
+        const lines = requestText.split('\n');
+        let method = 'POST';
+        let path = '/';
+        let host = '';
+        let useHttps = false;
+        let contentType = 'application/json';
+        let authorization = '';
+        let body = '';
+        let transformResponse = document.getElementById('transformResponse')?.value?.trim();
+        
+        let inBody = false;
+        let bodyLines = [];
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            
+            if (i === 0) {
+                // 第一行：方法和路徑
+                const parts = line.split(' ');
+                if (parts.length >= 2) {
+                    method = parts[0];
+                    path = parts[1];
+                }
+            } else if (line === '') {
+                // 空行表示headers結束，body開始
+                inBody = true;
+            } else if (!inBody) {
+                // Headers
+                if (line.toLowerCase().startsWith('host:')) {
+                    host = line.substring(5).trim();
+                } else if (line.toLowerCase().startsWith('content-type:')) {
+                    contentType = line.substring(13).trim();
+                } else if (line.toLowerCase().startsWith('authorization:')) {
+                    authorization = line.substring(14).trim();
+                }
+            } else {
+                // Body
+                bodyLines.push(line);
+            }
+        }
+        
+        body = bodyLines.join('\n').trim();
+        
+        // 檢查HTTPS
+        if (host.includes('api.deepseek.com') || host.includes('api.openai.com')) {
+            useHttps = true;
+        }
+        
+        if (!host) {
+            return { isValid: false, error: '無法解析Host' };
+        }
+        
+        if (!body.includes('{{prompt}}')) {
+            return { isValid: false, error: 'Request Body必須包含{{prompt}}變量' };
+        }
+        
+        return {
+            isValid: true,
+            isRawRequest: true,
+            useHttps,
+            httpMethod: method,
+            httpPath: path,
+            httpHost: host,
+            httpContentType: contentType,
+            authorization,
+            requestBody: body,
+            transformResponse
+        };
+        
+    } catch (error) {
+        return { isValid: false, error: '解析HTTP請求格式錯誤: ' + error.message };
+    }
+}
+
+// 構建API請求
+function buildAPIRequest(config, testQuestion) {
+    const protocol = config.useHttps ? 'https' : 'http';
+    const url = `${protocol}://${config.httpHost}${config.httpPath.startsWith('/') ? config.httpPath : '/' + config.httpPath}`;
+    
+    console.log('構建URL詳情:');
+    console.log('  - protocol:', protocol);
+    console.log('  - host:', config.httpHost);
+    console.log('  - path:', config.httpPath);
+    console.log('  - 最終URL:', url);
+    
+    // 構建headers
+    const headers = {
+        'Content-Type': config.httpContentType || 'application/json'
+    };
+    
+    // 添加認證
+    if (config.authType && config.authValue) {
+        switch (config.authType) {
+            case 'bearer':
+                headers['Authorization'] = `Bearer ${config.authValue}`;
+                break;
+            case 'basic':
+                headers['Authorization'] = `Basic ${btoa(config.authValue)}`;
+                break;
+            case 'apikey':
+                headers['Authorization'] = `Bearer ${config.authValue}`;
+                break;
+            case 'custom':
+                headers['Authorization'] = config.authValue;
+                break;
+        }
+    }
+    
+    console.log('構建的headers:', headers);
+    
+    // 替換prompt變量
+    const body = config.requestBody.replace(/\{\{prompt\}\}/g, testQuestion);
+    
+    console.log('原始body:', config.requestBody);
+    console.log('替換後body:', body);
+    
+    return {
+        method: config.httpMethod,
+        url: url,
+        headers: headers,
+        body: body,
+        transformResponse: config.transformResponse
+    };
+}
+
+// 顯示測試成功結果
+function displayTestSuccess(result, responseTime, transformResponse) {
+    const testResult = document.getElementById('testResult');
+    const apiResponse = document.getElementById('apiResponse');
+    const transformedResult = document.getElementById('transformedResult');
+    
+    // 只顯示根據transformResponse處理後的內容
+    if (transformResponse && result.transformedResponse !== null && result.transformedResponse !== undefined) {
+        // 顯示處理後的結果
+        apiResponse.textContent = result.transformedResponse;
+        
+        // 更新標籤
+        const apiResponseLabel = document.querySelector('label[for="apiResponse"]');
+        if (apiResponseLabel) apiResponseLabel.textContent = 'API回應';
+    } else {
+        // 如果沒有transform或transform失敗，顯示錯誤信息
+        apiResponse.textContent = 'Transform處理失敗或未配置，請檢查transformResponse設定';
+        
+        const apiResponseLabel = document.querySelector('label[for="apiResponse"]');
+        if (apiResponseLabel) apiResponseLabel.textContent = 'API回應';
+    }
+    
+    // 隱藏原始回應區域
+    transformedResult.style.display = 'none';
+    
+    // 更新請求詳情，添加響應時間
+    const requestDetails = document.getElementById('requestDetails');
+    requestDetails.innerHTML = `${requestDetails.textContent} <span class="badge bg-success ms-2">${responseTime}ms</span>`;
+    
+    testResult.style.display = 'block';
+    showAlert('API測試成功！', 'success');
+}
+
+// 顯示測試錯誤
+function displayTestError(errorMessage) {
+    const testError = document.getElementById('testError');
+    const errorMessageElement = document.getElementById('errorMessage');
+    
+    errorMessageElement.textContent = errorMessage;
+    testError.style.display = 'block';
+    showAlert('API測試失敗', 'error');
+}
+
+// 創建/更新配置
 async function saveConfiguration() {
     try {
         // 獲取配置名稱
@@ -948,9 +1353,13 @@ async function saveConfiguration() {
             };
         }
         
-        // 保存配置
-        const response = await fetch('/api/configs', {
-            method: 'POST',
+        // 判斷是創建新配置還是更新現有配置
+        const isEdit = selectedConfig && selectedConfig.id;
+        const url = isEdit ? `/api/configs/${selectedConfig.id}` : '/api/configs';
+        const method = isEdit ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -964,18 +1373,24 @@ async function saveConfiguration() {
         const result = await response.json();
         
         if (response.ok) {
-            showAlert('配置保存成功！', 'success');
+            showAlert(isEdit ? '配置儲存成功！' : '配置創建成功！', 'success');
             // 刷新配置列表
             loadConfigs();
-            // 關閉表單
+            
+            if (isEdit) {
+                // 編輯模式，重新載入配置詳情
+                await selectConfig(selectedConfig.id);
+            } else {
+                // 新增模式，關閉表單
             cancelConfigForm();
+            }
         } else {
-            showAlert(`配置保存失敗: ${result.error}`, 'error');
+            showAlert(`配置${isEdit ? '儲存' : '創建'}失敗: ${result.error}`, 'error');
         }
         
     } catch (error) {
-        console.error('保存配置時發生錯誤:', error);
-        showAlert('配置保存失敗: ' + error.message, 'error');
+        console.error(`配置${selectedConfig && selectedConfig.id ? '儲存' : '創建'}時發生錯誤:`, error);
+        showAlert(`配置${selectedConfig && selectedConfig.id ? '儲存' : '創建'}失敗: ` + error.message, 'error');
     }
 }
 
@@ -1127,10 +1542,12 @@ async function loadConfigToForm(config) {
                 // 解析第一行：POST /chat/completions HTTP/1.1
                 if (requestLines.length > 0) {
                     const firstLine = requestLines[0].trim();
-                    const methodMatch = firstLine.match(/^(\w+)\s+(.+)$/);
+                    const methodMatch = firstLine.match(/^(\w+)\s+([^\s]+)(?:\s+HTTP\/[\d.]+)?$/);
                     if (methodMatch) {
                         document.getElementById('httpMethod').value = methodMatch[1];
                         document.getElementById('httpPath').value = methodMatch[2];
+                        console.log('解析到的方法:', methodMatch[1]);
+                        console.log('解析到的路徑:', methodMatch[2]);
                     }
                 }
                 
@@ -1274,25 +1691,46 @@ async function loadConfigToForm(config) {
 
 // 重置評分標準列表
 function resetScoringCriteriaList() {
-    // 重置 API 配置
-    document.getElementById('httpPath').value = '';
-    document.getElementById('httpHost').value = '';
-    document.getElementById('httpContentType').value = 'application/json';
-    document.getElementById('requestBody').value = '';
-    document.getElementById('transformResponse').value = 'json.response';
+    // 重置 API 配置（安全檢查避免null錯誤）
+    const httpPath = document.getElementById('httpPath');
+    const httpHost = document.getElementById('httpHost');
+    const httpContentType = document.getElementById('httpContentType');
+    const requestBody = document.getElementById('requestBody');
+    const transformResponse = document.getElementById('transformResponse');
     
-    // 重置問題輸入方式
-    document.getElementById('questionSourceManual').checked = true;
-    document.getElementById('testQuestions').value = '';
-    document.getElementById('questionFile').value = '';
-    toggleQuestionInput();
+    if (httpPath) httpPath.value = '';
+    if (httpHost) httpHost.value = '';
+    if (httpContentType) httpContentType.value = 'application/json';
+    if (requestBody) requestBody.value = '';
+    if (transformResponse) transformResponse.value = 'json.response';
     
-    // 重置 JavaScript 配置
-    document.getElementById('enableJavascript').checked = false;
-    document.getElementById('javascriptConfig').style.display = 'none';
-    document.getElementById('javascriptCondition').value = 'length';
-    document.getElementById('minLength').value = '100';
-    document.getElementById('customJavascript').value = '';
+    // 重置問題輸入方式（安全檢查）
+    const questionSourceManual = document.getElementById('questionSourceManual');
+    const testQuestions = document.getElementById('testQuestions');
+    const questionFile = document.getElementById('questionFile');
+    
+    if (questionSourceManual) questionSourceManual.checked = true;
+    if (testQuestions) testQuestions.value = '';
+    if (questionFile) questionFile.value = '';
+    
+    try {
+        toggleQuestionInput();
+    } catch (e) {
+        console.log('toggleQuestionInput 函數調用失敗:', e);
+    }
+    
+    // 重置 JavaScript 配置（安全檢查）
+    const enableJavascript = document.getElementById('enableJavascript');
+    const javascriptConfig = document.getElementById('javascriptConfig');
+    const javascriptCondition = document.getElementById('javascriptCondition');
+    const minLength = document.getElementById('minLength');
+    const customJavascript = document.getElementById('customJavascript');
+    
+    if (enableJavascript) enableJavascript.checked = false;
+    if (javascriptConfig) javascriptConfig.style.display = 'none';
+    if (javascriptCondition) javascriptCondition.value = 'length';
+    if (minLength) minLength.value = '100';
+    if (customJavascript) customJavascript.value = '';
     updateJavascriptCondition();
     
     // 重置 G-Eval 配置
@@ -1905,7 +2343,7 @@ function toggleQuestionInput() {
 }
 
 
-// 保存配置表單
+// 創建/更新配置表單
 async function saveConfigForm() {
     try {
         // 驗證表單
@@ -1955,7 +2393,7 @@ async function saveConfigForm() {
         const result = await response.json();
         
         if (response.ok) {
-            showAlert(isEdit ? '配置更新成功' : '配置創建成功', 'success');
+            showAlert(isEdit ? '配置儲存成功' : '配置創建成功', 'success');
             await loadConfigs();
             
             // 如果是編輯模式，顯示更新後的配置詳情
@@ -1966,12 +2404,12 @@ async function saveConfigForm() {
                 hideConfigForm();
             }
         } else {
-            showAlert((isEdit ? '更新' : '創建') + '失敗: ' + result.error, 'danger');
+            showAlert((isEdit ? '儲存' : '創建') + '失敗: ' + result.error, 'danger');
         }
         
     } catch (error) {
-        console.error('保存配置失敗:', error);
-        showAlert('保存配置失敗', 'danger');
+        console.error('配置操作失敗:', error);
+        showAlert('配置操作失敗', 'danger');
     }
 }
 
@@ -2052,14 +2490,14 @@ async function saveFriendlyConfig() {
         const result = await response.json();
         
         if (response.ok) {
-            showAlert(isEdit ? '配置更新成功' : '配置創建成功', 'success');
+            showAlert(isEdit ? '配置儲存成功' : '配置創建成功', 'success');
             bootstrap.Modal.getInstance(document.getElementById('friendlyConfigModal')).hide();
             bootstrap.Modal.getInstance(document.getElementById('configPreviewModal')).hide();
             await loadConfigs();
             // 清除選中的配置
             selectedConfig = null;
         } else {
-            showAlert((isEdit ? '更新' : '創建') + '失敗: ' + result.error, 'danger');
+            showAlert((isEdit ? '儲存' : '創建') + '失敗: ' + result.error, 'danger');
         }
         
     } catch (error) {

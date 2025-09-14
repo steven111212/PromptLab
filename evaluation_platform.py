@@ -14,6 +14,7 @@ import io
 import pandas as pd
 import sqlite3
 import re
+import requests
 
 # Add project root to Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -880,6 +881,137 @@ def get_assert_templates():
         }
     ]
     return jsonify(templates)
+
+@app.route('/api/test-api', methods=['POST'])
+def test_api():
+    """測試API配置"""
+    try:
+        data = request.json
+        method = data.get('method', 'POST')
+        url = data.get('url', '')
+        headers = data.get('headers', {})
+        body = data.get('body', '')
+        transform_response = data.get('transformResponse', '')
+        
+        if not url:
+            return jsonify({'success': False, 'error': 'URL不能為空'}), 400
+        
+        # 解析body為JSON（如果是JSON格式）
+        request_data = None
+        if body:
+            try:
+                request_data = json.loads(body)
+            except json.JSONDecodeError:
+                request_data = body
+        
+        print(f"測試API: {method} {url}")
+        print(f"Headers: {headers}")
+        print(f"Body: {body}")
+        
+        # 發送請求到目標API
+        
+        try:
+            response = requests.request(
+                method=method,
+                url=url,
+                headers=headers,
+                json=request_data if isinstance(request_data, dict) else None,
+                data=request_data if isinstance(request_data, str) else None,
+                timeout=30
+            )
+            
+            # 解析響應
+            try:
+                response_json = response.json()
+            except:
+                response_json = {'raw_response': response.text}
+            
+            # 應用transform（如果有配置）
+            transformed_response = None
+            if transform_response and response_json:
+                try:
+                    transformed_response = apply_response_transform(response_json, transform_response)
+                except Exception as e:
+                    print(f"Transform錯誤: {e}")
+                    transformed_response = f"Transform錯誤: {str(e)}"
+            
+            if response.status_code == 200:
+                return jsonify({
+                    'success': True,
+                    'response': response_json,
+                    'transformedResponse': transformed_response,
+                    'statusCode': response.status_code,
+                    'headers': dict(response.headers)
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': f'API返回錯誤狀態碼 {response.status_code}: {response.text}',
+                    'response': response_json,
+                    'statusCode': response.status_code
+                })
+                
+        except requests.exceptions.Timeout:
+            return jsonify({'success': False, 'error': 'API請求超時（30秒）'}), 500
+        except requests.exceptions.ConnectionError:
+            return jsonify({'success': False, 'error': '無法連接到API服務器，請檢查URL和網路連接'}), 500
+        except requests.exceptions.RequestException as e:
+            return jsonify({'success': False, 'error': f'請求錯誤: {str(e)}'}), 500
+            
+    except Exception as e:
+        print(f"API測試錯誤: {e}")
+        return jsonify({'success': False, 'error': f'測試失敗: {str(e)}'}), 500
+
+def apply_response_transform(response_data, transform_config):
+    """應用響應轉換配置"""
+    try:
+        # 簡單的點記法解析，例如 "json.response" 或 "json.choices[0].message.content"
+        if not transform_config or transform_config == 'json':
+            return response_data
+        
+        # 移除 "json." 前綴（如果有的話）
+        path = transform_config.replace('json.', '') if transform_config.startswith('json.') else transform_config
+        
+        # 分割路徑
+        parts = []
+        current_part = ""
+        in_brackets = False
+        
+        for char in path:
+            if char == '[':
+                if current_part:
+                    parts.append(current_part)
+                    current_part = ""
+                in_brackets = True
+            elif char == ']':
+                if current_part:
+                    parts.append(int(current_part))  # 陣列索引
+                    current_part = ""
+                in_brackets = False
+            elif char == '.' and not in_brackets:
+                if current_part:
+                    parts.append(current_part)
+                    current_part = ""
+            else:
+                current_part += char
+        
+        if current_part:
+            parts.append(current_part)
+        
+        # 應用路徑
+        result = response_data
+        for part in parts:
+            if isinstance(result, dict) and part in result:
+                result = result[part]
+            elif isinstance(result, list) and isinstance(part, int) and 0 <= part < len(result):
+                result = result[part]
+            else:
+                return f"路徑 '{transform_config}' 在響應中不存在"
+        
+        return result
+        
+    except Exception as e:
+        return f"Transform處理錯誤: {str(e)}"
 
 @app.route('/api/validate-config', methods=['POST'])
 def validate_config():
