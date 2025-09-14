@@ -180,12 +180,14 @@ function showConfigDetails(config) {
     configFormTitle.textContent = '配置詳情';
     
     // 顯示配置詳情
+    const configName = config.parsed?.description || config.name || config.id || '未命名配置';
+    
     configDetails.innerHTML = `
         <div class="config-detail-view">
             <!-- 配置標題區域 -->
             <div class="d-flex justify-content-between align-items-start mb-4">
                 <div>
-                    <h3 class="text-dark mb-2">${config.name}</h3>
+                    <h3 class="text-dark mb-2">${configName}</h3>
                     <div class="d-flex align-items-center text-muted">
                         <i class="fas fa-file-code me-2"></i>
                         <span class="me-3">${config.filename}</span>
@@ -351,33 +353,117 @@ function generateConfigFormHTML() {
                         <p class="text-muted">配置要測試的API端點和請求格式</p>
                     </div>
                     
-                    <div class="row mb-4">
-                        <div class="col-md-8">
-                            <label class="form-label">API URL *</label>
-                            <div class="input-group">
-                                <span class="input-group-text">POST</span>
-                                <input type="text" class="form-control" id="apiUrl" placeholder="http://localhost:5000/eval" required>
+                    <!-- HTTP Request 配置 -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-globe me-2"></i>HTTP 請求配置</h6>
+                        </div>
+                        <div class="card-body">
+                            <!-- HTTPS 支援 -->
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">使用 HTTPS:</label>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="useHttps" checked>
+                                        <label class="form-check-label" for="useHttps">
+                                            啟用 HTTPS 安全連線
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
-                            <small class="form-text text-muted">完整的API端點URL</small>
+                            
+                            <!-- HTTP 方法 -->
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">HTTP 方法:</label>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <select class="form-select" id="httpMethod">
+                                                <option value="POST">POST</option>
+                                                <option value="GET">GET</option>
+                                                <option value="PUT">PUT</option>
+                                                <option value="PATCH">PATCH</option>
+                                            </select>
+                                        </div>
+                        <div class="col-md-8">
+                                            <input type="text" class="form-control" id="httpPath" placeholder="/chat/completions HTTP/1.1" required>
+                            </div>
+                                    </div>
                         </div>
                     </div>
                     
-                    <div class="row mb-4">
+                            <!-- Host -->
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Host:</label>
+                                </div>
+                                <div class="col-md-9">
+                                    <input type="text" class="form-control" id="httpHost" placeholder="api.deepseek.com" required>
+                                </div>
+                            </div>
+                            
+                            <!-- Content-Type -->
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Content-Type:</label>
+                                </div>
+                                <div class="col-md-9">
+                                    <input type="text" class="form-control" id="httpContentType" placeholder="application/json" value="application/json" required>
+                                </div>
+                            </div>
+                            
+                            <!-- Authorization -->
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold">Authorization:</label>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <select class="form-select" id="authType">
+                                                <option value="none">無認證</option>
+                                                <option value="bearer">Bearer Token</option>
+                                                <option value="basic">Basic Auth</option>
+                                                <option value="apikey">API Key</option>
+                                                <option value="custom">自定義</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <input type="text" class="form-control" id="authValue" placeholder="sk-56d9f30fdee64135abcfaaee7b34080a">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    
+                    <!-- Request Body 配置 -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-code me-2"></i>Request Body 配置</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
                         <div class="col-12">
-                            <label class="form-label">請求內容 (JSON) *</label>
-                            <textarea class="form-control" id="requestBody" rows="4" placeholder='{"question": "{{prompt}}"}' required></textarea>
-                            <small class="form-text text-muted">
-                                <i class="fas fa-info-circle me-1"></i>
-                                必須包含 <code>{{prompt}}</code> 變量作為測試問題的占位符
-                            </small>
+                                    <label class="form-label">Request Body 原始內容</label>
+                                    <textarea class="form-control" id="requestBody" rows="6" placeholder='{"question": "{{prompt}}"}'></textarea>
+                                    <small class="form-text text-muted">必須包含 {{prompt}} 變量</small>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
+                    <!-- 進階配置 -->
                     <div class="row mb-4">
                         <div class="col-md-8">
-                            <label class="form-label">回應提取路徑</label>
-                            <input type="text" class="form-control" id="transformResponse" value="json.response" placeholder="json.response">
-                            <small class="form-text text-muted">從API回應JSON中提取內容的路徑</small>
+                            <label class="form-label">Response Transform</label>
+                            <input type="text" class="form-control" id="transformResponse" placeholder="json.response">
+                            <small class="form-text text-muted">例如：json.response, json.choices[0].message.content</small>
                         </div>
                     </div>
                     
@@ -716,6 +802,11 @@ function nextStep(stepNumber) {
     
     // 更新進度指示器
     updateProgressSteps(stepNumber);
+    
+    // 如果進入步驟3且有配置數據，重新顯示測試問題信息
+    if (stepNumber === 3 && selectedConfig && selectedConfig.content) {
+        showCurrentTestInfo(selectedConfig.content);
+    }
 }
 
 function prevStep(stepNumber) {
@@ -733,6 +824,11 @@ function prevStep(stepNumber) {
     
     // 更新進度指示器
     updateProgressSteps(stepNumber);
+    
+    // 如果回到步驟3且有配置數據，重新顯示測試問題信息
+    if (stepNumber === 3 && selectedConfig && selectedConfig.content) {
+        showCurrentTestInfo(selectedConfig.content);
+    }
 }
 
 function updateProgressSteps(activeStep) {
@@ -769,6 +865,11 @@ function jumpToStep(stepNumber) {
     
     // 更新進度指示器
     updateProgressSteps(stepNumber);
+    
+    // 如果跳轉到步驟3且有配置數據，重新顯示測試問題信息
+    if (stepNumber === 3 && selectedConfig && selectedConfig.content) {
+        showCurrentTestInfo(selectedConfig.content);
+    }
 }
 
 
@@ -823,9 +924,59 @@ function handleCSVUpload(input) {
 }
 
 // 儲存配置
-function saveConfiguration() {
-    // 這個函數會在後面實現，現在先顯示提示
-    showAlert('配置儲存功能開發中...', 'info');
+async function saveConfiguration() {
+    try {
+        // 獲取配置名稱
+        const configName = document.getElementById('configName').value;
+        if (!configName.trim()) {
+            showAlert('請輸入配置名稱', 'error');
+            return;
+        }
+        
+        // 生成配置內容
+        const configContent = generateConfigFromForm();
+        
+        // 檢查是否有上傳的檔案
+        let uploadedFile = null;
+        const csvFileInput = document.getElementById('csvFile');
+        if (csvFileInput && csvFileInput.files.length > 0) {
+            const file = csvFileInput.files[0];
+            const fileContent = await readFileAsBase64(file);
+            uploadedFile = {
+                filename: file.name,
+                content: fileContent
+            };
+        }
+        
+        // 保存配置
+        const response = await fetch('/api/configs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: configName,
+                content: configContent,
+                uploadedFile: uploadedFile
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showAlert('配置保存成功！', 'success');
+            // 刷新配置列表
+            loadConfigs();
+            // 關閉表單
+            cancelConfigForm();
+        } else {
+            showAlert(`配置保存失敗: ${result.error}`, 'error');
+        }
+        
+    } catch (error) {
+        console.error('保存配置時發生錯誤:', error);
+        showAlert('配置保存失敗: ' + error.message, 'error');
+    }
 }
 
 // 顯示當前測試問題信息
@@ -851,8 +1002,14 @@ function showCurrentTestInfo(yamlContent) {
                 testInfoHtml = `
                     <div class="alert alert-info mb-4">
                         <i class="fas fa-file-csv me-2"></i>
-                        <strong>目前配置的測試檔案：</strong><br>
-                        ${fileNames.map(file => `• ${file}`).join('<br>')}
+                        <strong>目前已配置的測試檔案：</strong>
+                        <ul class="mb-0 mt-2">
+                            ${fileNames.map(file => `<li><code>${file}</code></li>`).join('')}
+                        </ul>
+                        <small class="text-muted d-block mt-2">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            如果要更改測試問題，可以上傳新的 CSV 檔案替換現有配置，或切換到手動輸入模式
+                        </small>
                     </div>
                 `;
             }
@@ -868,11 +1025,17 @@ function showCurrentTestInfo(yamlContent) {
             
             if (prompts.length > 0) {
                 testInfoHtml = `
-                    <div class="alert alert-info mb-4">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>目前配置的測試問題（${prompts.length} 個）：</strong><br>
-                        ${prompts.slice(0, 3).map(q => `• ${q}`).join('<br>')}
-                        ${prompts.length > 3 ? `<br>• ... 還有 ${prompts.length - 3} 個問題` : ''}
+                    <div class="alert alert-success mb-4">
+                        <i class="fas fa-list-ul me-2"></i>
+                        <strong>目前已配置 ${prompts.length} 個測試問題：</strong>
+                        <div class="mt-2 p-2 bg-light rounded">
+                            ${prompts.slice(0, 3).map((prompt, index) => `<div class="small mb-1"><strong>${index + 1}.</strong> ${prompt}</div>`).join('')}
+                            ${prompts.length > 3 ? `<div class="small text-muted">... 還有 ${prompts.length - 3} 個問題</div>` : ''}
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            如果要修改問題，可以在手動輸入區域重新編輯
+                        </small>
                     </div>
                 `;
             } else {
@@ -890,7 +1053,24 @@ function showCurrentTestInfo(yamlContent) {
     if (testInfoHtml) {
         // 使用 setTimeout 確保 DOM 已經渲染完成
         setTimeout(() => {
-            // 尋找測試問題配置的標題元素
+            // 尋找步驟3的測試問題配置區域
+            const step3 = document.getElementById('step3');
+            if (step3) {
+                // 移除舊的提醒
+                const existingAlert = step3.querySelector('.alert');
+                if (existingAlert) {
+                    existingAlert.remove();
+                }
+                
+                // 在步驟標題後插入提醒
+                const stepHeader = step3.querySelector('.step-header');
+                if (stepHeader) {
+                    const infoDiv = document.createElement('div');
+                    infoDiv.innerHTML = testInfoHtml;
+                    stepHeader.insertAdjacentElement('afterend', infoDiv.firstElementChild);
+                }
+            } else {
+                // 如果不是步驟式界面，使用原來的邏輯
             const questionConfigTitle = Array.from(document.querySelectorAll('h6')).find(h6 => 
                 h6.textContent.includes('測試問題配置')
             );
@@ -907,7 +1087,8 @@ function showCurrentTestInfo(yamlContent) {
                 infoDiv.innerHTML = testInfoHtml;
                 questionConfigTitle.parentElement.insertBefore(infoDiv.firstElementChild, questionConfigTitle.nextElementSibling);
             }
-        }, 100);
+            }
+        }, 200); // 增加延遲時間確保 DOM 完全渲染
     }
 }
 
@@ -932,16 +1113,23 @@ async function loadConfigToForm(config) {
         
         // 檢查是否有 providers 配置（格式一）
         if (yamlContent.includes('providers:')) {
+            // 解析 useHttps 配置
+            const useHttpsMatch = yamlContent.match(/useHttps:\s*(true|false)/);
+            if (useHttpsMatch) {
+                document.getElementById('useHttps').checked = useHttpsMatch[1] === 'true';
+            }
+            
             // 解析 request 格式
             const requestMatch = yamlContent.match(/request:\s*\|\s*\n((?:.*\n)*?)(?=\n\s*transformResponse|\n\s*[a-zA-Z]|\n\s*$)/);
             if (requestMatch) {
                 const requestLines = requestMatch[1].trim().split('\n');
                 
-                // 解析第一行：POST /eval HTTP/1.1
+                // 解析第一行：POST /chat/completions HTTP/1.1
                 if (requestLines.length > 0) {
                     const firstLine = requestLines[0].trim();
                     const methodMatch = firstLine.match(/^(\w+)\s+(.+)$/);
                     if (methodMatch) {
+                        document.getElementById('httpMethod').value = methodMatch[1];
                         document.getElementById('httpPath').value = methodMatch[2];
                     }
                 }
@@ -960,6 +1148,23 @@ async function loadConfigToForm(config) {
                     document.getElementById('httpContentType').value = contentTypeValue;
                 }
                 
+                // 解析 Authorization
+                const authLine = requestLines.find(line => line.trim().startsWith('Authorization:'));
+                if (authLine) {
+                    const authValue = authLine.replace('Authorization:', '').trim();
+                    if (authValue.startsWith('Bearer ')) {
+                        document.getElementById('authType').value = 'bearer';
+                        document.getElementById('authValue').value = authValue.replace('Bearer ', '');
+                    } else if (authValue.startsWith('Basic ')) {
+                        document.getElementById('authType').value = 'basic';
+                        document.getElementById('authValue').value = authValue.replace('Basic ', '');
+                    } else {
+                        document.getElementById('authType').value = 'custom';
+                        document.getElementById('authValue').value = authValue;
+                    }
+                }
+                
+                
                 // 解析 body
                 const bodyStart = requestLines.findIndex(line => line.trim() === '');
                 if (bodyStart !== -1 && bodyStart < requestLines.length - 1) {
@@ -977,7 +1182,11 @@ async function loadConfigToForm(config) {
                         }
                         return true;
                     });
-                    document.getElementById('requestBody').value = trimmedBodyLines.join('\n');
+                    
+                    const bodyText = trimmedBodyLines.join('\n');
+                    
+                    // 直接設置 Request Body 內容
+                    document.getElementById('requestBody').value = bodyText;
                 }
             }
             
@@ -1139,38 +1348,10 @@ function generateConfigFromForm() {
     const httpContentType = document.getElementById('httpContentType').value;
     const authType = document.getElementById('authType').value;
     const authValue = document.getElementById('authValue').value;
-    const bodyFormat = document.getElementById('bodyFormat').value;
     const transformResponse = document.getElementById('transformResponse').value;
     
-    // 獲取 Request Body
-    let requestBody = '';
-    if (bodyFormat === 'json') {
-        // 從結構化配置生成 JSON
-        const modelName = document.getElementById('modelName').value || 'deepseek-chat';
-        const maxTokens = document.getElementById('maxTokens').value || 300;
-        const temperature = document.getElementById('temperature').value;
-        const messageFormat = document.querySelector('input[name="messageFormat"]:checked').value;
-        
-        const bodyObj = {
-            model: modelName,
-            messages: [
-                {
-                    role: "user",
-                    content: "{{prompt}}"
-                }
-            ],
-            max_tokens: parseInt(maxTokens)
-        };
-        
-        if (temperature) {
-            bodyObj.temperature = parseFloat(temperature);
-        }
-        
-        requestBody = JSON.stringify(bodyObj, null, 2);
-    } else {
-        // 使用原始文本
-        requestBody = document.getElementById('requestBody').value;
-    }
+    // 獲取 Request Body（直接使用原始文本）
+    const requestBody = document.getElementById('requestBody').value;
     
     // 獲取測試問題配置
     const questionSourceRadio = document.querySelector('input[name="questionSource"]:checked');
@@ -1186,8 +1367,9 @@ function generateConfigFromForm() {
         }
     } else if (questionSource === 'upload') {
         // 檔案上傳模式：生成 tests 配置
-        const questionFile = document.getElementById('questionFile').files[0];
-        if (questionFile) {
+        const csvFileInput = document.getElementById('csvFile');
+        if (csvFileInput && csvFileInput.files.length > 0) {
+            const questionFile = csvFileInput.files[0];
             testsConfig = `  - file://${questionFile.name}`;
         }
     }
@@ -1231,18 +1413,25 @@ function generateConfigFromForm() {
             }
         }
         
-        // 添加自定義 headers
-        const customHeaders = getCustomHeaders();
-        for (const header of customHeaders) {
-            if (header.name && header.value) {
-                requestContent += `\n${header.name}: ${header.value}`;
-            }
-        }
         
         // 添加空行和 body
-        requestContent += `\n\n${trimmedRequestBody}`;
+        requestContent += '\n';
         
-        // 添加 request 配置
+        // 為 JSON body 添加正確的縮排
+        if (trimmedRequestBody) {
+            // 先格式化 JSON（如果是有效的 JSON）
+            let formattedBody = trimmedRequestBody;
+            try {
+                const jsonObj = JSON.parse(trimmedRequestBody);
+                formattedBody = JSON.stringify(jsonObj, null, 2);
+            } catch (e) {
+                // 不是有效的 JSON，保持原樣
+                formattedBody = trimmedRequestBody;
+            }
+            requestContent += `\n${formattedBody}`;
+        }
+        
+        // 添加 request 配置，統一縮排處理
         providersConfig += `\n      request: |\n${requestContent.split('\n').map(line => `        ${line}`).join('\n')}`;
         
         // 添加 transformResponse
@@ -2584,63 +2773,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// 切換 Body 格式顯示
-function toggleBodyFormat() {
-    const bodyFormat = document.getElementById('bodyFormat').value;
-    const jsonConfig = document.getElementById('jsonBodyConfig');
-    const rawConfig = document.getElementById('rawBodyConfig');
-    
-    if (bodyFormat === 'json') {
-        jsonConfig.style.display = 'block';
-        rawConfig.style.display = 'none';
-    } else {
-        jsonConfig.style.display = 'none';
-        rawConfig.style.display = 'block';
-    }
-}
 
-// 添加自定義 Header
-function addCustomHeader() {
-    const customHeaders = document.getElementById('customHeaders');
-    const headerIndex = customHeaders.children.length;
-    
-    const headerDiv = document.createElement('div');
-    headerDiv.className = 'row mb-2';
-    headerDiv.innerHTML = `
-        <div class="col-md-4">
-            <input type="text" class="form-control custom-header-name" placeholder="Header 名稱" id="headerName${headerIndex}">
-        </div>
-        <div class="col-md-6">
-            <input type="text" class="form-control custom-header-value" placeholder="Header 值" id="headerValue${headerIndex}">
-        </div>
-        <div class="col-md-2">
-            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeCustomHeader(this)">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `;
-    
-    customHeaders.appendChild(headerDiv);
-}
-
-// 移除自定義 Header
-function removeCustomHeader(button) {
-    button.closest('.row').remove();
-}
-
-// 獲取所有自定義 Headers
-function getCustomHeaders() {
-    const headers = [];
-    const nameInputs = document.querySelectorAll('.custom-header-name');
-    const valueInputs = document.querySelectorAll('.custom-header-value');
-    
-    for (let i = 0; i < nameInputs.length; i++) {
-        const name = nameInputs[i].value.trim();
-        const value = valueInputs[i].value.trim();
-        if (name && value) {
-            headers.push({ name, value });
-        }
-    }
-    
-    return headers;
-}

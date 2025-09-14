@@ -920,9 +920,44 @@ def validate_config():
                 if not provider.get('id'):
                     validation['errors'].append(f'Provider {i + 1} 缺少 id')
                     validation['valid'] = False
-                if not provider.get('config', {}).get('url'):
-                    validation['errors'].append(f'Provider {i + 1} 缺少 URL')
+                
+                config = provider.get('config', {})
+                
+                # 檢查是否有 URL 或 request 配置
+                if not config.get('url') and not config.get('request'):
+                    validation['errors'].append(f'Provider {i + 1} 缺少 URL 或 request 配置')
                     validation['valid'] = False
+                
+                # 如果有 request 配置，檢查格式
+                if config.get('request'):
+                    request_content = config['request']
+                    if not isinstance(request_content, str):
+                        validation['errors'].append(f'Provider {i + 1} 的 request 配置格式錯誤')
+                        validation['valid'] = False
+                    else:
+                        # 檢查 request 是否包含必要的 HTTP 元素
+                        lines = request_content.strip().split('\n')
+                        if len(lines) < 1:
+                            validation['errors'].append(f'Provider {i + 1} 的 request 配置內容不完整')
+                            validation['valid'] = False
+                        else:
+                            # 檢查第一行是否是有效的 HTTP 方法行
+                            first_line = lines[0].strip()
+                            if not any(method in first_line for method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']):
+                                validation['warnings'].append(f'Provider {i + 1} 的 request 配置可能缺少有效的 HTTP 方法')
+                            
+                            # 檢查是否包含 {{prompt}} 變量
+                            if '{{prompt}}' not in request_content:
+                                validation['warnings'].append(f'Provider {i + 1} 的 request 配置建議包含 {{prompt}} 變量')
+                
+                # 檢查 useHttps 配置
+                if 'useHttps' in config:
+                    if not isinstance(config['useHttps'], bool):
+                        validation['warnings'].append(f'Provider {i + 1} 的 useHttps 應該是 true 或 false')
+                
+                # 檢查 transformResponse 配置
+                if not config.get('transformResponse'):
+                    validation['warnings'].append(f'Provider {i + 1} 建議設置 transformResponse 以提取回應內容')
         
         # 檢查defaultTest配置
         if parsed.get('defaultTest'):
