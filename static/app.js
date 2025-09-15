@@ -392,7 +392,7 @@ function generateConfigFormHTML() {
                                 </div>
                                 <div class="col-md-9">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="useHttps" checked>
+                                        <input class="form-check-input" type="checkbox" id="useHttps">
                                         <label class="form-check-label" for="useHttps">
                                             啟用 HTTPS 安全連線
                                         </label>
@@ -416,7 +416,7 @@ function generateConfigFormHTML() {
                                             </select>
                                         </div>
                         <div class="col-md-8">
-                                            <input type="text" class="form-control" id="httpPath" placeholder="/chat/completions HTTP/1.1" required>
+                                            <input type="text" class="form-control" id="httpPath" required>
                             </div>
                                     </div>
                         </div>
@@ -428,7 +428,7 @@ function generateConfigFormHTML() {
                                     <label class="form-label fw-bold">Host:</label>
                                 </div>
                                 <div class="col-md-9">
-                                    <input type="text" class="form-control" id="httpHost" placeholder="api.deepseek.com" required>
+                                    <input type="text" class="form-control" id="httpHost" required>
                                 </div>
                             </div>
                             
@@ -459,7 +459,7 @@ function generateConfigFormHTML() {
                                             </select>
                                         </div>
                                         <div class="col-md-9">
-                                            <input type="text" class="form-control" id="authValue" placeholder="sk-56d9f30fdee64135abcfaaee7b34080a">
+                                            <input type="text" class="form-control" id="authValue" >
                                         </div>
                                     </div>
                                 </div>
@@ -477,7 +477,7 @@ function generateConfigFormHTML() {
                             <div class="row mb-3">
                         <div class="col-12">
                                     <label class="form-label">Request Body 原始內容</label>
-                                    <textarea class="form-control" id="requestBody" rows="6" placeholder='{"question": "{{prompt}}"}'></textarea>
+                                    <textarea class="form-control" id="requestBody" rows="6" ></textarea>
                                     <small class="form-text text-muted">必須包含 {{prompt}} 變量</small>
                                 </div>
                             </div>
@@ -488,7 +488,7 @@ function generateConfigFormHTML() {
                     <div class="row mb-4">
                         <div class="col-md-8">
                             <label class="form-label">Response Transform</label>
-                            <input type="text" class="form-control" id="transformResponse" placeholder="json.response">
+                            <input type="text" class="form-control" id="transformResponse">
                             <small class="form-text text-muted">例如：json.response, json.choices[0].message.content</small>
                         </div>
                     </div>
@@ -1647,6 +1647,49 @@ async function loadConfigToForm(config) {
                 document.getElementById('enableGEval').checked = true;
                 toggleGEvalConfig();
                 
+                // 載入 Grader Provider 配置
+                const providerMatch = yamlContent.match(/defaultTest:\s*\n\s*options:\s*\n\s*provider:\s*\n\s*id:\s*([^\n]+)/);
+                if (providerMatch) {
+                    const providerId = providerMatch[1].trim();
+                    console.log('找到 Provider ID:', providerId);
+                    
+                    // 解析 provider 類型和模型
+                    if (providerId.startsWith('openai:')) {
+                        document.getElementById('llmProvider').value = 'openai';
+                        const model = providerId.replace('openai:', '');
+                        setTimeout(() => {
+                            updateLLMProviderConfig();
+                            setTimeout(() => {
+                                const openaiModelSelect = document.getElementById('openaiModel');
+                                if (openaiModelSelect) {
+                                    openaiModelSelect.value = model;
+                                }
+                                
+                                // 載入 API Key
+                                const apiKeyMatch = yamlContent.match(/apiKey:\s*["]?([^"\n]+)["]?/);
+                                if (apiKeyMatch) {
+                                    const openaiApiKey = document.getElementById('openaiApiKey');
+                                    if (openaiApiKey) {
+                                        openaiApiKey.value = apiKeyMatch[1].trim();
+                                    }
+                                }
+                            }, 100);
+                        }, 100);
+                    } else if (providerId.startsWith('anthropic:')) {
+                        document.getElementById('llmProvider').value = 'anthropic';
+                        const model = providerId.replace('anthropic:', '');
+                        setTimeout(() => {
+                            updateLLMProviderConfig();
+                            setTimeout(() => {
+                                const anthropicModelSelect = document.getElementById('anthropicModel');
+                                if (anthropicModelSelect) {
+                                    anthropicModelSelect.value = model;
+                                }
+                            }, 100);
+                        }, 100);
+                    }
+                }
+                
                 // 嘗試解析 G-Eval 配置
                 const gevalMatch = yamlContent.match(/type:\s*(?:g-eval|llm-rubric)\s*\n\s*value:\s*([^\n]+)/);
                 if (gevalMatch) {
@@ -1734,14 +1777,13 @@ function resetScoringCriteriaList() {
     updateJavascriptCondition();
     
     // 重置 G-Eval 配置
-    document.getElementById('enableGEval').checked = false;
-    document.getElementById('gevalConfig').style.display = 'none';
-    document.getElementById('gradingModelType').value = 'openai';
-    document.getElementById('openaiModel').value = 'gpt-4';
-    document.getElementById('gradingApiUrl').value = '';
-    document.getElementById('gradingApiKey').value = '';
-    document.getElementById('gradingModel').value = '';
-    document.getElementById('gradingTransformResponse').value = 'json.choices[0].message.content';
+    const enableGEval = document.getElementById('enableGEval');
+    const gevalConfig = document.getElementById('gevalConfig');
+    const openaiModel = document.getElementById('openaiModel');
+    
+    if (enableGEval) enableGEval.checked = false;
+    if (gevalConfig) gevalConfig.style.display = 'none';
+    if (openaiModel) openaiModel.value = 'gpt-4o-mini';
     updateGradingModelFields();
     
     // 重置 G-Eval 評分標準列表
@@ -1817,7 +1859,7 @@ function generateConfigFromForm() {
     
     if (httpPath && httpHost && httpContentType && requestBody) {
         providersConfig = `providers:
-  - id: https
+  - id: http
     config:`;
         
         // 添加 useHttps 配置
@@ -1827,7 +1869,7 @@ function generateConfigFromForm() {
         
         // 構建 request 內容
         const trimmedRequestBody = requestBody.trim();
-        let requestContent = `${httpMethod} ${httpPath}\nHost: ${httpHost}\nContent-Type: ${httpContentType}`;
+        let requestContent = `${httpMethod} ${httpPath} HTTP/1.1\nHost: ${httpHost}\nContent-Type: ${httpContentType}`;
         
         // 添加 Authorization header
         if (authType !== 'none' && authValue) {
@@ -2000,35 +2042,6 @@ function generateConfigFromForm() {
                 gevalConfig += `\n      - ${criterion}`;
             });
             
-                // 添加 LLM 提供者配置
-                const llmProvider = document.getElementById('llmProvider').value;
-                if (llmProvider) {
-                    gevalConfig += `\n    options:
-      provider: `;
-                    
-                    switch (llmProvider) {
-                        case 'openai':
-                            const openaiModel = document.getElementById('openaiModel').value;
-                            gevalConfig += `openai:${openaiModel}`;
-                            break;
-                        case 'anthropic':
-                            const anthropicModel = document.getElementById('anthropicModel').value;
-                            gevalConfig += `anthropic:${anthropicModel}`;
-                            break;
-                        case 'azure-openai':
-                            const azureDeployment = document.getElementById('azureDeployment').value;
-                            gevalConfig += `azure:${azureDeployment}`;
-                            break;
-                        case 'google':
-                            const googleModel = document.getElementById('googleModel').value;
-                            gevalConfig += `google:${googleModel}`;
-                            break;
-                        case 'custom':
-                            gevalConfig += `http`;
-                            break;
-                }
-            }
-            
             asserts.push(gevalConfig);
             }
         }
@@ -2089,15 +2102,15 @@ function generateConfigFromForm() {
         const hasGEval = document.getElementById('enableGEval') && document.getElementById('enableGEval').checked;
         
         if (hasGEval) {
-            // 有 LLM Grader 評分，需要添加 grader 提供者配置
+            // 有 LLM Grader 評分，需要在 defaultTest.options 中添加 provider 配置
             const llmProvider = document.getElementById('llmProvider').value;
-            const graderConfig = generateGraderProviderConfig(llmProvider);
+            const graderProviderConfig = generateGraderProviderConfig(llmProvider);
             
-            if (graderConfig) {
-                config += `\n\n# LLM Grader 提供者配置\n${graderConfig}`;
+            if (graderProviderConfig) {
+                config += `\n\ndefaultTest:\n  options:\n${graderProviderConfig}\n\n  ${assertConfig}`;
+            } else {
+                config += `\n\ndefaultTest:\n  ${assertConfig}`;
             }
-            
-            config += `\n\ndefaultTest:\n  ${assertConfig}`;
         } else {
             // 沒有 LLM Grader 評分，只需要 assert 配置
             config += `\n\ndefaultTest:\n  ${assertConfig}`;
@@ -2118,89 +2131,64 @@ function generateGraderProviderConfig(provider) {
         case 'openai':
             const openaiModel = document.getElementById('openaiModel').value;
             const openaiApiKey = document.getElementById('openaiApiKey').value;
-            const openaiTemperature = document.getElementById('openaiTemperature').value;
-            const openaiMaxTokens = document.getElementById('openaiMaxTokens').value;
-            const openaiBaseUrl = document.getElementById('openaiBaseUrl').value;
             
-            providerConfig = `providers:
-  - id: openai:${openaiModel}
-    config:
-      temperature: ${openaiTemperature}
-      max_tokens: ${openaiMaxTokens}
-      apiKey: ${openaiApiKey || 'sk-abc123'}`;
-            
-            if (openaiBaseUrl) {
-                providerConfig += `\n      apiBaseUrl: ${openaiBaseUrl}`;
-            }
+            providerConfig = `    provider:
+      id: openai:${openaiModel}
+      config:
+        apiKey: "${openaiApiKey || 'sk-abc123'}"`;
             break;
             
         case 'anthropic':
             const anthropicModel = document.getElementById('anthropicModel').value;
             const anthropicApiKey = document.getElementById('anthropicApiKey').value;
-            const anthropicMaxTokens = document.getElementById('anthropicMaxTokens').value;
-            const anthropicTemperature = document.getElementById('anthropicTemperature').value;
             
-            providerConfig = `providers:
-  - id: anthropic:${anthropicModel}
-    config:
-      temperature: ${anthropicTemperature}
-      max_tokens: ${anthropicMaxTokens}
-      apiKey: ${anthropicApiKey || 'sk-ant-abc123'}`;
+            providerConfig = `    provider:
+      id: anthropic:${anthropicModel}
+      config:
+        apiKey: "${anthropicApiKey || 'sk-ant-abc123'}"`;
             break;
             
         case 'azure-openai':
             const azureEndpoint = document.getElementById('azureEndpoint').value;
             const azureApiKey = document.getElementById('azureApiKey').value;
             const azureDeployment = document.getElementById('azureDeployment').value;
-            const azureTemperature = document.getElementById('azureTemperature').value;
-            const azureMaxTokens = document.getElementById('azureMaxTokens').value;
             
-            providerConfig = `providers:
-  - id: azure:${azureDeployment}
-    config:
-      temperature: ${azureTemperature}
-      max_tokens: ${azureMaxTokens}
-      apiKey: ${azureApiKey || 'your-api-key'}
-      apiBaseUrl: ${azureEndpoint || 'https://your-resource.openai.azure.com'}`;
+            providerConfig = `    provider:
+      id: azure:${azureDeployment}
+      config:
+        apiKey: "${azureApiKey || 'your-api-key'}"
+        apiBaseUrl: "${azureEndpoint || 'https://your-resource.openai.azure.com'}"`;
             break;
             
         case 'google':
             const googleModel = document.getElementById('googleModel').value;
             const googleApiKey = document.getElementById('googleApiKey').value;
-            const googleTemperature = document.getElementById('googleTemperature').value;
-            const googleMaxTokens = document.getElementById('googleMaxTokens').value;
             
-            providerConfig = `providers:
-  - id: google:${googleModel}
-    config:
-      temperature: ${googleTemperature}
-      max_tokens: ${googleMaxTokens}
-      apiKey: ${googleApiKey || 'your-google-api-key'}`;
+            providerConfig = `    provider:
+      id: google:${googleModel}
+      config:
+        apiKey: "${googleApiKey || 'your-google-api-key'}"`;
             break;
             
         case 'custom':
             const customUrl = document.getElementById('customUrl').value;
             const customApiKey = document.getElementById('customApiKey').value;
             const customModel = document.getElementById('customModel').value;
-            const customTemperature = document.getElementById('customTemperature').value;
-            const customMaxTokens = document.getElementById('customMaxTokens').value;
             
-            providerConfig = `providers:
-  - id: http
-    config:
-      url: ${customUrl || 'https://api.example.com/v1/chat/completions'}
-      method: POST
-      headers:
-        Content-Type: application/json
-        Authorization: Bearer ${customApiKey || 'your-api-key'}
-      body:
-        model: ${customModel || 'gpt-4'}
-        temperature: ${customTemperature}
-        max_tokens: ${customMaxTokens}
-        messages:
-          - role: user
-            content: "{{prompt}}"
-      transformResponse: json.choices[0].message.content`;
+            providerConfig = `    provider:
+      id: http
+      config:
+        url: "${customUrl || 'https://api.example.com/v1/chat/completions'}"
+        method: POST
+        headers:
+          Content-Type: application/json
+          Authorization: "Bearer ${customApiKey || 'your-api-key'}"
+        body:
+          model: "${customModel || 'gpt-4'}"
+          messages:
+            - role: user
+              content: "{{prompt}}"
+        transformResponse: json.choices[0].message.content`;
             break;
     }
     
@@ -2238,16 +2226,19 @@ function updateJavascriptCondition() {
 
 // 更新評分模型配置
 function updateGradingModelFields() {
-    const modelType = document.getElementById('gradingModelType').value;
+    const modelType = document.getElementById('gradingModelType');
     const openaiConfig = document.getElementById('openaiConfig');
     const httpConfig = document.getElementById('httpGradingConfig');
     
-    if (modelType === 'openai') {
-        openaiConfig.style.display = 'block';
-        httpConfig.style.display = 'none';
-    } else if (modelType === 'http') {
-        openaiConfig.style.display = 'none';
-        httpConfig.style.display = 'block';
+    if (!modelType) return; // 如果元素不存在，直接返回
+    
+    const modelTypeValue = modelType.value;
+    if (modelTypeValue === 'openai') {
+        if (openaiConfig) openaiConfig.style.display = 'block';
+        if (httpConfig) httpConfig.style.display = 'none';
+    } else if (modelTypeValue === 'http') {
+        if (openaiConfig) openaiConfig.style.display = 'none';
+        if (httpConfig) httpConfig.style.display = 'block';
     }
 }
 
@@ -2935,18 +2926,6 @@ function updateLLMProviderConfig() {
                     <input type="password" class="form-control form-control-sm" id="openaiApiKey" placeholder="sk-..." required>
                     <small class="form-text text-muted">你的 OpenAI API Key</small>
                 </div>
-                <div class="row">
-                    <div class="col-6 mb-2">
-                        <label class="form-label small">Temperature</label>
-                        <input type="number" class="form-control form-control-sm" id="openaiTemperature" value="0" min="0" max="2" step="0.1">
-                        <small class="form-text text-muted">0 = 更一致</small>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <label class="form-label small">Max Tokens</label>
-                        <input type="number" class="form-control form-control-sm" id="openaiMaxTokens" value="128" min="1" max="4096">
-                        <small class="form-text text-muted">評分回覆長度</small>
-                    </div>
-                </div>
             `;
             break;
             
@@ -2967,18 +2946,6 @@ function updateLLMProviderConfig() {
                     <label class="form-label small">API Key *</label>
                     <input type="password" class="form-control form-control-sm" id="anthropicApiKey" placeholder="sk-ant-..." required>
                     <small class="form-text text-muted">你的 Anthropic API Key</small>
-                </div>
-                <div class="row">
-                    <div class="col-6 mb-2">
-                        <label class="form-label small">Temperature</label>
-                        <input type="number" class="form-control form-control-sm" id="anthropicTemperature" value="0" min="0" max="1" step="0.1">
-                        <small class="form-text text-muted">0 = 更一致</small>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <label class="form-label small">Max Tokens</label>
-                        <input type="number" class="form-control form-control-sm" id="anthropicMaxTokens" value="128" min="1" max="4096">
-                        <small class="form-text text-muted">評分回覆長度</small>
-                    </div>
                 </div>
             `;
             break;
@@ -3003,18 +2970,6 @@ function updateLLMProviderConfig() {
                     <input type="text" class="form-control form-control-sm" id="azureDeployment" placeholder="gpt-4o" required>
                     <small class="form-text text-muted">你的模型部署名稱</small>
                 </div>
-                <div class="row">
-                    <div class="col-6 mb-2">
-                        <label class="form-label small">Temperature</label>
-                        <input type="number" class="form-control form-control-sm" id="azureTemperature" value="0" min="0" max="2" step="0.1">
-                        <small class="form-text text-muted">0 = 更一致</small>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <label class="form-label small">Max Tokens</label>
-                        <input type="number" class="form-control form-control-sm" id="azureMaxTokens" value="128" min="1" max="4096">
-                        <small class="form-text text-muted">評分回覆長度</small>
-                    </div>
-                </div>
             `;
             break;
             
@@ -3032,16 +2987,6 @@ function updateLLMProviderConfig() {
                     <label class="form-label small">API Key</label>
                     <input type="password" class="form-control form-control-sm" id="googleApiKey" placeholder="your-google-api-key">
                 </div>
-                <div class="row">
-                    <div class="col-6 mb-2">
-                        <label class="form-label small">Temperature</label>
-                        <input type="number" class="form-control form-control-sm" id="googleTemperature" value="0" min="0" max="2" step="0.1">
-                    </div>
-                    <div class="col-6 mb-2">
-                        <label class="form-label small">Max Tokens</label>
-                        <input type="number" class="form-control form-control-sm" id="googleMaxTokens" value="128" min="1" max="2048">
-                    </div>
-                </div>
             `;
             break;
             
@@ -3058,16 +3003,6 @@ function updateLLMProviderConfig() {
                 <div class="mb-3">
                     <label class="form-label small">模型名稱</label>
                     <input type="text" class="form-control form-control-sm" id="customModel" placeholder="gpt-4">
-                </div>
-                <div class="row">
-                    <div class="col-6 mb-2">
-                        <label class="form-label small">Temperature</label>
-                        <input type="number" class="form-control form-control-sm" id="customTemperature" value="0" min="0" max="2" step="0.1">
-                    </div>
-                    <div class="col-6 mb-2">
-                        <label class="form-label small">Max Tokens</label>
-                        <input type="number" class="form-control form-control-sm" id="customMaxTokens" value="128" min="1" max="4096">
-                    </div>
                 </div>
             `;
             break;
@@ -3087,38 +3022,25 @@ function updateConfigPreview() {
         case 'openai':
             const model = document.getElementById('openaiModel').value;
             const apiKey = document.getElementById('openaiApiKey').value;
-            const temperature = document.getElementById('openaiTemperature').value;
-            const maxTokens = document.getElementById('openaiMaxTokens').value;
-            const baseUrl = document.getElementById('openaiBaseUrl').value;
             
             config = {
                 providers: [{
                     id: `openai:${model}`,
                     config: {
-                        temperature: parseFloat(temperature),
-                        max_tokens: parseInt(maxTokens),
                         apiKey: apiKey || 'sk-abc123'
                     }
                 }]
             };
-            
-            if (baseUrl) {
-                config.providers[0].config.apiBaseUrl = baseUrl;
-            }
             break;
             
         case 'anthropic':
             const anthropicModel = document.getElementById('anthropicModel').value;
             const anthropicApiKey = document.getElementById('anthropicApiKey').value;
-            const anthropicMaxTokens = document.getElementById('anthropicMaxTokens').value;
-            const anthropicTemperature = document.getElementById('anthropicTemperature').value;
             
             config = {
                 providers: [{
                     id: `anthropic:${anthropicModel}`,
                     config: {
-                        temperature: parseFloat(anthropicTemperature),
-                        max_tokens: parseInt(anthropicMaxTokens),
                         apiKey: anthropicApiKey || 'sk-ant-abc123'
                     }
                 }]
@@ -3129,15 +3051,11 @@ function updateConfigPreview() {
             const azureEndpoint = document.getElementById('azureEndpoint').value;
             const azureApiKey = document.getElementById('azureApiKey').value;
             const azureDeployment = document.getElementById('azureDeployment').value;
-            const azureTemperature = document.getElementById('azureTemperature').value;
-            const azureMaxTokens = document.getElementById('azureMaxTokens').value;
             
             config = {
                 providers: [{
                     id: `azure:${azureDeployment}`,
                     config: {
-                        temperature: parseFloat(azureTemperature),
-                        max_tokens: parseInt(azureMaxTokens),
                         apiKey: azureApiKey || 'your-api-key',
                         apiBaseUrl: azureEndpoint || 'https://your-resource.openai.azure.com'
                     }
@@ -3148,15 +3066,11 @@ function updateConfigPreview() {
         case 'google':
             const googleModel = document.getElementById('googleModel').value;
             const googleApiKey = document.getElementById('googleApiKey').value;
-            const googleTemperature = document.getElementById('googleTemperature').value;
-            const googleMaxTokens = document.getElementById('googleMaxTokens').value;
             
             config = {
                 providers: [{
                     id: `google:${googleModel}`,
                     config: {
-                        temperature: parseFloat(googleTemperature),
-                        max_tokens: parseInt(googleMaxTokens),
                         apiKey: googleApiKey || 'your-google-api-key'
                     }
                 }]
@@ -3167,8 +3081,6 @@ function updateConfigPreview() {
             const customUrl = document.getElementById('customUrl').value;
             const customApiKey = document.getElementById('customApiKey').value;
             const customModel = document.getElementById('customModel').value;
-            const customTemperature = document.getElementById('customTemperature').value;
-            const customMaxTokens = document.getElementById('customMaxTokens').value;
             
             config = {
                 providers: [{
@@ -3182,8 +3094,6 @@ function updateConfigPreview() {
                         },
                         body: {
                             model: customModel || 'gpt-4',
-                            temperature: parseFloat(customTemperature),
-                            max_tokens: parseInt(customMaxTokens),
                             messages: [
                                 {
                                     role: 'user',

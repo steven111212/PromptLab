@@ -487,7 +487,7 @@
                                             </div>
                                             <div class="col-md-9">
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="useHttps" checked>
+                                                    <input class="form-check-input" type="checkbox" id="useHttps">
                                                     <label class="form-check-label" for="useHttps">
                                                         啟用 HTTPS 安全連線
                                                     </label>
@@ -511,7 +511,7 @@
                                                         </select>
                                                     </div>
                                                     <div class="col-md-8">
-                                                        <input type="text" class="form-control" id="httpPath" placeholder="/chat/completions HTTP/1.1" required>
+                                                        <input type="text" class="form-control" id="httpPath" placeholder="" autocomplete="off" required>
                                                     </div>
                                                 </div>
                                             </div>
@@ -523,7 +523,7 @@
                                                 <label class="form-label fw-bold">Host:</label>
                                             </div>
                                             <div class="col-md-9">
-                                                <input type="text" class="form-control" id="httpHost" placeholder="api.deepseek.com" required>
+                                                <input type="text" class="form-control" id="httpHost" placeholder="" autocomplete="off" required>
                                             </div>
                                         </div>
                                         
@@ -533,7 +533,7 @@
                                                 <label class="form-label fw-bold">Content-Type:</label>
                                             </div>
                                             <div class="col-md-9">
-                                                <input type="text" class="form-control" id="httpContentType" placeholder="application/json" value="application/json" required>
+                                                <input type="text" class="form-control" id="httpContentType" placeholder="" value="application/json" required>
                                             </div>
                                         </div>
                                         
@@ -554,7 +554,7 @@
                                                         </select>
                                                     </div>
                                                     <div class="col-md-9">
-                                                        <input type="text" class="form-control" id="authValue" placeholder="sk-56d9f30fdee64135abcfaaee7b34080a">
+                                                        <input type="text" class="form-control" id="authValue" placeholder="" autocomplete="off">
                                                     </div>
                                                 </div>
                                             </div>
@@ -570,7 +570,7 @@
                         <div class="row mb-4">
                             <div class="col-12">
                                 <label class="form-label">Request Body *</label>
-                                <textarea class="form-control" id="requestBody" rows="4" placeholder='{"question": "{{prompt}}"}'
+                                <textarea class="form-control" id="requestBody" rows="4" placeholder="" autocomplete="off"
                                           required></textarea>
                                 <small class="form-text text-muted">必須包含 {{prompt}} 變量</small>
                             </div>
@@ -583,7 +583,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Response Transform</label>
-                                <input type="text" class="form-control" id="transformResponse" placeholder="json.response" value="json.response">
+                                <input type="text" class="form-control" id="transformResponse" placeholder="" value="" autocomplete="off">
                                 <small class="form-text text-muted">例如：json.response, json.choices[0].message.content</small>
                             </div>
                         </div>
@@ -839,29 +839,17 @@
                                                     <div class="col-md-6">
                                                         <label class="form-label">OpenAI 模型</label>
                                                         <select class="form-select" id="openaiModel">
-                                                            <option value="gpt-4o-mini">GPT-4o Mini</option>
-                                                            <option value="gpt-4o">GPT-4o</option>
-                                                            <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                                                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                                            <option value="gpt-4-1">OpenAI: GPT-4.1</option>
+                                                            <option value="gpt-4-1-mini">OpenAI: GPT-4.1 Mini</option>
+                                                            <option value="gpt-4-1-nano">OpenAI: GPT-4.1 Nano</option>
+                                                            <option value="gpt-4o">OpenAI: GPT-4o</option>
+                                                            <option value="gpt-4o-mini" selected>OpenAI: GPT-4o Mini</option>
+                                                            <option value="o3">OpenAI: GPT-o3 (with thinking)</option>
                                                         </select>
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label class="form-label">API Key</label>
-                                                        <input type="password" class="form-control" id="openaiApiKey" placeholder="sk-...">
-                                                    </div>
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Temperature</label>
-                                                        <input type="number" class="form-control" id="openaiTemperature" value="0" min="0" max="2" step="0.1">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Max Tokens</label>
-                                                        <input type="number" class="form-control" id="openaiMaxTokens" value="128" min="1" max="4096">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Base URL (選填)</label>
-                                                        <input type="url" class="form-control" id="openaiBaseUrl" placeholder="https://api.openai.com/v1">
+                                                        <input type="password" class="form-control" id="openaiApiKey" placeholder="sk-..." autocomplete="off">
                                                     </div>
                                                 </div>
                                             </div>
@@ -879,17 +867,7 @@
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label class="form-label">API Key</label>
-                                                        <input type="password" class="form-control" id="anthropicApiKey" placeholder="sk-ant-...">
-                                                    </div>
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Max Tokens</label>
-                                                        <input type="number" class="form-control" id="anthropicMaxTokens" value="128" min="1" max="4096">
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Temperature</label>
-                                                        <input type="number" class="form-control" id="anthropicTemperature" value="0" min="0" max="1" step="0.1">
+                                                        <input type="password" class="form-control" id="anthropicApiKey" placeholder="sk-ant-..." autocomplete="off">
                                                     </div>
                                                 </div>
                                             </div>
@@ -897,27 +875,17 @@
                                             <!-- Azure OpenAI 配置 -->
                                             <div id="azureProviderConfig" class="provider-config" style="display: none;">
                                                 <div class="row mb-3">
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <label class="form-label">Azure Endpoint</label>
-                                                        <input type="url" class="form-control" id="azureEndpoint" placeholder="https://your-resource.openai.azure.com">
+                                                        <input type="url" class="form-control" id="azureEndpoint" placeholder="https://your-resource.openai.azure.com" autocomplete="off">
                                                     </div>
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <label class="form-label">API Key</label>
-                                                        <input type="password" class="form-control" id="azureApiKey" placeholder="your-api-key">
+                                                        <input type="password" class="form-control" id="azureApiKey" placeholder="your-api-key" autocomplete="off">
                                                     </div>
-                                                </div>
-                                                <div class="row mb-3">
                                                     <div class="col-md-4">
                                                         <label class="form-label">Deployment Name</label>
-                                                        <input type="text" class="form-control" id="azureDeployment" placeholder="gpt-4o">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Temperature</label>
-                                                        <input type="number" class="form-control" id="azureTemperature" value="0" min="0" max="2" step="0.1">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Max Tokens</label>
-                                                        <input type="number" class="form-control" id="azureMaxTokens" value="128" min="1" max="4096">
+                                                        <input type="text" class="form-control" id="azureDeployment" placeholder="gpt-4o" autocomplete="off">
                                                     </div>
                                                 </div>
                                             </div>
@@ -935,17 +903,7 @@
                                                     </div>
                                                     <div class="col-md-6">
                                                         <label class="form-label">API Key</label>
-                                                        <input type="password" class="form-control" id="googleApiKey" placeholder="your-google-api-key">
-                                                    </div>
-                                                </div>
-                                                <div class="row mb-3">
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Temperature</label>
-                                                        <input type="number" class="form-control" id="googleTemperature" value="0" min="0" max="2" step="0.1">
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label class="form-label">Max Tokens</label>
-                                                        <input type="number" class="form-control" id="googleMaxTokens" value="128" min="1" max="2048">
+                                                        <input type="password" class="form-control" id="googleApiKey" placeholder="your-google-api-key" autocomplete="off">
                                                     </div>
                                                 </div>
                                             </div>
@@ -953,27 +911,17 @@
                                             <!-- 自定義 HTTP API 配置 -->
                                             <div id="customProviderConfig" class="provider-config" style="display: none;">
                                                 <div class="row mb-3">
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <label class="form-label">API URL</label>
-                                                        <input type="url" class="form-control" id="customUrl" placeholder="https://api.example.com/v1/chat/completions">
+                                                        <input type="url" class="form-control" id="customUrl" placeholder="https://api.example.com/v1/chat/completions" autocomplete="off">
                                                     </div>
-                                                    <div class="col-md-6">
+                                                    <div class="col-md-4">
                                                         <label class="form-label">API Key</label>
-                                                        <input type="password" class="form-control" id="customApiKey" placeholder="your-api-key">
+                                                        <input type="password" class="form-control" id="customApiKey" placeholder="your-api-key" autocomplete="off">
                                                     </div>
-                                                </div>
-                                                <div class="row mb-3">
                                                     <div class="col-md-4">
                                                         <label class="form-label">模型名稱</label>
-                                                        <input type="text" class="form-control" id="customModel" placeholder="gpt-4">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Temperature</label>
-                                                        <input type="number" class="form-control" id="customTemperature" value="0" min="0" max="2" step="0.1">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="form-label">Max Tokens</label>
-                                                        <input type="number" class="form-control" id="customMaxTokens" value="128" min="1" max="4096">
+                                                        <input type="text" class="form-control" id="customModel" placeholder="gpt-4" autocomplete="off">
                                                     </div>
                                                 </div>
                                             </div>
@@ -1079,10 +1027,10 @@
         });
     </script>
     <!-- 模組化的 JavaScript 文件 -->
-    <script src="{{ url_for('static', filename='evaluation-api.js') }}"></script>
-    <script src="{{ url_for('static', filename='chart-manager.js') }}"></script>
-    <script src="{{ url_for('static', filename='modal-charts.js') }}"></script>
-    <script src="{{ url_for('static', filename='evaluation-results.js') }}"></script>
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='evaluation-api.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='chart-manager.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='modal-charts.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='evaluation-results.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='app.js') }}?v=20250915g"></script>
 </body>
 </html>
