@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AttackGen - 測試集生成工具</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .coming-soon-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .coming-soon-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .tool-icon {
+            font-size: 5rem;
+            margin-bottom: 2rem;
+            color: #17a2b8;
+        }
+        
+        .tool-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .tool-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .features-list {
+            text-align: left;
+            margin: 2rem 0;
+        }
+        
+        .features-list li {
+            padding: 0.5rem 0;
+            font-size: 1.1rem;
+        }
+        
+        .btn-back {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin-top: 2rem;
+        }
+        
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .status-badge {
+            background: #ffc107;
+            color: #000;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 2rem;
+        }
+        
+        .owasp-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 2rem 0;
+        }
+        
+        .owasp-title {
+            color: #ffc107;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="coming-soon-container">
+        <div class="coming-soon-card">
+            <div class="status-badge">
+                <i class="fas fa-clock me-2"></i>即將推出
+            </div>
+            
+            <div class="tool-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            
+            <h1 class="tool-title">AttackGen</h1>
+            <p class="tool-subtitle">測試集生成工具</p>
+            
+            <div class="row">
+                <div class="col-md-10 mx-auto">
+                    <p class="mb-4">根據文檔生成問題測試集，並基於OWASP TOP10風險生成對應的測試集問題。</p>
+                    
+                    <h5 class="mb-3">主要功能：</h5>
+                    <ul class="features-list">
+                        <li><i class="fas fa-file-alt me-2 text-info"></i>文檔解析與問題生成</li>
+                        <li><i class="fas fa-shield-alt me-2 text-info"></i>OWASP TOP10風險測試集</li>
+                        <li><i class="fas fa-cogs me-2 text-info"></i>自動測試集生成</li>
+                        <li><i class="fas fa-download me-2 text-info"></i>多格式導出 (CSV, JSON, TXT)</li>
+                        <li><i class="fas fa-filter me-2 text-info"></i>智能問題分類</li>
+                        <li><i class="fas fa-chart-pie me-2 text-info"></i>測試集統計分析</li>
+                    </ul>
+                    
+                    <div class="owasp-section">
+                        <h6 class="owasp-title">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            OWASP TOP10 風險覆蓋
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>注入攻擊</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>身份驗證失效</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>敏感數據洩露</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>XML外部實體</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>訪問控制失效</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="list-unstyled">
+                                    <li><i class="fas fa-check text-success me-2"></i>安全配置錯誤</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>跨站腳本</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>不安全的反序列化</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>已知漏洞組件</li>
+                                    <li><i class="fas fa-check text-success me-2"></i>日誌記錄不足</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info mt-4">
+                <i class="fas fa-lightbulb me-2"></i>
+                此工具將幫助您快速生成高質量的測試集，提升LLM系統的安全性和可靠性。
+            </div>
+            
+            <a href="/" class="btn-back">
+                <i class="fas fa-arrow-left me-2"></i>返回主頁
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

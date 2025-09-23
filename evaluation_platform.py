@@ -9,8 +9,6 @@ import subprocess
 import uuid
 from pathlib import Path
 import shutil
-import csv
-import io
 import pandas as pd
 import sqlite3
 import re
@@ -34,9 +32,24 @@ def ensure_directories():
 ensure_directories()
 
 @app.route('/')
-def index():
-    """渲染主頁面"""
+def overview():
+    """渲染Overview主頁面"""
+    return render_template('overview.html')
+
+@app.route('/scorelab')
+def scorelab():
+    """渲染ScoreLab評分工具頁面"""
     return render_template('index.html')
+
+@app.route('/testrunner')
+def testrunner():
+    """渲染TestRunner測試工具頁面"""
+    return render_template('testrunner.html')
+
+@app.route('/attackgen')
+def attackgen():
+    """渲染AttackGen生成工具頁面"""
+    return render_template('attackgen.html')
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -47,11 +60,6 @@ def health_check():
         'platform': 'Python Flask'
     })
 
-def clean_filename(filename):
-    """清理檔案名稱中的無效字符"""
-    invalid_chars = r'[<>:"/\\|?*]'
-    cleaned = re.sub(invalid_chars, '_', filename)
-    return cleaned
 
 @app.route('/api/evaluation-results', methods=['GET'])
 def get_evaluation_results():
@@ -691,131 +699,7 @@ def run_config(config_id):
         print(f"配置執行錯誤: {e}")
         return jsonify({'error': f'配置執行失敗: {str(e)}'}), 500
 
-@app.route('/api/evaluate', methods=['POST'])
-def evaluate():
-    """執行評測"""
-    try:
-        data = request.json
-        config_id = data.get('configId', '')
-        
-        print(f"開始評測 - 配置ID: {config_id}")
-        
-        evaluation_id = str(uuid.uuid4())
-        
-        # 使用配置目錄
-        config_dir = Path('configs') / config_id
-        config_file = config_dir / 'promptfooconfig.yaml'
-        
-        if not config_file.exists():
-            return jsonify({'error': f'配置檔案不存在: {config_file}'}), 404
-        
-        print(f"使用配置目錄: {config_dir}")
-        print(f"配置文件: {config_file}")
-        
-        # 創建結果目錄
-        result_dir = Path('results') / evaluation_id
-        result_dir.mkdir(exist_ok=True)
-        
-        # 執行promptfoo eval（在配置目錄中執行）
-        result_file = result_dir / 'results.json'
-        command = [
-            'promptfoo', 'eval',
-            '--output', str(result_file)
-        ]
-        
-        print(f"執行命令: {' '.join(command)}")
-        print(f"工作目錄: {config_dir}")
-        
-        # 執行命令（在配置目錄中執行）
-        process = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            timeout=300,  # 5分鐘超時
-            cwd=str(config_dir)  # 在配置目錄中執行
-        )
-        
-        # 讀取結果
-        results = None
-        if result_file.exists():
-            with open(result_file, 'r', encoding='utf-8') as f:
-                results = json.load(f)
-        
-        # 清理工作目錄
-        if eval_work_dir.exists():
-            import shutil
-            shutil.rmtree(eval_work_dir)
-            print(f"已清理工作目錄: {eval_work_dir}")
-        
-        return jsonify({
-            'evaluationId': evaluation_id,
-            'status': 'completed',
-            'results': results,
-            'stdout': process.stdout,
-            'stderr': process.stderr,
-            'returncode': process.returncode
-        })
-        
-    except subprocess.TimeoutExpired:
-        return jsonify({'error': '評測執行超時'}), 500
-    except Exception as e:
-        print(f"評測執行錯誤: {e}")
-        return jsonify({'error': f'評測執行失敗: {str(e)}'}), 500
 
-@app.route('/api/results/<evaluation_id>', methods=['GET'])
-def get_result(evaluation_id):
-    """獲取評測結果"""
-    try:
-        result_path = Path('results') / evaluation_id / 'results.json'
-        
-        if not result_path.exists():
-            return jsonify({'error': '評測結果不存在'}), 404
-        
-        with open(result_path, 'r', encoding='utf-8') as f:
-            results = json.load(f)
-        
-        return jsonify(results)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/results', methods=['GET'])
-def get_results():
-    """獲取所有評測結果"""
-    try:
-        evaluations = []
-        results_dir = Path('results')
-        
-        if results_dir.exists():
-            for result_dir in results_dir.iterdir():
-                if result_dir.is_dir():
-                    result_file = result_dir / 'results.json'
-                    if result_file.exists():
-                        try:
-                            with open(result_file, 'r', encoding='utf-8') as f:
-                                results = json.load(f)
-                            
-                            # 計算統計數據
-                            total_tests = len(results.get('results', []))
-                            scores = [r.get('score', 0) for r in results.get('results', []) if r.get('score', 0) > 0]
-                            average_score = sum(scores) / len(scores) if scores else 0
-                            
-                            evaluations.append({
-                                'id': result_dir.name,
-                                'timestamp': results.get('timestamp', time.strftime('%Y-%m-%d %H:%M:%S')),
-                                'summary': {
-                                    'totalTests': total_tests,
-                                    'averageScore': round(average_score, 2)
-                                }
-                            })
-                        except Exception as e:
-                            print(f"讀取結果檔案 {result_file} 失敗: {e}")
-                            continue
-        
-        # 按時間排序
-        evaluations.sort(key=lambda x: x['timestamp'], reverse=True)
-        return jsonify(evaluations)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/assert-templates', methods=['GET'])
 def get_assert_templates():
@@ -1105,6 +989,44 @@ def validate_config():
             'error': f'驗證失敗: {str(e)}'
         }), 500
 
+# CSV檔案處理
+@app.route('/api/upload-csv', methods=['POST'])
+def upload_csv():
+    """處理CSV檔案上傳並返回欄位信息"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': '沒有選擇檔案'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': '沒有選擇檔案'}), 400
+        
+        if not file.filename.lower().endswith('.csv'):
+            return jsonify({'error': '請上傳CSV檔案'}), 400
+        
+        # 讀取CSV檔案
+        import io
+        csv_content = file.read().decode('utf-8')
+        csv_io = io.StringIO(csv_content)
+        
+        # 使用pandas讀取CSV
+        df = pd.read_csv(csv_io)
+        
+        # 獲取欄位名稱
+        headers = df.columns.tolist()
+        
+        # 返回欄位信息
+        return jsonify({
+            'success': True,
+            'headers': headers,
+            'row_count': len(df),
+            'message': f'成功讀取CSV檔案，包含 {len(df)} 行數據'
+        })
+        
+    except Exception as e:
+        print(f"CSV上傳錯誤: {e}")
+        return jsonify({'error': f'CSV檔案處理失敗: {str(e)}'}), 500
+
 # 檔案上傳處理
 
 # 靜態檔案服務
@@ -1116,11 +1038,14 @@ def serve_static(filename):
 if __name__ == '__main__':
     print("🚀 啟動LLM評測平台...")
     print("📊 平台功能:")
-    print("   - 配置管理")
-    print("   - 評測執行")
-    print("   - 結果分析")
-    print("   - Assert指標管理")
-    print("🌐 訪問地址: http://localhost:5500")
+    print("   - TestRunner: 安全測試工具 (即將推出)")
+    print("   - ScoreLab: 評分工具 (可用)")
+    print("   - AttackGen: 測試集生成工具 (即將推出)")
+    print("🌐 訪問地址:")
+    print("   - 主頁: http://localhost:5500")
+    print("   - ScoreLab: http://localhost:5500/scorelab")
+    print("   - TestRunner: http://localhost:5500/testrunner")
+    print("   - AttackGen: http://localhost:5500/attackgen")
     print("📝 請確保已安裝 promptfoo: pip install promptfoo")
     
     app.run(debug=True, host='0.0.0.0', port=5500)

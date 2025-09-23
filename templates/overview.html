@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM評測平台 - Overview</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .hero-section {
+            padding: 80px 0;
+            color: white;
+            text-align: center;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 3rem;
+            opacity: 0.9;
+        }
+        
+        .tools-container {
+            padding: 60px 0;
+        }
+        
+        .tool-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+        }
+        
+        .tool-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tool-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        
+        .tool-description {
+            color: #6c757d;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .tool-features {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+        
+        .tool-features li {
+            padding: 0.5rem 0;
+            color: #495057;
+        }
+        
+        .tool-features li::before {
+            content: '✓';
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        
+        .btn-tool {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-tool:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        
+        .status-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-available {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-coming-soon {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .footer {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-align: center;
+            padding: 40px 0;
+            margin-top: 60px;
+        }
+        
+        .feature-highlight {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            color: white;
+        }
+        
+        .feature-highlight h3 {
+            margin-bottom: 1rem;
+        }
+        
+        .feature-highlight p {
+            margin-bottom: 0;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <h1 class="hero-title">
+                <i class="fas fa-robot me-3"></i>
+                LLM評測平台
+            </h1>
+            <p class="hero-subtitle">
+                全面的LLM系統安全評估與性能測試解決方案
+            </p>
+            
+            <!-- Feature Highlight -->
+            <div class="feature-highlight">
+                <h3><i class="fas fa-shield-alt me-2"></i>為什麼選擇我們的平台？</h3>
+                <p>整合三大核心工具，提供從安全測試到性能評估的完整解決方案，幫助您構建更安全、更可靠的LLM系統。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tools Section -->
+    <div class="tools-container">
+        <div class="container">
+            <div class="row g-4">
+                <!-- TestRunner - 測試工具 -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="tool-card">
+                        <span class="status-badge status-coming-soon">即將推出</span>
+                        <div class="tool-icon">
+                            <i class="fas fa-bug"></i>
+                        </div>
+                        <h3 class="tool-title">TestRunner</h3>
+                        <p class="tool-description">
+                            模擬紅隊攻擊來檢測LLM系統的安全性，識別潛在的安全漏洞和風險點。
+                        </p>
+                        <ul class="tool-features">
+                            <li>紅隊攻擊模擬</li>
+                            <li>安全漏洞檢測</li>
+                            <li>風險評估報告</li>
+                            <li>攻擊向量分析</li>
+                        </ul>
+                        <a href="/testrunner" class="btn-tool">
+                            <i class="fas fa-arrow-right me-2"></i>進入工具
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ScoreLab - 評分工具 -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="tool-card">
+                        <span class="status-badge status-available">可用</span>
+                        <div class="tool-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="tool-title">ScoreLab</h3>
+                        <p class="tool-description">
+                            用戶提供測試的API和資料集，設定評分標準，檢測API的performance。
+                        </p>
+                        <ul class="tool-features">
+                            <li>API性能測試</li>
+                            <li>自定義評分標準</li>
+                            <li>數據集管理</li>
+                            <li>詳細分析報告</li>
+                        </ul>
+                        <a href="/scorelab" class="btn-tool">
+                            <i class="fas fa-arrow-right me-2"></i>進入工具
+                        </a>
+                    </div>
+                </div>
+
+                <!-- AttackGen - 生成資料集工具 -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="tool-card">
+                        <span class="status-badge status-coming-soon">即將推出</span>
+                        <div class="tool-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h3 class="tool-title">AttackGen</h3>
+                        <p class="tool-description">
+                            根據文檔生成問題測試集，並基於OWASP TOP10風險生成對應的測試集問題。
+                        </p>
+                        <ul class="tool-features">
+                            <li>文檔解析生成</li>
+                            <li>OWASP TOP10風險</li>
+                            <li>自動測試集生成</li>
+                            <li>多格式導出</li>
+                        </ul>
+                        <a href="/attackgen" class="btn-tool">
+                            <i class="fas fa-arrow-right me-2"></i>進入工具
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="container">
+            <p class="mb-0">
+                <i class="fas fa-copyright me-2"></i>
+                2024 LLM評測平台 - 讓AI更安全、更可靠
+            </p>
+        </div>
+    </div>
+
+    <!-- Coming Soon Modal -->
+    <div class="modal fade" id="comingSoonModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="fas fa-clock me-2 text-warning"></i>
+                        即將推出
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-tools text-primary" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 id="toolName" class="mb-3">工具名稱</h4>
+                    <p class="text-muted mb-4">
+                        此工具正在開發中，即將為您提供更強大的功能。請關注我們的更新通知。
+                    </p>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        您可以先體驗 <strong>ScoreLab</strong> 評分工具
+                    </div>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+                    <a href="/scorelab" class="btn btn-primary">
+                        <i class="fas fa-arrow-right me-2"></i>體驗 ScoreLab
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showComingSoon(toolName) {
+            document.getElementById('toolName').textContent = toolName;
+            const modal = new bootstrap.Modal(document.getElementById('comingSoonModal'));
+            modal.show();
+        }
+
+        // 添加一些動畫效果
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.tool-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        });
+    </script>
+</body>
+</html>

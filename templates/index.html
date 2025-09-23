@@ -213,8 +213,8 @@
             <div class="col-12">
                 <div class="d-flex align-items-center py-2 px-3">
                     <h4 class="mb-0 me-4">
-                        <i class="fas fa-robot me-2 text-primary"></i>
-                        <span class="text-primary">LLM評測平台</span>
+                        <i class="fas fa-chart-line me-2 text-primary"></i>
+                        <span class="text-primary">ScoreLab - 評分工具</span>
                     </h4>
                     <div class="nav nav-tabs border-0">
                         <a class="nav-link active px-4 py-3 border-0" href="#" data-tab="config" 
@@ -224,6 +224,10 @@
                         <a class="nav-link px-4 py-3 border-0" href="#" data-tab="results"
                            style="font-weight: 500;">
                             <i class="fas fa-chart-bar me-2"></i>評估結果
+                        </a>
+                        <a class="nav-link px-4 py-3 border-0" href="/" 
+                           style="font-weight: 500; color: rgba(255, 255, 255, 0.8);">
+                            <i class="fas fa-home me-2"></i>返回主頁
                         </a>
                     </div>
                 </div>
@@ -1027,6 +1031,7 @@
         });
     </script>
     <!-- 模組化的 JavaScript 文件 -->
+    <script src="{{ url_for('static', filename='chart-utils.js') }}?v=20250915b"></script>
     <script src="{{ url_for('static', filename='evaluation-api.js') }}?v=20250915b"></script>
     <script src="{{ url_for('static', filename='chart-manager.js') }}?v=20250915b"></script>
     <script src="{{ url_for('static', filename='modal-charts.js') }}?v=20250915b"></script>
