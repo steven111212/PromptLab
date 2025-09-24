@@ -1,6 +1,4 @@
 // 全域變數
-let currentConfigs = [];
-let selectedConfig = null;
 
 // 初始化應用程式
 document.addEventListener('DOMContentLoaded', function() {
@@ -10,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // 初始化應用程式
 async function initializeApp() {
     setupEventListeners();
-    await loadConfigs();
+    await ConfigManager.loadConfigs();
 }
 
 // 設置事件監聽器
@@ -70,203 +68,11 @@ function switchTab(tab) {
     }
 }
 
-// 載入配置列表
-async function loadConfigs() {
-    try {
-        const response = await fetch('/api/configs');
-        const configs = await response.json();
-        currentConfigs = configs; // 更新全域變數
-        
-        const container = document.getElementById('configList');
-        
-        if (currentConfigs.length === 0) {
-            container.innerHTML = `
-                <div class="list-group-item border-0 text-center py-4">
-                    <i class="fas fa-folder-open text-muted mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
-                    <p class="text-muted small mb-3">暫無配置檔案</p>
-                    <button class="btn btn-primary btn-sm" onclick="showNewConfigForm()">
-                        <i class="fas fa-plus me-1"></i>新增第一個配置
-                    </button>
-                </div>
-            `;
-            return;
-        }
-        
-        const html = currentConfigs.map(config => `
-            <div class="list-group-item list-group-item-action border-0 config-item" 
-                 data-config-id="${config.id}" 
-                 onclick="selectConfig('${config.id}')" 
-                 style="cursor: pointer; transition: all 0.2s;">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1 text-dark">${config.name}</h6>
-                        <p class="mb-1 small text-muted">
-                            <i class="fas fa-file-code me-1"></i>${config.filename}
-                        </p>
-                        <small class="text-muted">
-                            <i class="fas fa-clock me-1"></i>最近修改
-                        </small>
-                    </div>
-                    <div class="dropdown" onclick="event.stopPropagation();">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
-                                type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-ellipsis-v"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="#" onclick="runConfig('${config.id}')">
-                                    <i class="fas fa-play me-2 text-success"></i>執行
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#" onclick="editConfig('${config.id}')">
-                                    <i class="fas fa-edit me-2 text-primary"></i>編輯
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-danger" href="#" onclick="deleteConfig('${config.id}')">
-                                    <i class="fas fa-trash me-2"></i>刪除
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-        
-        container.innerHTML = html;
-        
-    } catch (error) {
-        console.error('載入配置失敗:', error);
-        showAlert('載入配置失敗', 'danger');
-    }
-}
 
-// 選擇配置
-async function selectConfig(configId) {
-    try {
-        // 更新選中狀態
-        document.querySelectorAll('.config-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        document.querySelector(`[data-config-id="${configId}"]`).classList.add('active');
-        
-        const response = await fetch(`/api/configs/${configId}`);
-        const config = await response.json();
-        
-        selectedConfig = config;
-        
-        // 顯示配置詳情
-        showConfigDetails(config);
-        
-    } catch (error) {
-        console.error('載入配置詳情失敗:', error);
-        showAlert('載入配置詳情失敗', 'danger');
-    }
-}
 
-// 顯示配置詳情
-function showConfigDetails(config) {
-    const configDetails = document.getElementById('configDetails');
-    const configForm = document.getElementById('configForm');
-    const configFormTitle = document.getElementById('configFormTitle');
-    const configFormActions = document.getElementById('configFormActions');
-    
-    // 隱藏表單，顯示詳情
-    configForm.style.display = 'none';
-    configFormActions.style.display = 'none';
-    configDetails.style.display = 'block';
-    configFormTitle.textContent = '配置詳情';
-    
-    // 顯示配置詳情
-    const configName = config.parsed?.description || config.name || config.id || '未命名配置';
-    
-    configDetails.innerHTML = `
-        <div class="config-detail-view">
-            <!-- 配置標題區域 -->
-            <div class="d-flex justify-content-between align-items-start mb-4">
-                <div>
-                    <h3 class="text-dark mb-2">${configName}</h3>
-                    <div class="d-flex align-items-center text-muted">
-                        <i class="fas fa-file-code me-2"></i>
-                        <span class="me-3">${config.filename}</span>
-                        <i class="fas fa-clock me-2"></i>
-                        <span>最近修改</span>
-                    </div>
-                </div>
-                <div class="btn-group">
-                    <button class="btn btn-success" onclick="runConfig('${config.id}')">
-                        <i class="fas fa-play me-2"></i>執行配置
-                    </button>
-                    <button class="btn btn-primary" onclick="editConfig('${config.id}')">
-                        <i class="fas fa-edit me-2"></i>編輯配置
-                    </button>
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-ellipsis-h"></i>
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteConfig('${config.id}')">
-                                <i class="fas fa-trash me-2"></i>刪除配置
-                            </a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
 
-            <!-- 配置預覽卡片 -->
-            <div class="card border-0 bg-light">
-                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0 text-secondary">
-                        <i class="fas fa-code me-2"></i>配置內容預覽
-                    </h6>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="copyConfigContent('${config.id}')">
-                        <i class="fas fa-copy me-1"></i>複製
-                    </button>
-                </div>
-                <div class="card-body">
-                    <pre class="bg-white p-3 rounded border" style="max-height: 400px; overflow-y: auto; font-size: 0.875rem;"><code>${config.content}</code></pre>
-                </div>
-            </div>
-        </div>
-    `;
-}
 
-// 複製配置內容
-function copyConfigContent(configId) {
-    const config = currentConfigs.find(c => c.id === configId);
-    if (config) {
-        navigator.clipboard.writeText(config.content).then(() => {
-            showAlert('配置內容已複製到剪貼簿', 'success');
-        }).catch(() => {
-            showAlert('複製失敗', 'danger');
-        });
-    }
-}
 
-// 編輯配置
-async function editConfig(configId) {
-    try {
-        const response = await fetch(`/api/configs/${configId}`);
-        const config = await response.json();
-        
-        selectedConfig = config;
-        
-        // 顯示編輯表單
-        await showConfigForm(config, true);
-        
-    } catch (error) {
-        console.error('載入配置詳情失敗:', error);
-        showAlert('載入配置詳情失敗', 'danger');
-    }
-}
-
-// 顯示新增配置表單
-function showNewConfigForm() {
-    selectedConfig = null;
-    showConfigForm(null, false);
-}
 
 // 顯示配置表單
 async function showConfigForm(config, isEdit) {
@@ -585,13 +391,7 @@ function generateConfigFormHTML() {
                     <div class="row mb-4">
                         <div class="col-12">
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="questionSource" id="questionSourceManual" value="manual" checked onchange="toggleQuestionInput()">
-                                <label class="form-check-label" for="questionSourceManual">
-                                    <i class="fas fa-keyboard me-2"></i>手動輸入
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="questionSource" id="questionSourceUpload" value="upload" onchange="toggleQuestionInput()">
+                                <input class="form-check-input" type="radio" name="questionSource" id="questionSourceUpload" value="upload" checked onchange="toggleQuestionInput()">
                                 <label class="form-check-label" for="questionSourceUpload">
                                     <i class="fas fa-file-csv me-2"></i>上傳CSV檔案
                                 </label>
@@ -599,24 +399,9 @@ function generateConfigFormHTML() {
                         </div>
                     </div>
 
-                    <!-- 手動輸入問題 -->
-                    <div id="manualQuestionsSection" class="mb-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-edit me-2"></i>手動輸入測試問題
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <label class="form-label">測試問題</label>
-                                <textarea class="form-control" id="testQuestions" rows="6" placeholder="請輸入測試問題，每行一個問題&#10;例如：&#10;什麼是台電？&#10;如何申請用電？&#10;電費如何計算？"></textarea>
-                                <small class="form-text text-muted">每行一個問題</small>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- 上傳測試集檔案 -->
-                    <div id="uploadQuestionsSection" class="mb-4" style="display: none;">
+                    <div id="uploadQuestionsSection" class="mb-4">
                         <div class="card">
                             <div class="card-header">
                                 <h6 class="mb-0">
@@ -916,8 +701,8 @@ function nextStep(stepNumber) {
     updateProgressSteps(stepNumber);
     
     // 如果進入步驟3且有配置數據，重新顯示測試問題信息
-    if (stepNumber === 3 && selectedConfig && selectedConfig.content) {
-        showCurrentTestInfo(selectedConfig.content);
+    if (stepNumber === 3 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
+        showCurrentTestInfo(ConfigManager.selectedConfig().content);
     }
 }
 
@@ -938,8 +723,8 @@ function prevStep(stepNumber) {
     updateProgressSteps(stepNumber);
     
     // 如果回到步驟3且有配置數據，重新顯示測試問題信息
-    if (stepNumber === 3 && selectedConfig && selectedConfig.content) {
-        showCurrentTestInfo(selectedConfig.content);
+    if (stepNumber === 3 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
+        showCurrentTestInfo(ConfigManager.selectedConfig().content);
     }
 }
 
@@ -979,8 +764,8 @@ function jumpToStep(stepNumber) {
     updateProgressSteps(stepNumber);
     
     // 如果跳轉到步驟3且有配置數據，重新顯示測試問題信息
-    if (stepNumber === 3 && selectedConfig && selectedConfig.content) {
-        showCurrentTestInfo(selectedConfig.content);
+    if (stepNumber === 3 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
+        showCurrentTestInfo(ConfigManager.selectedConfig().content);
     }
 }
 
@@ -1354,8 +1139,8 @@ async function saveConfiguration() {
         }
         
         // 判斷是創建新配置還是更新現有配置
-        const isEdit = selectedConfig && selectedConfig.id;
-        const url = isEdit ? `/api/configs/${selectedConfig.id}` : '/api/configs';
+        const isEdit = ConfigManager.selectedConfig() && ConfigManager.selectedConfig().id;
+        const url = isEdit ? `/api/configs/${ConfigManager.selectedConfig().id}` : '/api/configs';
         const method = isEdit ? 'PUT' : 'POST';
         
         const response = await fetch(url, {
@@ -1375,11 +1160,11 @@ async function saveConfiguration() {
         if (response.ok) {
             showAlert(isEdit ? '配置儲存成功！' : '配置創建成功！', 'success');
             // 刷新配置列表
-            loadConfigs();
+            ConfigManager.loadConfigs();
             
             if (isEdit) {
                 // 編輯模式，重新載入配置詳情
-                await selectConfig(selectedConfig.id);
+                await ConfigManager.selectConfig(ConfigManager.selectedConfig().id);
             } else {
                 // 新增模式，關閉表單
             cancelConfigForm();
@@ -1389,8 +1174,8 @@ async function saveConfiguration() {
         }
         
     } catch (error) {
-        console.error(`配置${selectedConfig && selectedConfig.id ? '儲存' : '創建'}時發生錯誤:`, error);
-        showAlert(`配置${selectedConfig && selectedConfig.id ? '儲存' : '創建'}失敗: ` + error.message, 'error');
+        console.error(`配置${ConfigManager.selectedConfig() && ConfigManager.selectedConfig().id ? '儲存' : '創建'}時發生錯誤:`, error);
+        showAlert(`配置${ConfigManager.selectedConfig() && ConfigManager.selectedConfig().id ? '儲存' : '創建'}失敗: ` + error.message, 'error');
     }
 }
 
@@ -1423,7 +1208,7 @@ function showCurrentTestInfo(yamlContent) {
                         </ul>
                         <small class="text-muted d-block mt-2">
                             <i class="fas fa-lightbulb me-1"></i>
-                            如果要更改測試問題，可以上傳新的 CSV 檔案替換現有配置，或切換到手動輸入模式
+                            如果要更改測試問題，可以上傳新的 CSV 檔案替換現有配置
                         </small>
                     </div>
                 `;
@@ -1449,7 +1234,7 @@ function showCurrentTestInfo(yamlContent) {
                         </div>
                         <small class="text-muted d-block mt-2">
                             <i class="fas fa-lightbulb me-1"></i>
-                            如果要修改問題，可以在手動輸入區域重新編輯
+                            如果要修改問題，可以上傳新的 CSV 檔案替換現有配置
                         </small>
                     </div>
                 `;
@@ -1748,13 +1533,11 @@ function resetScoringCriteriaList() {
     if (transformResponse) transformResponse.value = 'json.response';
     
     // 重置問題輸入方式（安全檢查）
-    const questionSourceManual = document.getElementById('questionSourceManual');
-    const testQuestions = document.getElementById('testQuestions');
-    const questionFile = document.getElementById('questionFile');
+    const questionSourceUpload = document.getElementById('questionSourceUpload');
+    const csvFile = document.getElementById('csvFile');
     
-    if (questionSourceManual) questionSourceManual.checked = true;
-    if (testQuestions) testQuestions.value = '';
-    if (questionFile) questionFile.value = '';
+    if (questionSourceUpload) questionSourceUpload.checked = true;
+    if (csvFile) csvFile.value = '';
     
     try {
         toggleQuestionInput();
@@ -1835,17 +1618,10 @@ function generateConfigFromForm() {
     
     // 獲取測試問題配置
     const questionSourceRadio = document.querySelector('input[name="questionSource"]:checked');
-    const questionSource = questionSourceRadio ? questionSourceRadio.value : 'manual';
+    const questionSource = questionSourceRadio ? questionSourceRadio.value : 'upload';
     let testsConfig = '';
     
-    if (questionSource === 'manual') {
-        // 手動輸入模式：生成 prompts 配置
-        const testQuestions = document.getElementById('testQuestions').value;
-        const questions = testQuestions.split('\n').filter(q => q.trim()).map(q => q.trim());
-        if (questions.length > 0) {
-            testsConfig = questions.map(q => `  - "${q}"`).join('\n');
-        }
-    } else if (questionSource === 'upload') {
+    if (questionSource === 'upload') {
         // 檔案上傳模式：生成 tests 配置
         const csvFileInput = document.getElementById('csvFile');
         if (csvFileInput && csvFileInput.files.length > 0) {
@@ -2058,20 +1834,15 @@ function generateConfigFromForm() {
         config += `\n\n${providersConfig}`;
     }
     
-    // 處理測試問題配置 - 保留原有的 prompts 和 tests 欄位
+    // 處理測試問題配置 - 使用 tests 欄位
     if (testsConfig) {
-        if (questionSource === 'manual') {
-            // 手動輸入模式：使用 prompts
-            config += `\n\nprompts:\n${testsConfig}`;
-        } else if (questionSource === 'upload') {
-            // 檔案上傳模式：使用 tests
-            config += `\n\ntests:\n${testsConfig}`;
-        }
+        // 檔案上傳模式：使用 tests
+        config += `\n\ntests:\n${testsConfig}`;
     }
     
     // 如果沒有新的測試配置，但原有配置中有 prompts 或 tests，需要保留
-    if (!testsConfig && selectedConfig) {
-        const originalContent = selectedConfig.content;
+    if (!testsConfig && ConfigManager.selectedConfig()) {
+        const originalContent = ConfigManager.selectedConfig().content;
         
         // 檢查原有配置中是否有 prompts
         if (originalContent.includes('prompts:')) {
@@ -2119,6 +1890,120 @@ function generateConfigFromForm() {
     
     console.log('最終生成的配置:', config);
     return config;
+}
+
+// 更新 LLM 提供者配置區域
+function updateLLMProviderConfig() {
+    const provider = document.getElementById('llmProvider').value;
+    const configArea = document.getElementById('llmProviderConfigArea');
+    
+    if (!provider) {
+        configArea.innerHTML = '';
+        return;
+    }
+    
+    let configHTML = '';
+    
+    switch (provider) {
+        case 'openai':
+            configHTML = `
+                <div class="mb-3">
+                    <label class="form-label small">OpenAI API Key *</label>
+                    <input type="password" class="form-control form-control-sm" id="openaiApiKey" placeholder="sk-..." required>
+                    <small class="form-text text-muted">請輸入您的 OpenAI API Key</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">選擇模型 *</label>
+                    <select class="form-select form-select-sm" id="openaiModel" required>
+                        <option value="">請選擇模型</option>
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                    </select>
+                </div>
+            `;
+            break;
+            
+        case 'anthropic':
+            configHTML = `
+                <div class="mb-3">
+                    <label class="form-label small">Anthropic API Key *</label>
+                    <input type="password" class="form-control form-control-sm" id="anthropicApiKey" placeholder="sk-ant-..." required>
+                    <small class="form-text text-muted">請輸入您的 Anthropic API Key</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">選擇模型 *</label>
+                    <select class="form-select form-select-sm" id="anthropicModel" required>
+                        <option value="">請選擇模型</option>
+                        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                        <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+                        <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                        <option value="claude-3-sonnet-20240229">Claude 3 Sonnet</option>
+                    </select>
+                </div>
+            `;
+            break;
+            
+        case 'azure-openai':
+            configHTML = `
+                <div class="mb-3">
+                    <label class="form-label small">Azure OpenAI API Key *</label>
+                    <input type="password" class="form-control form-control-sm" id="azureApiKey" placeholder="Azure API Key" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">Azure OpenAI Endpoint *</label>
+                    <input type="url" class="form-control form-control-sm" id="azureEndpoint" placeholder="https://your-resource.openai.azure.com/" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">API Version *</label>
+                    <input type="text" class="form-control form-control-sm" id="azureApiVersion" placeholder="2024-02-15-preview" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">Deployment Name *</label>
+                    <input type="text" class="form-control form-control-sm" id="azureDeployment" placeholder="gpt-4" required>
+                </div>
+            `;
+            break;
+            
+        case 'google':
+            configHTML = `
+                <div class="mb-3">
+                    <label class="form-label small">Google API Key *</label>
+                    <input type="password" class="form-control form-control-sm" id="googleApiKey" placeholder="AIza..." required>
+                    <small class="form-text text-muted">請輸入您的 Google API Key</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">選擇模型 *</label>
+                    <select class="form-select form-select-sm" id="googleModel" required>
+                        <option value="">請選擇模型</option>
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        <option value="gemini-pro">Gemini Pro</option>
+                    </select>
+                </div>
+            `;
+            break;
+            
+        case 'custom':
+            configHTML = `
+                <div class="mb-3">
+                    <label class="form-label small">API Endpoint *</label>
+                    <input type="url" class="form-control form-control-sm" id="customEndpoint" placeholder="https://api.example.com/v1/chat/completions" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">API Key</label>
+                    <input type="password" class="form-control form-control-sm" id="customApiKey" placeholder="API Key (可選)">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">模型名稱 *</label>
+                    <input type="text" class="form-control form-control-sm" id="customModel" placeholder="model-name" required>
+                </div>
+            `;
+            break;
+    }
+    
+    configArea.innerHTML = configHTML;
 }
 
 // 生成 LLM Grader 提供者配置
@@ -2171,18 +2056,18 @@ function generateGraderProviderConfig(provider) {
             break;
             
         case 'custom':
-            const customUrl = document.getElementById('customUrl').value;
+            const customEndpoint = document.getElementById('customEndpoint').value;
             const customApiKey = document.getElementById('customApiKey').value;
             const customModel = document.getElementById('customModel').value;
             
             providerConfig = `    provider:
       id: http
       config:
-        url: "${customUrl || 'https://api.example.com/v1/chat/completions'}"
+        url: "${customEndpoint || 'https://api.example.com/v1/chat/completions'}"
         method: POST
         headers:
           Content-Type: application/json
-          Authorization: "Bearer ${customApiKey || 'your-api-key'}"
+          ${customApiKey ? `Authorization: "Bearer ${customApiKey}"` : ''}
         body:
           model: "${customModel || 'gpt-4'}"
           messages:
@@ -2300,35 +2185,16 @@ function toggleQuestionInput() {
     if (!questionSource) return;
     
     const questionSourceValue = questionSource.value;
-    const manualSection = document.getElementById('manualQuestionsSection');
     const uploadSection = document.getElementById('uploadQuestionsSection');
-    const testQuestions = document.getElementById('testQuestions');
     
     console.log('切換問題輸入方式:', questionSourceValue);
     
-    if (questionSourceValue === 'manual') {
-        // 手動輸入模式：顯示手動輸入區域，隱藏檔案上傳
-        if (manualSection) {
-            manualSection.style.display = 'block';
-            console.log('設置 manualSection display: block');
-        }
-        if (uploadSection) {
-            uploadSection.style.display = 'none';
-            console.log('設置 uploadSection display: none');
-        }
-        if (testQuestions) testQuestions.required = false;
-        console.log('切換到手動輸入模式');
-    } else if (questionSourceValue === 'upload') {
-        // 檔案上傳模式：隱藏手動輸入區域，顯示檔案上傳
-        if (manualSection) {
-            manualSection.style.display = 'none';
-            console.log('設置 manualSection display: none');
-        }
+    if (questionSourceValue === 'upload') {
+        // 檔案上傳模式：顯示檔案上傳區域
         if (uploadSection) {
             uploadSection.style.display = 'block';
             console.log('設置 uploadSection display: block');
         }
-        if (testQuestions) testQuestions.required = false;
         console.log('切換到檔案上傳模式');
     }
 }
@@ -2365,8 +2231,8 @@ async function saveConfigForm() {
         console.log('上傳檔案:', uploadedFile);
         
         // 判斷是創建新配置還是更新現有配置
-        const isEdit = selectedConfig && selectedConfig.id;
-        const url = isEdit ? `/api/configs/${selectedConfig.id}` : '/api/configs';
+        const isEdit = ConfigManager.selectedConfig() && ConfigManager.selectedConfig().id;
+        const url = isEdit ? `/api/configs/${ConfigManager.selectedConfig().id}` : '/api/configs';
         const method = isEdit ? 'PUT' : 'POST';
         
         const response = await fetch(url, {
@@ -2389,7 +2255,7 @@ async function saveConfigForm() {
             
             // 如果是編輯模式，顯示更新後的配置詳情
             if (isEdit) {
-                await selectConfig(selectedConfig.id);
+                await ConfigManager.selectConfig(ConfigManager.selectedConfig().id);
             } else {
                 // 新增模式，隱藏表單，顯示提示
                 hideConfigForm();
@@ -2423,8 +2289,8 @@ function hideConfigForm() {
     configFormTitle.textContent = '配置詳情';
     
     // 如果有選中的配置，顯示其詳情
-    if (selectedConfig) {
-        showConfigDetails(selectedConfig);
+    if (ConfigManager.selectedConfig()) {
+        ConfigManager.showConfigDetails(ConfigManager.selectedConfig());
     } else {
         // 沒有選中配置，顯示提示
         configDetails.innerHTML = '<p class="text-muted">請選擇一個配置檔案查看詳情，或點擊「新增配置」創建新配置</p>';
@@ -2462,8 +2328,8 @@ async function saveFriendlyConfig() {
         console.log('上傳檔案:', uploadedFile);
         
         // 判斷是創建新配置還是更新現有配置
-        const isEdit = selectedConfig && selectedConfig.id;
-        const url = isEdit ? `/api/configs/${selectedConfig.id}` : '/api/configs';
+        const isEdit = ConfigManager.selectedConfig() && ConfigManager.selectedConfig().id;
+        const url = isEdit ? `/api/configs/${ConfigManager.selectedConfig().id}` : '/api/configs';
         const method = isEdit ? 'PUT' : 'POST';
         
         const response = await fetch(url, {
@@ -2486,7 +2352,7 @@ async function saveFriendlyConfig() {
             bootstrap.Modal.getInstance(document.getElementById('configPreviewModal')).hide();
             await loadConfigs();
             // 清除選中的配置
-            selectedConfig = null;
+            ConfigManager.selectedConfig() = null;
         } else {
             showAlert((isEdit ? '儲存' : '創建') + '失敗: ' + result.error, 'danger');
         }
@@ -2504,8 +2370,8 @@ function validateFriendlyForm() {
     const httpHost = document.getElementById('httpHost').value;
     const httpContentType = document.getElementById('httpContentType').value;
     const requestBody = document.getElementById('requestBody').value;
-    const testQuestions = document.getElementById('testQuestions').value;
-    const questionSource = document.getElementById('questionSource').value;
+    const csvFile = document.getElementById('csvFile');
+    const questionSource = document.querySelector('input[name="questionSource"]:checked')?.value || 'upload';
     
     if (!configName.trim()) {
         showAlert('請輸入配置名稱', 'warning');
@@ -2548,15 +2414,11 @@ function validateFriendlyForm() {
     
     // 驗證測試問題（可選，如果沒有配置測試問題也沒關係）
     const questionSourceRadio = document.querySelector('input[name="questionSource"]:checked');
-    const questionSourceValue = questionSourceRadio ? questionSourceRadio.value : 'manual';
+    const questionSourceValue = questionSourceRadio ? questionSourceRadio.value : 'upload';
     
-    if (questionSourceValue === 'manual') {
-        // 手動輸入模式：如果有輸入問題，驗證格式
-        const questions = testQuestions.split('\n').filter(q => q.trim());
-        // 不強制要求必須有問題，允許為空
-    } else if (questionSourceValue === 'upload') {
+    if (questionSourceValue === 'upload') {
         // 檔案上傳模式：如果有選擇檔案，驗證檔案
-        const questionFile = document.getElementById('questionFile').files[0];
+        const questionFile = document.getElementById('csvFile').files[0];
         // 不強制要求必須上傳檔案，允許為空
     }
     
@@ -2603,53 +2465,7 @@ function validateFriendlyForm() {
 }
 
 
-// 執行配置
-async function runConfig(configId) {
-    if (confirm('確定要執行這個配置嗎？')) {
-        try {
-            showAlert('正在執行配置，請稍候...', 'info');
-            
-            const response = await fetch(`/api/configs/${configId}/run`, {
-                method: 'POST'
-            });
-            
-            const result = await response.json();
-            
-            if (response.ok) {
-                showAlert('配置執行成功！', 'success');
-                console.log('執行結果:', result);
-            } else {
-                showAlert('執行失敗: ' + result.error, 'danger');
-            }
-        } catch (error) {
-            console.error('執行配置失敗:', error);
-            showAlert('執行失敗', 'danger');
-        }
-    }
-}
 
-// 刪除配置
-async function deleteConfig(configId) {
-    if (confirm('確定要刪除這個配置嗎？')) {
-        try {
-            const response = await fetch(`/api/configs/${configId}`, {
-                method: 'DELETE'
-            });
-            
-            if (response.ok) {
-                showAlert('配置刪除成功', 'success');
-                // 重新載入配置列表
-                await loadConfigs();
-            } else {
-                const result = await response.json();
-                showAlert('刪除失敗: ' + result.error, 'danger');
-            }
-        } catch (error) {
-            console.error('刪除配置失敗:', error);
-            showAlert('刪除失敗', 'danger');
-        }
-    }
-}
 
 // 載入執行結果
 async function loadResults() {
