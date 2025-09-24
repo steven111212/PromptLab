@@ -528,16 +528,7 @@ function generateConfigFormHTML() {
                                     </label>
                                 </div>
                             </div>
-                            
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="enableRouge">
-                                    <label class="form-check-label" for="enableRouge">
-                                        <i class="fas fa-align-left me-2"></i>ROUGE Score
-                                    </label>
-                                </div>
-                            </div>
-                            
+                                              
                             <div class="mb-2">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" id="enableContains">
@@ -546,51 +537,7 @@ function generateConfigFormHTML() {
                                     </label>
                                 </div>
                             </div>
-                            
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="enableRegex">
-                                    <label class="form-check-label" for="enableRegex">
-                                        <i class="fas fa-code me-2"></i>正則表達式
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="enableWordCount">
-                                    <label class="form-check-label" for="enableWordCount">
-                                        <i class="fas fa-calculator me-2"></i>字數統計
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="enableSentiment">
-                                    <label class="form-check-label" for="enableSentiment">
-                                        <i class="fas fa-heart me-2"></i>情感分析
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="enableToxicity">
-                                    <label class="form-check-label" for="enableToxicity">
-                                        <i class="fas fa-shield-alt me-2"></i>毒性檢測
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="enableReadability">
-                                    <label class="form-check-label" for="enableReadability">
-                                        <i class="fas fa-eye me-2"></i>可讀性評估
-                                    </label>
-                                </div>
-                            </div>
+                                                               
                         </div>
                     </div>
                 </div>
