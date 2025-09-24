@@ -1031,12 +1031,23 @@
         });
     </script>
     <!-- 模組化的 JavaScript 文件 -->
-    <script src="{{ url_for('static', filename='chart-utils.js') }}?v=20250915b"></script>
-    <script src="{{ url_for('static', filename='evaluation-api.js') }}?v=20250915b"></script>
-    <script src="{{ url_for('static', filename='chart-manager.js') }}?v=20250915b"></script>
-    <script src="{{ url_for('static', filename='modal-charts.js') }}?v=20250915b"></script>
-    <script src="{{ url_for('static', filename='evaluation-results.js') }}?v=20250915b"></script>
-    <script src="{{ url_for('static', filename='config-manager.js') }}?v=20250915b"></script>
+    <!-- 核心模組 -->
+    <script src="{{ url_for('static', filename='core/app-core.js') }}?v=20250915b"></script>
+    
+    <!-- ScoreLab 配置管理模組 -->
+    <script src="{{ url_for('static', filename='scorelab/config/config-manager.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='scorelab/config/config-form-steps.js') }}?v=20250915b"></script>
+    
+    <!-- ScoreLab 結果管理模組 -->
+    <script src="{{ url_for('static', filename='scorelab/results/chart-utils.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='scorelab/results/chart-manager.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='scorelab/results/modal-charts.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='scorelab/results/evaluation-results.js') }}?v=20250915b"></script>
+    
+    <!-- ScoreLab 評估功能模組 -->
+    <script src="{{ url_for('static', filename='scorelab/evaluation/evaluation-api.js') }}?v=20250915b"></script>
+    
+    <!-- 主應用程式 -->
     <script src="{{ url_for('static', filename='app.js') }}?v=20250915g"></script>
 </body>
 </html>
