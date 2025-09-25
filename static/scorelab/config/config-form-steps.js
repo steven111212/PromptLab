@@ -20,7 +20,7 @@ function nextStep(stepNumber) {
     
     // 如果進入步驟3且有配置數據，重新顯示測試問題信息
     if (stepNumber === 3 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
-        showCurrentTestInfo(ConfigManager.selectedConfig().content);
+        ConfigLoader.showCurrentTestInfo(ConfigManager.selectedConfig().content);
     }
 }
 
@@ -43,7 +43,7 @@ function prevStep(stepNumber) {
     
     // 如果回到步驟3且有配置數據，重新顯示測試問題信息
     if (stepNumber === 3 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
-        showCurrentTestInfo(ConfigManager.selectedConfig().content);
+        ConfigLoader.showCurrentTestInfo(ConfigManager.selectedConfig().content);
     }
 }
 
@@ -82,6 +82,6 @@ function jumpToStep(stepNumber) {
     
     // 如果跳轉到步驟3且有配置數據，重新顯示測試問題信息
     if (stepNumber === 3 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
-        showCurrentTestInfo(ConfigManager.selectedConfig().content);
+        ConfigLoader.showCurrentTestInfo(ConfigManager.selectedConfig().content);
     }
 }

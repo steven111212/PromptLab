@@ -810,7 +810,7 @@
                                                     <label class="form-label">評分標準</label>
                                                     <div id="gevalCriteriaList">
                                                         <div class="input-group mb-2">
-                                                            <input type="text" class="form-control" placeholder="例如：不回答與旅行無關的問題">
+                                                            <input type="text" class="form-control">
                                                             <button type="button" class="btn btn-outline-danger" onclick="removeGEvalCriteria(this)">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
@@ -1037,6 +1037,10 @@
     <!-- ScoreLab 配置管理模組 -->
     <script src="{{ url_for('static', filename='scorelab/config/config-manager.js') }}?v=20250915b"></script>
     <script src="{{ url_for('static', filename='scorelab/config/config-form-steps.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='scorelab/config/scoring-criteria.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='scorelab/config/form-validation.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='scorelab/config/config-loader.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='scorelab/config/config-form.js') }}?v=20250915b"></script>
     
     <!-- ScoreLab 結果管理模組 -->
     <script src="{{ url_for('static', filename='scorelab/results/chart-utils.js') }}?v=20250915b"></script>
@@ -1046,6 +1050,10 @@
     
     <!-- ScoreLab 評估功能模組 -->
     <script src="{{ url_for('static', filename='scorelab/evaluation/evaluation-api.js') }}?v=20250915b"></script>
+    <script src="{{ url_for('static', filename='scorelab/evaluation/api-test.js') }}?v=20250915b"></script>
+    
+    <!-- ScoreLab 共享工具模組 -->
+    <script src="{{ url_for('static', filename='scorelab/shared/utils.js') }}?v=20250915b"></script>
     
     <!-- 主應用程式 -->
     <script src="{{ url_for('static', filename='app.js') }}?v=20250915g"></script>

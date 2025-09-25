@@ -17,7 +17,7 @@ async function loadConfigs() {
                 <div class="list-group-item border-0 text-center py-4">
                     <i class="fas fa-folder-open text-muted mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
                     <p class="text-muted small mb-3">暫無配置檔案</p>
-                    <button class="btn btn-primary btn-sm" onclick="showNewConfigForm()">
+                    <button class="btn btn-primary btn-sm" onclick="ConfigManager.showNewConfigForm()">
                         <i class="fas fa-plus me-1"></i>新增第一個配置
                     </button>
                 </div>
@@ -28,7 +28,7 @@ async function loadConfigs() {
         const html = currentConfigs.map(config => `
             <div class="list-group-item list-group-item-action border-0 config-item" 
                  data-config-id="${config.id}" 
-                 onclick="selectConfig('${config.id}')" 
+                 onclick="ConfigManager.selectConfig('${config.id}')" 
                  style="cursor: pointer; transition: all 0.2s;">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
@@ -48,18 +48,18 @@ async function loadConfigs() {
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a class="dropdown-item" href="#" onclick="runConfig('${config.id}')">
+                                <a class="dropdown-item" href="#" onclick="ConfigManager.runConfig('${config.id}')">
                                     <i class="fas fa-play me-2 text-success"></i>執行
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="#" onclick="editConfig('${config.id}')">
+                                <a class="dropdown-item" href="#" onclick="ConfigManager.editConfig('${config.id}')">
                                     <i class="fas fa-edit me-2 text-primary"></i>編輯
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item text-danger" href="#" onclick="deleteConfig('${config.id}')">
+                                <a class="dropdown-item text-danger" href="#" onclick="ConfigManager.deleteConfig('${config.id}')">
                                     <i class="fas fa-trash me-2"></i>刪除
                                 </a>
                             </li>
@@ -130,10 +130,10 @@ function showConfigDetails(config) {
                     </div>
                 </div>
                 <div class="btn-group">
-                    <button class="btn btn-success" onclick="runConfig('${config.id}')">
+                    <button class="btn btn-success" onclick="ConfigManager.runConfig('${config.id}')">
                         <i class="fas fa-play me-2"></i>執行配置
                     </button>
-                    <button class="btn btn-primary" onclick="editConfig('${config.id}')">
+                    <button class="btn btn-primary" onclick="ConfigManager.editConfig('${config.id}')">
                         <i class="fas fa-edit me-2"></i>編輯配置
                     </button>
                     <div class="dropdown">
@@ -141,7 +141,7 @@ function showConfigDetails(config) {
                             <i class="fas fa-ellipsis-h"></i>
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteConfig('${config.id}')">
+                            <li><a class="dropdown-item text-danger" href="#" onclick="ConfigManager.deleteConfig('${config.id}')">
                                 <i class="fas fa-trash me-2"></i>刪除配置
                             </a></li>
                         </ul>
@@ -155,7 +155,7 @@ function showConfigDetails(config) {
                     <h6 class="mb-0 text-secondary">
                         <i class="fas fa-code me-2"></i>配置內容預覽
                     </h6>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="copyConfigContent('${config.id}')">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="ConfigManager.copyConfigContent('${config.id}')">
                         <i class="fas fa-copy me-1"></i>複製
                     </button>
                 </div>
@@ -188,7 +188,7 @@ async function editConfig(configId) {
         selectedConfig = config;
         
         // 顯示編輯表單
-        await showConfigForm(config, true);
+        await ConfigForm.showConfigForm(config, true);
         
     } catch (error) {
         console.error('載入配置詳情失敗:', error);
@@ -199,7 +199,7 @@ async function editConfig(configId) {
 // 顯示新增配置表單
 function showNewConfigForm() {
     selectedConfig = null;
-    showConfigForm(null, false);
+    ConfigForm.showConfigForm(null, false);
 }
 
 // 執行配置
