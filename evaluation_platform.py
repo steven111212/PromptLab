@@ -113,7 +113,9 @@ def get_evaluation_results():
                     # 將時間戳從毫秒轉換為日期時間字符串
                     timestamp_ms = int(row['created_at'])
                     dt = pd.to_datetime(timestamp_ms, unit='ms')
-                    created_time = dt.strftime('%Y-%m-%d %H:%M:%S')
+                    # 轉換為台灣時區 (UTC+8)
+                    dt_taiwan = dt + pd.Timedelta(hours=8)
+                    created_time = dt_taiwan.strftime('%Y-%m-%d %H:%M:%S')
                 except:
                     created_time = str(row.get('created_at', '未知'))
             

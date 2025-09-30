@@ -55,7 +55,7 @@ function resetScoringCriteriaList() {
     const gevalCriteriaList = document.getElementById('gevalCriteriaList');
     gevalCriteriaList.innerHTML = `
         <div class="input-group mb-2">
-            <input type="text" class="form-control" placeholder="例如：不回答與旅行無關的問題">
+            <input type="text" class="form-control">
             <button type="button" class="btn btn-outline-danger" onclick="removeGEvalCriteria(this)">
                 <i class="fas fa-trash"></i>
             </button>
@@ -621,7 +621,7 @@ function addGEvalCriteria() {
     const div = document.createElement('div');
     div.className = 'input-group mb-2';
     div.innerHTML = `
-        <input type="text" class="form-control" placeholder="例如：不回答與旅行無關的問題">
+        <input type="text" class="form-control">
         <button type="button" class="btn btn-outline-danger" onclick="removeGEvalCriteria(this)">
             <i class="fas fa-trash"></i>
         </button>
