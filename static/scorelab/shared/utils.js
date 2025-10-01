@@ -91,11 +91,7 @@ function validateFriendlyForm() {
         return false;
     }
     
-    // 檢查是否包含 {{prompt}} 變量
-    if (!requestBody.includes('{{prompt}}')) {
-        showAlert('Request Body 必須包含 {{prompt}} 變量', 'warning');
-        return false;
-    }
+
     
     // 驗證評分標準
     const enableJavascript = document.getElementById('enableJavascript').checked;

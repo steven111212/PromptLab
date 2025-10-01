@@ -7,7 +7,7 @@ function showCurrentTestInfo(yamlContent) {
     
     // 優先檢查 tests: 是否有具體檔案
     if (yamlContent.includes('tests:')) {
-        const testsMatch = yamlContent.match(/tests:\s*\n((?:.*\n)*?)(?=\n\s*[a-zA-Z]|\n\s*$)/);
+        const testsMatch = yamlContent.match(/tests:\s*\n((?:.*\n?)*?)(?=\n[a-zA-Z]|$)/);
         if (testsMatch) {
             const tests = testsMatch[1].trim().split('\n')
                 .map(line => line.replace(/^\s*-\s*/, ''))

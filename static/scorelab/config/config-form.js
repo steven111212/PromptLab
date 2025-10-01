@@ -210,7 +210,6 @@ function generateConfigFormHTML() {
                         <div class="col-12">
                                     <label class="form-label">Request Body 原始內容</label>
                                     <textarea class="form-control" id="requestBody" rows="6" ></textarea>
-                                    <small class="form-text text-muted">必須包含 {{prompt}} 變量</small>
                                 </div>
                             </div>
                         </div>
@@ -339,7 +338,7 @@ function generateConfigFormHTML() {
                                     <input type="file" class="form-control" id="csvFile" accept=".csv" onchange="handleCSVUpload(this)">
                                     <small class="form-text text-muted">
                                         <i class="fas fa-info-circle me-1"></i>
-                                        CSV檔案應包含 "prompt" 欄位，可選包含 "expected" 欄位作為期望答案
+                                        請確保欄位名稱與 API Request Body 中的變量名稱與CSV檔案中的欄位名稱一致
                                     </small>
                                 </div>
                                 <div id="csvPreview" style="display: none;">
@@ -567,13 +566,7 @@ function handleCSVUpload(input) {
         const lines = csv.split('\n');
         const headers = lines[0].split(',').map(h => h.trim());
         
-        // 檢查是否有 prompt 欄位
-        const promptIndex = headers.findIndex(h => h.toLowerCase() === 'prompt');
-        if (promptIndex === -1) {
-            showAlert('CSV檔案必須包含 "prompt" 欄位', 'danger');
-            return;
-        }
-        
+
         // 顯示預覽
         const preview = document.getElementById('csvPreview');
         const table = document.getElementById('csvPreviewTable');

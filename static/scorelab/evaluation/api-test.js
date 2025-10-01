@@ -102,9 +102,7 @@ function collectAPIConfig() {
             return { isValid: false, error: '請填寫Request Body' };
         }
         
-        if (!requestBody.includes('{{prompt}}')) {
-            return { isValid: false, error: 'Request Body必須包含{{prompt}}變量' };
-        }
+
         
         return {
             isValid: true,
@@ -178,9 +176,6 @@ function parseRawHttpRequest(requestText) {
             return { isValid: false, error: '無法解析Host' };
         }
         
-        if (!body.includes('{{prompt}}')) {
-            return { isValid: false, error: 'Request Body必須包含{{prompt}}變量' };
-        }
         
         return {
             isValid: true,
