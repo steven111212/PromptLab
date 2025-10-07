@@ -25,10 +25,9 @@ function updateLLMProviderConfig() {
                     <label class="form-label small">選擇模型 *</label>
                     <select class="form-select form-select-sm" id="openaiModel" required>
                         <option value="">請選擇模型</option>
+                        <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
                         <option value="gpt-4o">GPT-4o</option>
-                        <option value="gpt-4o-mini">GPT-4o Mini</option>
-                        <option value="gpt-4-turbo">GPT-4 Turbo</option>
-                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                        <option value="gpt-5">GPT-5</option>
                     </select>
                 </div>
             `;
