@@ -12,7 +12,7 @@ async function showConfigForm(config, isEdit) {
     configDetails.style.display = 'none';
     configForm.style.display = 'block';
     configFormActions.style.display = 'block';
-    configFormTitle.textContent = isEdit ? '編輯配置' : '新增配置';
+    configFormTitle.textContent = isEdit ? '編輯專案' : '新增專案';
     
     // 生成表單HTML
     configForm.innerHTML = generateConfigFormHTML();
@@ -23,20 +23,20 @@ async function showConfigForm(config, isEdit) {
         const saveButtonTextStep4 = document.getElementById('saveButtonTextStep4');
         
         if (saveButtonText) {
-            saveButtonText.textContent = isEdit ? '儲存配置' : '創建配置';
+            saveButtonText.textContent = isEdit ? '儲存專案' : '創建專案';
         }
         if (saveButtonTextStep4) {
-            saveButtonTextStep4.textContent = isEdit ? '儲存配置' : '創建配置';
+            saveButtonTextStep4.textContent = isEdit ? '儲存專案' : '創建專案';
         }
         
         // 更新頂部的保存按鈕文字
         const topSaveButton = document.querySelector('#configFormActions .btn-success');
         if (topSaveButton) {
-            topSaveButton.innerHTML = `<i class="fas fa-save me-2"></i>${isEdit ? '儲存配置' : '創建配置'}`;
+            topSaveButton.innerHTML = `<i class="fas fa-save me-2"></i>${isEdit ? '儲存專案' : '創建專案'}`;
         }
     }, 100);
     
-    // 如果是編輯模式，載入配置數據
+    // 如果是編輯模式，載入專案數據
     if (isEdit && config) {
         await ConfigLoader.loadConfigToForm(config);
     } else {
@@ -45,7 +45,7 @@ async function showConfigForm(config, isEdit) {
     }
 }
 
-// 生成配置表單HTML
+// 生成專案表單HTML
 function generateConfigFormHTML() {
     return `
         <div class="config-form-container">

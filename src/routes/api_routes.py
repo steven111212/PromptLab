@@ -43,25 +43,25 @@ def register_api_routes(app):
 
     @app.route('/api/configs', methods=['GET'])
     def get_configs():
-        """獲取所有配置"""
+        """獲取所有專案"""
         result, status_code = config_service.get_configs()
         return jsonify(result), status_code
 
     @app.route('/api/configs/<config_id>', methods=['GET'])
     def get_config(config_id):
-        """獲取特定配置"""
+        """獲取特定專案"""
         result, status_code = config_service.get_config(config_id)
         return jsonify(result), status_code
 
     @app.route('/api/configs/<config_id>/check-files', methods=['GET'])
     def check_config_files(config_id):
-        """檢查配置相關檔案是否存在"""
+        """檢查專案相關檔案是否存在"""
         result, status_code = config_service.check_config_files(config_id)
         return jsonify(result), status_code
 
     @app.route('/api/configs', methods=['POST'])
     def save_config():
-        """保存配置"""
+        """保存專案"""
         data = request.json
         name = data.get('name', '')
         content = data.get('content', '')
@@ -72,7 +72,7 @@ def register_api_routes(app):
 
     @app.route('/api/configs/<config_id>', methods=['PUT'])
     def update_config(config_id):
-        """更新配置"""
+        """更新專案"""
         data = request.json
         name = data.get('name', '')
         content = data.get('content', '')
@@ -83,13 +83,13 @@ def register_api_routes(app):
 
     @app.route('/api/configs/<config_id>', methods=['DELETE'])
     def delete_config(config_id):
-        """刪除配置"""
+        """刪除專案"""
         result, status_code = config_service.delete_config(config_id)
         return jsonify(result), status_code
 
     @app.route('/api/configs/<config_id>/run', methods=['POST'])
     def run_config(config_id):
-        """執行配置"""
+        """執行專案"""
         result, status_code = execution_service.run_config(config_id)
         return jsonify(result), status_code
 
@@ -160,7 +160,7 @@ def register_api_routes(app):
 
     @app.route('/api/test-api', methods=['POST'])
     def test_api():
-        """測試API配置"""
+        """測試API設定"""
         data = request.json
         method = data.get('method', 'POST')
         url = data.get('url', '')
@@ -173,7 +173,7 @@ def register_api_routes(app):
 
     @app.route('/api/validate-config', methods=['POST'])
     def validate_config():
-        """驗證配置"""
+        """驗證專案"""
         data = request.json
         content = data.get('content', '')
         

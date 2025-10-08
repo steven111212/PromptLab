@@ -1,7 +1,7 @@
 
 // 重置評分標準列表
 function resetScoringCriteriaList() {
-    // 重置 API 配置（安全檢查避免null錯誤）
+    // 重置 API 專案（安全檢查避免null錯誤）
     const httpPath = document.getElementById('httpPath');
     const httpHost = document.getElementById('httpHost');
     const httpContentType = document.getElementById('httpContentType');
@@ -27,7 +27,7 @@ function resetScoringCriteriaList() {
         console.log('toggleQuestionInput 函數調用失敗:', e);
     }
     
-    // 重置 JavaScript 配置（安全檢查）
+    // 重置 JavaScript 專案（安全檢查）
     const enableJavascript = document.getElementById('enableJavascript');
     const javascriptConfig = document.getElementById('javascriptConfig');
     const javascriptCondition = document.getElementById('javascriptCondition');
@@ -41,7 +41,7 @@ function resetScoringCriteriaList() {
     if (customJavascript) customJavascript.value = '';
     updateJavascriptCondition();
     
-    // 重置 G-Eval 配置
+    // 重置 G-Eval 專案
     const enableGEval = document.getElementById('enableGEval');
     const gevalConfig = document.getElementById('gevalConfig');
     const openaiModel = document.getElementById('openaiModel');
@@ -73,7 +73,7 @@ function resetScoringCriteriaList() {
 
 
 
-// 預覽配置
+// 預覽專案
 function previewConfig() {
     const config = generateConfigFromForm();
     const preview = document.getElementById('configPreview');
@@ -81,12 +81,12 @@ function previewConfig() {
     new bootstrap.Modal(document.getElementById('configPreviewModal')).show();
 }
 
-// 從表單生成配置 - 已移至 FormValidation 模組
+// 從表單生成專案設定 - 已移至 FormValidation 模組
 // 使用 FormValidation.generateConfigFromForm() 替代
 function generateConfigFromForm() {
     const configName = document.getElementById('configName').value;
     
-    // 獲取被測API配置
+    // 獲取API設定
     const useHttps = document.getElementById('useHttps').checked;
     const httpMethod = document.getElementById('httpMethod').value;
     const httpPath = document.getElementById('httpPath').value;
@@ -99,13 +99,13 @@ function generateConfigFromForm() {
     // 獲取 Request Body（直接使用原始文本）
     const requestBody = document.getElementById('requestBody').value;
     
-    // 獲取測試問題配置
+    // 獲取測試問題設定
     const questionSourceRadio = document.querySelector('input[name="questionSource"]:checked');
     const questionSource = questionSourceRadio ? questionSourceRadio.value : 'upload';
     let testsConfig = '';
     
     if (questionSource === 'upload') {
-        // 檔案上傳模式：生成 tests 配置
+        // 檔案上傳模式：生成 tests 設定
         const csvFileInput = document.getElementById('csvFile');
         if (csvFileInput && csvFileInput.files.length > 0) {
             const questionFile = csvFileInput.files[0];
@@ -113,7 +113,7 @@ function generateConfigFromForm() {
         }
     }
     
-    // 生成Providers配置（格式一）
+    // 生成Providers設定（格式一）
     let providersConfig = '';
     
     if (httpPath && httpHost && httpContentType && requestBody) {
@@ -121,7 +121,7 @@ function generateConfigFromForm() {
   - id: http
     config:`;
         
-        // 添加 useHttps 配置
+        // 添加 useHttps 設定
         if (useHttps) {
             providersConfig += `\n      useHttps: true`;
         }
@@ -170,7 +170,7 @@ function generateConfigFromForm() {
             requestContent += `\n${formattedBody}`;
         }
         
-        // 添加 request 配置，統一縮排處理
+        // 添加 request 設定，統一縮排處理
         providersConfig += `\n      request: |\n${requestContent.split('\n').map(line => `        ${line}`).join('\n')}`;
         
         // 添加 transformResponse
@@ -179,7 +179,7 @@ function generateConfigFromForm() {
         }
     }
     
-    // 生成評分標準配置
+    // 生成評分標準設定
     let assertConfig = '';
     const asserts = [];
     
@@ -327,24 +327,24 @@ function generateConfigFromForm() {
         assertConfig = 'assert:\n' + asserts.join('\n');
     }
     
-    // 生成完整配置
+    // 生成完整專案
     let config = `description: "${configName}"`;
 
     if (providersConfig) {
         config += `\n\n${providersConfig}`;
     }
     
-    // 處理測試問題配置 - 使用 tests 欄位
+    // 處理測試問題設定 - 使用 tests 欄位
     if (testsConfig) {
         // 檔案上傳模式：使用 tests
         config += `\n\ntests:\n${testsConfig}`;
     }
     
-    // 如果沒有新的測試配置，但原有配置中有 prompts 或 tests，需要保留
+    // 如果沒有新的測試設定，但原有專案中有 prompts 或 tests，需要保留
     if (!testsConfig && ConfigManager.selectedConfig()) {
         const originalContent = ConfigManager.selectedConfig().content;
         
-        // 檢查原有配置中是否有 prompts
+        // 檢查原有專案中是否有 prompts
         if (originalContent.includes('prompts:')) {
             const promptsMatch = originalContent.match(/prompts:\s*\n((?:.*\n)*?)(?=\n\s*[a-zA-Z]|\n\s*$)/);
             if (promptsMatch) {
@@ -355,7 +355,7 @@ function generateConfigFromForm() {
             }
         }
         
-        // 檢查原有配置中是否有 tests
+        // 檢查原有專案中是否有 tests
         if (originalContent.includes('tests:')) {
             const testsMatch = originalContent.match(/tests:\s*\n((?:.*\n)*?)(?=\n\s*[a-zA-Z]|\n\s*$)/);
             if (testsMatch) {
@@ -367,15 +367,15 @@ function generateConfigFromForm() {
         }
     }
     
-    // 檢查是否有 LLM Grader 評分或 provider 配置
+    // 檢查是否有 LLM Grader 評分或 provider 設定
     const hasGEval = document.getElementById('enableGEval') && document.getElementById('enableGEval').checked;
     const hasFactuality = document.getElementById('enableFactuality') && document.getElementById('enableFactuality').checked;
     const hasLLMProvider = document.getElementById('llmProvider') && document.getElementById('llmProvider').value;
     
-    // 如果有評分標準或LLM provider配置，使用 defaultTest 格式
+    // 如果有評分標準或LLM provider設定，使用 defaultTest 格式
     if (assertConfig || hasLLMProvider) {
         if (hasGEval || hasFactuality || hasLLMProvider) {
-            // 有 LLM Grader 評分或 provider 配置，需要在 defaultTest.options 中添加 provider 配置
+            // 有 LLM Grader 評分或 provider 設定，需要在 defaultTest.options 中添加 provider 設定
             const llmProvider = document.getElementById('llmProvider').value;
             const graderProviderConfig = generateGraderProviderConfig(llmProvider);
             
@@ -390,20 +390,20 @@ function generateConfigFromForm() {
                     config += `\n\ndefaultTest:\n  ${assertConfig}`;
                 }
             }
-        } else {
-            // 沒有 LLM Grader 評分，只需要 assert 配置
-            config += `\n\ndefaultTest:\n  ${assertConfig}`;
-        }
+            } else {
+                // 沒有 LLM Grader 評分，只需要 assert 設定
+                config += `\n\ndefaultTest:\n  ${assertConfig}`;
+            }
     }
     
-    console.log('最終生成的配置:', config);
+    console.log('最終生成的專案設定:', config);
     return config;
 }
 
-// 更新 LLM 提供者配置區域 - 已移至 ScoringCriteria 模組
+// 更新 LLM 提供者設定區域 - 已移至 ScoringCriteria 模組
 // 使用 ScoringCriteria.updateLLMProviderConfig() 替代
 
-// 生成 LLM Grader 提供者配置
+// 生成 LLM Grader 提供者設定
 function generateGraderProviderConfig(provider) {
     if (!provider) return null;
     
@@ -479,7 +479,7 @@ function generateGraderProviderConfig(provider) {
     return providerConfig;
 }
 
-// 切換 JavaScript 配置顯示 - 已移至 ScoringCriteria 模組
+// 切換 JavaScript 設定顯示 - 已移至 ScoringCriteria 模組
 // 使用 ScoringCriteria.toggleJavascriptConfig() 替代
 function toggleJavascriptConfig() {
     const checkbox = document.getElementById('enableJavascript');
@@ -487,7 +487,7 @@ function toggleJavascriptConfig() {
     config.style.display = checkbox.checked ? 'block' : 'none';
 }
 
-// 切換 G-Eval 配置顯示 - 已移至 ScoringCriteria 模組
+// 切換 G-Eval 設定顯示 - 已移至 ScoringCriteria 模組
 // 使用 ScoringCriteria.toggleGEvalConfig() 替代
 function toggleGEvalConfig() {
     const checkbox = document.getElementById('enableGEval');
@@ -495,7 +495,7 @@ function toggleGEvalConfig() {
     config.style.display = checkbox.checked ? 'block' : 'none';
 }
 
-// 更新 JavaScript 條件配置 - 已移至 ScoringCriteria 模組
+// 更新 JavaScript 條件設定 - 已移至 ScoringCriteria 模組
 // 使用 ScoringCriteria.updateJavascriptCondition() 替代
 function updateJavascriptCondition() {
     const condition = document.getElementById('javascriptCondition').value;
@@ -511,7 +511,7 @@ function updateJavascriptCondition() {
     }
 }
 
-// 更新評分模型配置
+// 更新評分模型設定
 function updateGradingModelFields() {
     const modelType = document.getElementById('gradingModelType');
     const openaiConfig = document.getElementById('openaiConfig');
@@ -563,7 +563,7 @@ function removeGEvalCriteria(button) {
 // 使用 ConfigForm.toggleQuestionInput() 替代
 
 
-// 創建/更新配置表單
+// 創建/更新專案表單
 async function saveConfigForm() {
     try {
         // 驗證表單
@@ -589,11 +589,11 @@ async function saveConfigForm() {
             }
         }
         
-        console.log('生成的配置內容:', config);
-        console.log('配置名稱:', name);
+        console.log('生成的專案內容:', config);
+        console.log('專案名稱:', name);
         console.log('上傳檔案:', uploadedFile);
         
-        // 判斷是創建新配置還是更新現有配置
+        // 判斷是創建新專案還是更新現有專案
         const isEdit = ConfigManager.selectedConfig() && ConfigManager.selectedConfig().id;
         const url = isEdit ? `/api/configs/${ConfigManager.selectedConfig().id}` : '/api/configs';
         const method = isEdit ? 'PUT' : 'POST';
@@ -613,10 +613,10 @@ async function saveConfigForm() {
         const result = await response.json();
         
         if (response.ok) {
-            showAlert(isEdit ? '配置儲存成功' : '配置創建成功', 'success');
+            showAlert(isEdit ? '專案儲存成功' : '專案創建成功', 'success');
             await loadConfigs();
             
-            // 如果是編輯模式，顯示更新後的配置詳情
+            // 如果是編輯模式，顯示更新後的專案詳情
             if (isEdit) {
                 await ConfigManager.selectConfig(ConfigManager.selectedConfig().id);
             } else {
@@ -628,18 +628,18 @@ async function saveConfigForm() {
         }
         
     } catch (error) {
-        console.error('配置操作失敗:', error);
-        showAlert('配置操作失敗', 'danger');
+        console.error('專案操作失敗:', error);
+        showAlert('專案操作失敗', 'danger');
     }
 }
 
-// 取消配置表單 - 已移至 ConfigForm 模組
+// 取消專案表單 - 已移至 ConfigForm 模組
 // 使用 ConfigForm.cancelConfigForm() 替代
 
-// 隱藏配置表單 - 已移至 ConfigForm 模組
+// 隱藏專案表單 - 已移至 ConfigForm 模組
 // 使用 ConfigForm.hideConfigForm() 替代
 
-// 保存友善配置（保留用於模態框）
+// 保存友善專案（保留用於模態框）
 async function saveFriendlyConfig() {
     try {
         // 驗證表單
@@ -665,11 +665,11 @@ async function saveFriendlyConfig() {
             }
         }
         
-        console.log('生成的配置內容:', config);
-        console.log('配置名稱:', name);
+        console.log('生成的專案內容:', config);
+        console.log('專案名稱:', name);
         console.log('上傳檔案:', uploadedFile);
         
-        // 判斷是創建新配置還是更新現有配置
+        // 判斷是創建新專案還是更新現有專案
         const isEdit = ConfigManager.selectedConfig() && ConfigManager.selectedConfig().id;
         const url = isEdit ? `/api/configs/${ConfigManager.selectedConfig().id}` : '/api/configs';
         const method = isEdit ? 'PUT' : 'POST';
@@ -689,19 +689,19 @@ async function saveFriendlyConfig() {
         const result = await response.json();
         
         if (response.ok) {
-            showAlert(isEdit ? '配置儲存成功' : '配置創建成功', 'success');
+            showAlert(isEdit ? '專案儲存成功' : '專案創建成功', 'success');
             bootstrap.Modal.getInstance(document.getElementById('friendlyConfigModal')).hide();
             bootstrap.Modal.getInstance(document.getElementById('configPreviewModal')).hide();
             await loadConfigs();
-            // 清除選中的配置
+            // 清除選中的專案
             ConfigManager.selectedConfig() = null;
         } else {
             showAlert((isEdit ? '儲存' : '創建') + '失敗: ' + result.error, 'danger');
         }
         
     } catch (error) {
-        console.error('創建配置失敗:', error);
-        showAlert('創建配置失敗', 'danger');
+        console.error('創建專案失敗:', error);
+        showAlert('創建專案失敗', 'danger');
     }
 }
 

@@ -111,10 +111,10 @@ function showConfigDetails(config) {
     configForm.style.display = 'none';
     configFormActions.style.display = 'none';
     configDetails.style.display = 'block';
-    configFormTitle.textContent = '配置詳情';
+    configFormTitle.textContent = '專案詳情';
     
-    // 顯示配置詳情
-    const configName = config.parsed?.description || config.name || config.id || '未命名配置';
+    // 顯示專案詳情
+    const configName = config.parsed?.description || config.name || config.id || '未命名專案';
     
     configDetails.innerHTML = `
         <div class="config-detail-view">
@@ -131,10 +131,10 @@ function showConfigDetails(config) {
                 </div>
                 <div class="btn-group">
                     <button class="btn btn-success" onclick="ConfigManager.runConfig('${config.id}')">
-                        <i class="fas fa-play me-2"></i>執行配置
+                        <i class="fas fa-play me-2"></i>執行專案
                     </button>
                     <button class="btn btn-primary" onclick="ConfigManager.editConfig('${config.id}')">
-                        <i class="fas fa-edit me-2"></i>編輯配置
+                        <i class="fas fa-edit me-2"></i>編輯專案
                     </button>
                     <div class="dropdown">
                         <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -142,7 +142,7 @@ function showConfigDetails(config) {
                         </button>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item text-danger" href="#" onclick="ConfigManager.deleteConfig('${config.id}')">
-                                <i class="fas fa-trash me-2"></i>刪除配置
+                                <i class="fas fa-trash me-2"></i>刪除專案
                             </a></li>
                         </ul>
                     </div>
@@ -153,7 +153,7 @@ function showConfigDetails(config) {
             <div class="card border-0 bg-light">
                 <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 text-secondary">
-                        <i class="fas fa-code me-2"></i>配置內容預覽
+                        <i class="fas fa-code me-2"></i>專案內容預覽
                     </h6>
                     <button class="btn btn-sm btn-outline-secondary" onclick="ConfigManager.copyConfigContent('${config.id}')">
                         <i class="fas fa-copy me-1"></i>複製
@@ -167,12 +167,12 @@ function showConfigDetails(config) {
     `;
 }
 
-// 複製配置內容
+// 複製專案內容
 function copyConfigContent(configId) {
     const config = currentConfigs.find(c => c.id === configId);
     if (config) {
         navigator.clipboard.writeText(config.content).then(() => {
-            showAlert('配置內容已複製到剪貼簿', 'success');
+            showAlert('專案內容已複製到剪貼簿', 'success');
         }).catch(() => {
             showAlert('複製失敗', 'danger');
         });

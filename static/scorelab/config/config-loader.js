@@ -1,5 +1,5 @@
-// 配置載入模組
-// 負責配置的載入和顯示功能
+// 專案載入模組
+// 負責專案的載入和顯示功能
 
 // 顯示當前測試問題信息
 function showCurrentTestInfo(yamlContent) {
@@ -24,13 +24,13 @@ function showCurrentTestInfo(yamlContent) {
                 testInfoHtml = `
                     <div class="alert alert-info mb-4">
                         <i class="fas fa-file-csv me-2"></i>
-                        <strong>目前已配置的測試檔案：</strong>
+                        <strong>目前已設定的測試檔案：</strong>
                         <ul class="mb-0 mt-2">
                             ${fileNames.map(file => `<li><code>${file}</code></li>`).join('')}
                         </ul>
                         <small class="text-muted d-block mt-2">
                             <i class="fas fa-lightbulb me-1"></i>
-                            如果要更改測試問題，可以上傳新的 CSV 檔案替換現有配置
+                            如果要更改測試問題，可以上傳新的 CSV 檔案替換現有設定
                         </small>
                     </div>
                 `;
@@ -49,14 +49,14 @@ function showCurrentTestInfo(yamlContent) {
                 testInfoHtml = `
                     <div class="alert alert-success mb-4">
                         <i class="fas fa-list-ul me-2"></i>
-                        <strong>目前已配置 ${prompts.length} 個測試問題：</strong>
+                        <strong>目前已設定 ${prompts.length} 個測試問題：</strong>
                         <div class="mt-2 p-2 bg-light rounded">
                             ${prompts.slice(0, 3).map((prompt, index) => `<div class="small mb-1"><strong>${index + 1}.</strong> ${prompt}</div>`).join('')}
                             ${prompts.length > 3 ? `<div class="small text-muted">... 還有 ${prompts.length - 3} 個問題</div>` : ''}
                         </div>
                         <small class="text-muted d-block mt-2">
                             <i class="fas fa-lightbulb me-1"></i>
-                            如果要修改問題，可以上傳新的 CSV 檔案替換現有配置
+                            如果要修改問題，可以上傳新的 CSV 檔案替換現有設定
                         </small>
                     </div>
                 `;
@@ -64,18 +64,18 @@ function showCurrentTestInfo(yamlContent) {
                 testInfoHtml = `
                     <div class="alert alert-warning mb-4">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>檢測到 prompts 配置但沒有具體問題</strong>
+                        <strong>檢測到 prompts 設定但沒有具體問題</strong>
                     </div>
                 `;
             }
         }
     }
     
-    // 將測試問題提醒插入到測試問題配置區域
+    // 將測試問題提醒插入到測試問題設定區域
     if (testInfoHtml) {
         // 使用 setTimeout 確保 DOM 已經渲染完成
         setTimeout(() => {
-            // 尋找步驟3的測試問題配置區域
+            // 尋找步驟3的測試問題設定區域
             const step3 = document.getElementById('step3');
             if (step3) {
                 // 移除舊的提醒
@@ -117,25 +117,25 @@ function showCurrentTestInfo(yamlContent) {
 // 將配置載入到表單中
 async function loadConfigToForm(config) {
     try {
-        console.log('開始載入配置到表單:', config);
+        console.log('開始載入專案到表單:', config);
         
-        // 解析 YAML 配置
+        // 解析 YAML 專案設定
         const yamlContent = config.content;
         console.log('YAML 內容:', yamlContent);
         
-        // 檢查並顯示當前配置的測試問題信息
+        // 檢查並顯示當前專案的測試問題信息
         showCurrentTestInfo(yamlContent);
         
         // 基本資訊
         const descriptionMatch = yamlContent.match(/description:\s*["']?([^"'\n]+)["']?/);
         if (descriptionMatch) {
             document.getElementById('configName').value = descriptionMatch[1];
-            console.log('設置配置名稱:', descriptionMatch[1]);
+            console.log('設置專案名稱:', descriptionMatch[1]);
         }
         
-        // 檢查是否有 providers 配置（格式一）
+        // 檢查是否有 providers 設定（格式一）
         if (yamlContent.includes('providers:')) {
-            // 解析 useHttps 配置
+            // 解析 useHttps 設定
             const useHttpsMatch = yamlContent.match(/useHttps:\s*(true|false)/);
             if (useHttpsMatch) {
                 document.getElementById('useHttps').checked = useHttpsMatch[1] === 'true';

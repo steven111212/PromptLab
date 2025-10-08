@@ -219,7 +219,7 @@
                     <div class="nav nav-tabs border-0">
                         <a class="nav-link active px-4 py-3 border-0" href="#" data-tab="config" 
                            style="font-weight: 500;">
-                            <i class="fas fa-cog me-2"></i>配置管理
+                            <i class="fas fa-cog me-2"></i>評測專案管理
                         </a>
                         <a class="nav-link px-4 py-3 border-0" href="#" data-tab="results"
                            style="font-weight: 500;">
@@ -243,11 +243,11 @@
                         <!-- 簡潔的標題列 -->
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
-                                <h2 class="mb-1"><i class="fas fa-cog me-2 text-primary"></i>配置管理</h2>
-                                <p class="text-muted mb-0">管理和編輯你的評測配置</p>
+                                <h2 class="mb-1"><i class="fas fa-cog me-2 text-primary"></i>評測專案管理</h2>
+                                <p class="text-muted mb-0">管理和編輯你的評測專案</p>
                             </div>
                             <button class="btn btn-primary btn-lg" onclick="showNewConfigForm()">
-                                <i class="fas fa-plus me-2"></i>新增配置
+                                <i class="fas fa-plus me-2"></i>建立評測專案
                             </button>
                         </div>
 
@@ -258,7 +258,7 @@
                                 <div class="card border-0 shadow-sm">
                                     <div class="card-header bg-light border-0">
                                         <h6 class="mb-0 text-secondary">
-                                            <i class="fas fa-list me-2"></i>配置列表
+                                            <i class="fas fa-list me-2"></i>專案列表
                                         </h6>
                                     </div>
                                     <div class="card-body p-0">
@@ -277,11 +277,11 @@
                                 <div class="card border-0 shadow-sm">
                                     <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
                                         <h5 id="configFormTitle" class="mb-0 text-dark">
-                                            <i class="fas fa-file-alt me-2 text-primary"></i>配置詳情
+                                            <i class="fas fa-file-alt me-2 text-primary"></i>專案詳情
                                         </h5>
                                         <div id="configFormActions" class="btn-group" style="display: none;">
                                             <button class="btn btn-success" onclick="saveConfigForm()">
-                                                <i class="fas fa-save me-2"></i>創建配置
+                                                <i class="fas fa-save me-2"></i>建立專案
                                             </button>
                                             <button class="btn btn-outline-secondary" onclick="cancelConfigForm()">
                                                 <i class="fas fa-times me-2"></i>取消
@@ -296,9 +296,9 @@
                                                     <i class="fas fa-rocket text-primary" style="font-size: 4rem; opacity: 0.3;"></i>
                                                 </div>
                                                 <h4 class="text-muted mb-3">開始你的評測之旅</h4>
-                                                <p class="text-muted mb-4">選擇一個現有配置進行編輯，或創建一個新的評測配置</p>
+                                                <p class="text-muted mb-4">選擇一個現有專案進行編輯，或建立一個新的評測專案</p>
                                                 <button class="btn btn-primary btn-lg" onclick="showNewConfigForm()">
-                                                    <i class="fas fa-plus me-2"></i>新增配置
+                                                    <i class="fas fa-plus me-2"></i>建立評測專案
                                                 </button>
                                             </div>
                                         </div>
@@ -453,7 +453,7 @@
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">創建評測配置</h5>
+                    <h5 class="modal-title">建立評測專案</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -464,7 +464,7 @@
                                 <h6 class="text-primary"><i class="fas fa-info-circle me-2"></i>基本資訊</h6>
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label">配置名稱 *</label>
+                                <label class="form-label">專案名稱 *</label>
                                 <input type="text" class="form-control" id="configName" placeholder="例如：台電客服評測" required>
                                 <small class="form-text text-muted">請勿使用特殊字符: < > : " / \ | ? *</small>
                             </div>
@@ -473,15 +473,15 @@
                         <!-- 被測API配置 -->
                         <div class="row mb-4">
                             <div class="col-12">
-                                <h6 class="text-primary"><i class="fas fa-robot me-2"></i>被測API配置</h6>
-                                <p class="text-muted small">配置要測試的API端點</p>
+                                <h6 class="text-primary"><i class="fas fa-robot me-2"></i>API 設定</h6>
+                                <p class="text-muted small">設定要測試的API端點</p>
                             </div>
                         </div>
 
                         <!-- HTTP Request 配置 -->
                         <div class="row mb-4">
                             <div class="col-12">
-                                <label class="form-label">HTTP Request 配置 *</label>
+                                <label class="form-label">API 請求設定 *</label>
                                 <div class="card">
                                     <div class="card-body">
                                         <!-- HTTPS 支援 -->
@@ -582,7 +582,7 @@
                         <!-- 進階配置 -->
                         <div class="row mb-4">
                             <div class="col-12">
-                                <h6 class="text-primary"><i class="fas fa-cogs me-2"></i>進階配置</h6>
+                                <h6 class="text-primary"><i class="fas fa-cogs me-2"></i>進階設定</h6>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Response Transform</label>
@@ -639,7 +639,7 @@
                         <!-- 評分標準 -->
                         <div class="row mb-4">
                             <div class="col-12">
-                                <h6 class="text-primary"><i class="fas fa-check-circle me-2"></i>評分標準配置</h6>
+                                <h6 class="text-primary"><i class="fas fa-check-circle me-2"></i>評分標準設定</h6>
                                 <p class="text-muted small">選擇評分方式，支援預設指標和 LLM 評分兩大類別</p>
                             </div>
                         </div>
@@ -972,8 +972,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-outline-info" onclick="previewConfig()">預覽配置</button>
-                    <button type="button" class="btn btn-primary" onclick="saveFriendlyConfig()">創建配置</button>
+                    <button type="button" class="btn btn-outline-info" onclick="previewConfig()">預覽專案</button>
+                    <button type="button" class="btn btn-primary" onclick="saveFriendlyConfig()">建立專案</button>
                 </div>
             </div>
         </div>
@@ -984,7 +984,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">配置預覽</h5>
+                    <h5 class="modal-title">專案預覽</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -992,7 +992,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
-                    <button type="button" class="btn btn-primary" onclick="saveFriendlyConfig()">確認創建</button>
+                    <button type="button" class="btn btn-primary" onclick="saveFriendlyConfig()">確認建立</button>
                 </div>
             </div>
         </div>
@@ -1003,7 +1003,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">配置模板</h5>
+                    <h5 class="modal-title">專案模板</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
