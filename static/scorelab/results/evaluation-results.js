@@ -348,10 +348,6 @@ async function showTestDetails(testIndex, evalId) {
         }
         const test = detail.details[testIndex];
         
-        // 生成 Variables 區域的 HTML
-        const variablesHtml = Object.entries(test.variables || {}).map(([key, value]) => 
-            `<div class="mb-2"><strong>${key}:</strong><br><span class="text-muted">${value || '無值'}</span></div>`
-        ).join('');
 
         // 生成 Assertions 表格的 HTML
         const assertionsHtml = test.assertions && test.assertions.length > 0 ? 
@@ -409,29 +405,6 @@ async function showTestDetails(testIndex, evalId) {
                         </div>
                         <div class="modal-body">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <div class="card">
-                                        <div class="card-header bg-info text-white">
-                                            <h6 class="mb-0">Variables</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            ${variablesHtml || '<p class="text-muted">無變數資料</p>'}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card">
-                                        <div class="card-header bg-primary text-white">
-                                            <h6 class="mb-0">Output</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <pre class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto; font-size: 0.85rem; white-space: pre-wrap;">${test.output || test.error || '無輸出'}</pre>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row mt-3">
                                 <div class="col-12">
                                     <div class="card">
                                         <div class="card-header bg-success text-white">

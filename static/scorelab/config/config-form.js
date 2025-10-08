@@ -397,12 +397,12 @@ function generateConfigFormHTML() {
                         <div class="card-body">
                             <p class="text-muted small mb-3">選擇一個或多個內建評分指標</p>
 
-                            <!-- JavaScript 驗證 -->
+                            <!-- 回覆長度檢查 -->
                             <div class="mb-3">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" id="enableJavascript" onchange="ScoringCriteria.toggleJavascriptConfig()">
                                     <label class="form-check-label" for="enableJavascript">
-                                        <i class="fas fa-code me-2"></i>JavaScript 驗證
+                                        <i class="fas fa-ruler me-2"></i>回覆長度檢查
                                     </label>
                                 </div>
                                 <div id="javascriptConfig" style="display: none;" class="mt-2 ps-4">
@@ -427,14 +427,6 @@ function generateConfigFormHTML() {
                             </div>
 
                             <!-- 其他 Metric 評分選項 -->
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="enableFactuality">
-                                    <label class="form-check-label" for="enableFactuality">
-                                        <i class="fas fa-check-double me-2"></i>事實性檢查
-                                    </label>
-                </div>
-            </div>
 
                             <div class="mb-2">
                                 <div class="form-check">
@@ -449,7 +441,25 @@ function generateConfigFormHTML() {
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" id="enableBertScore">
                                     <label class="form-check-label" for="enableBertScore">
-                                        <i class="fas fa-calculator me-2"></i>BERT Score
+                                        <i class="fas fa-calculator me-2"></i>BERT Score (F1)
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableBertRecall">
+                                    <label class="form-check-label" for="enableBertRecall">
+                                        <i class="fas fa-calculator me-2"></i>BERT Recall
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableBertPrecision">
+                                    <label class="form-check-label" for="enableBertPrecision">
+                                        <i class="fas fa-calculator me-2"></i>BERT Precision
                                     </label>
                                 </div>
                             </div>
@@ -476,9 +486,59 @@ function generateConfigFormHTML() {
                             </h6>
                         </div>
                         <div class="card-body">
-                            <div class="alert alert-info mb-3">
-                                <i class="fas fa-info-circle me-2"></i>
-                                如果你要使用 grader 評分，你需要配置 grader provider（評分者提供商），例如選用 OpenAI 並填寫對應的 API Key 和選擇模型等。
+                            <!-- Grader Provider 配置 -->
+                            <div class="mb-4">
+                                <h6 class="text-success mb-3">
+                                    <i class="fas fa-cogs me-2"></i>Grader Provider 配置
+                                </h6>
+                                <p class="text-muted small mb-3">選擇要使用哪個 LLM 服務來進行評分</p>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label small">選擇 LLM 提供者 *</label>
+                                    <select class="form-select form-select-sm" id="llmProvider" onchange="ScoringCriteria.updateLLMProviderConfig()" required>
+                                        <option value="">請選擇 LLM 提供者</option>
+                                        <option value="openai">OpenAI</option>
+                                        <option value="anthropic">Anthropic (Claude)</option>
+                                        <option value="azure-openai">Azure OpenAI</option>
+                                        <option value="google">Google (Gemini)</option>
+                                        <option value="custom">自定義 HTTP API</option>
+                                    </select>
+                                    <small class="form-text text-muted">這個 LLM 將用來評估被測試 API 的回覆品質</small>
+                                </div>
+                                
+                                <!-- LLM 提供者配置區域會在這裡動態顯示 -->
+                                <div id="llmProviderConfigArea"></div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <!-- 評分方式選擇 -->
+                            <div class="mb-3">
+                                <h6 class="text-success mb-3">
+                                    <i class="fas fa-chart-line me-2"></i>評分方式選擇
+                                </h6>
+                                <p class="text-muted small mb-3">選擇要使用的評分方式</p>
+                            </div>
+
+                            <!-- 事實性檢查評分 -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableFactuality" onchange="ScoringCriteria.toggleFactualityConfig()">
+                                    <label class="form-check-label" for="enableFactuality">
+                                        <i class="fas fa-check-double me-2"></i>事實性檢查
+                                    </label>
+                                </div>
+                                <div id="factualityConfig" style="display: none;" class="mt-2 ps-4">
+                                    <div class="row">
+                                        <div class="col-12 mb-2">
+                                            <label class="form-label small">選擇變數</label>
+                                            <select class="form-select form-select-sm" id="factualityVariable">
+                                                <option value="">請選擇CSV檔案中的變數</option>
+                                            </select>
+                                            <small class="form-text text-muted">從已配置的CSV檔案中選擇變數</small>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- G-Eval 評分 -->
@@ -505,28 +565,6 @@ function generateConfigFormHTML() {
                                         </button>
                                     </div>
                                     
-                                    <hr class="my-3">
-                                    <h6 class="text-success mb-3">
-                                        <i class="fas fa-cogs me-2"></i>Grader Provider 配置
-                                    </h6>
-                                    <p class="text-muted small mb-3">選擇要使用哪個 LLM 服務來進行評分</p>
-                                    
-                                    <div class="mb-3">
-                                        <label class="form-label small">選擇 LLM 提供者 *</label>
-                                        <select class="form-select form-select-sm" id="llmProvider" onchange="ScoringCriteria.updateLLMProviderConfig()" required>
-                                            <option value="">請選擇 LLM 提供者</option>
-                                            <option value="openai">OpenAI</option>
-                                            <option value="anthropic">Anthropic (Claude)</option>
-                                            <option value="azure-openai">Azure OpenAI</option>
-                                            <option value="google">Google (Gemini)</option>
-                                            <option value="custom">自定義 HTTP API</option>
-                                        </select>
-                                        <small class="form-text text-muted">這個 LLM 將用來評估被測試 API 的回覆品質</small>
-                                    </div>
-                                    
-                                    <!-- LLM 提供者配置區域會在這裡動態顯示 -->
-                                        <div id="llmProviderConfigArea"></div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -566,6 +604,10 @@ function handleCSVUpload(input) {
         const lines = csv.split('\n');
         const headers = lines[0].split(',').map(h => h.trim());
         
+        // 更新事實性檢查變數選項（從當前上傳的檔案）
+        if (window.ScoringCriteria && window.ScoringCriteria.updateFactualityVariables) {
+            window.ScoringCriteria.updateFactualityVariables(headers);
+        }
 
         // 顯示預覽
         const preview = document.getElementById('csvPreview');
@@ -597,6 +639,66 @@ function handleCSVUpload(input) {
     };
     
     reader.readAsText(file);
+}
+
+// 從已配置的CSV檔案中獲取變數
+async function loadFactualityVariablesFromConfig() {
+    console.log('loadFactualityVariablesFromConfig 被調用');
+    
+    // 檢查是否有已配置的CSV檔案
+    const csvFileInput = document.getElementById('csvFile');
+    console.log('csvFileInput:', csvFileInput);
+    
+    if (csvFileInput && csvFileInput.files.length > 0) {
+        console.log('找到上傳的CSV檔案，開始讀取');
+        // 如果有上傳的檔案，直接讀取檔案內容並解析headers
+        const file = csvFileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const csv = e.target.result;
+            const lines = csv.split('\n');
+            const headers = lines[0].split(',').map(h => h.trim());
+            console.log('從上傳檔案解析到的headers:', headers);
+            
+            // 更新事實性檢查變數選項
+            if (window.ScoringCriteria && window.ScoringCriteria.updateFactualityVariables) {
+                window.ScoringCriteria.updateFactualityVariables(headers);
+            }
+        };
+        reader.readAsText(file);
+    } else {
+        // 如果沒有上傳檔案，嘗試從已配置的CSV檔案中獲取
+        console.log('沒有上傳檔案，嘗試從已配置的CSV檔案中獲取headers');
+        
+        // 檢查是否有選中的配置
+        const selectedConfig = ConfigManager.selectedConfig();
+        if (selectedConfig && selectedConfig.id) {
+            console.log('找到選中的配置:', selectedConfig.id);
+            
+            try {
+                const response = await fetch(`/api/get-csv-headers/${selectedConfig.id}`);
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    console.log('從已配置CSV檔案獲取到的headers:', result.headers);
+                    console.log('檔案名稱:', result.filename);
+                    
+                    // 更新事實性檢查變數選項
+                    if (window.ScoringCriteria && window.ScoringCriteria.updateFactualityVariables) {
+                        window.ScoringCriteria.updateFactualityVariables(result.headers);
+                    }
+                } else {
+                    console.log('無法從已配置CSV檔案獲取headers:', result.error);
+                    console.log('請先上傳CSV檔案');
+                }
+            } catch (error) {
+                console.error('獲取已配置CSV headers失敗:', error);
+                console.log('請先上傳CSV檔案');
+            }
+        } else {
+            console.log('沒有選中的配置，請先上傳CSV檔案');
+        }
+    }
 }
 
 // 切換問題輸入方式

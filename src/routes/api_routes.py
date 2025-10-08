@@ -189,3 +189,46 @@ def register_api_routes(app):
         file = request.files['file']
         result, status_code = csv_service.upload_csv(file)
         return jsonify(result), status_code
+
+    @app.route('/api/get-csv-headers/<config_id>', methods=['GET'])
+    def get_csv_headers(config_id):
+        """獲取已配置CSV檔案的headers"""
+        try:
+            from src.services.config_service import ConfigService
+            config_service = ConfigService()
+            
+            # 獲取配置資訊
+            config_result, status_code = config_service.get_config(config_id)
+            if status_code != 200:
+                return jsonify({'error': '配置不存在'}), 404
+            
+            config = config_result['parsed']
+            
+            # 檢查是否有tests配置
+            if 'tests' in config and config['tests']:
+                for test in config['tests']:
+                    if isinstance(test, str) and test.startswith('file://'):
+                        filename = test.replace('file://', '')
+                        
+                        # 構建檔案路徑
+                        import os
+                        config_dir = os.path.join('configs', config_id)
+                        csv_path = os.path.join(config_dir, filename)
+                        
+                        if os.path.exists(csv_path):
+                            # 讀取CSV檔案並返回headers
+                            import pandas as pd
+                            df = pd.read_csv(csv_path)
+                            headers = df.columns.tolist()
+                            
+                            return jsonify({
+                                'success': True,
+                                'headers': headers,
+                                'filename': filename
+                            }), 200
+            
+            return jsonify({'error': '沒有找到CSV檔案'}), 404
+            
+        except Exception as e:
+            print(f"獲取CSV headers錯誤: {e}")
+            return jsonify({'error': f'獲取CSV headers失敗: {str(e)}'}), 500

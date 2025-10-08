@@ -204,6 +204,8 @@ function generateConfigFromForm() {
                             document.getElementById('enableFactuality').checked ||
                             document.getElementById('enableSimilarity').checked ||
                             document.getElementById('enableBertScore').checked ||
+                            document.getElementById('enableBertRecall').checked ||
+                            document.getElementById('enableBertPrecision').checked ||
                             document.getElementById('enableRouge').checked ||
                             document.getElementById('enableContains').checked ||
                             document.getElementById('enableRegex').checked ||
@@ -215,11 +217,6 @@ function generateConfigFromForm() {
     if (hasMetricScoring) {
         // Metric 評分 - 添加各種預設指標
         
-        // 事實性檢查
-        if (document.getElementById('enableFactuality') && document.getElementById('enableFactuality').checked) {
-            asserts.push(`  - type: factuality
-    value: "{{expected_answer}}"`);
-        }
         
         // 語義相似度
         if (document.getElementById('enableSimilarity') && document.getElementById('enableSimilarity').checked) {
@@ -228,11 +225,22 @@ function generateConfigFromForm() {
     threshold: 0.8`);
         }
         
-        // BERT Score
+        // BERT Score (F1)
         if (document.getElementById('enableBertScore') && document.getElementById('enableBertScore').checked) {
             asserts.push(`  - type: python
-    value: get_assert_bert_f1(output, "{{expected_answer}}")
-    threshold: 0.7`);
+    value: file://../../assert/bert_scoring.py:get_assert_bert_f1`);
+        }
+        
+        // BERT Recall
+        if (document.getElementById('enableBertRecall') && document.getElementById('enableBertRecall').checked) {
+            asserts.push(`  - type: python
+    value: file://../../assert/bert_scoring.py:get_assert_bert_recall`);
+        }
+        
+        // BERT Precision
+        if (document.getElementById('enableBertPrecision') && document.getElementById('enableBertPrecision').checked) {
+            asserts.push(`  - type: python
+    value: file://../../assert/bert_scoring.py:get_assert_bert_precision`);
         }
         
         // ROUGE Score
@@ -282,8 +290,17 @@ function generateConfigFromForm() {
     
     // 檢查是否有選擇 LLM Grader 評分
     const hasLLMScoring = document.getElementById('enableGEval').checked;
+    const hasFactualityScoring = document.getElementById('enableFactuality') && document.getElementById('enableFactuality').checked;
     
-    if (hasLLMScoring) {
+    if (hasLLMScoring || hasFactualityScoring) {
+        // 事實性檢查評分
+        if (hasFactualityScoring) {
+            const factualityVariable = document.getElementById('factualityVariable');
+            const selectedVariable = factualityVariable ? factualityVariable.value : '{{expected_answer}}';
+            asserts.push(`  - type: factuality
+    value: "${selectedVariable}"`);
+        }
+        
         // LLM Grader 評分 - G-Eval
         if (document.getElementById('enableGEval') && document.getElementById('enableGEval').checked) {
         const criteriaInputs = document.querySelectorAll('#gevalCriteriaList input[type="text"]');
@@ -350,20 +367,28 @@ function generateConfigFromForm() {
         }
     }
     
-    // 如果有評分標準，使用 defaultTest 格式
-    if (assertConfig) {
-        // 檢查是否有 G-Eval 評分
-        const hasGEval = document.getElementById('enableGEval') && document.getElementById('enableGEval').checked;
-        
-        if (hasGEval) {
-            // 有 LLM Grader 評分，需要在 defaultTest.options 中添加 provider 配置
+    // 檢查是否有 LLM Grader 評分或 provider 配置
+    const hasGEval = document.getElementById('enableGEval') && document.getElementById('enableGEval').checked;
+    const hasFactuality = document.getElementById('enableFactuality') && document.getElementById('enableFactuality').checked;
+    const hasLLMProvider = document.getElementById('llmProvider') && document.getElementById('llmProvider').value;
+    
+    // 如果有評分標準或LLM provider配置，使用 defaultTest 格式
+    if (assertConfig || hasLLMProvider) {
+        if (hasGEval || hasFactuality || hasLLMProvider) {
+            // 有 LLM Grader 評分或 provider 配置，需要在 defaultTest.options 中添加 provider 配置
             const llmProvider = document.getElementById('llmProvider').value;
             const graderProviderConfig = generateGraderProviderConfig(llmProvider);
             
             if (graderProviderConfig) {
-                config += `\n\ndefaultTest:\n  options:\n${graderProviderConfig}\n\n  ${assertConfig}`;
+                if (assertConfig) {
+                    config += `\n\ndefaultTest:\n  options:\n${graderProviderConfig}\n\n  ${assertConfig}`;
+                } else {
+                    config += `\n\ndefaultTest:\n  options:\n${graderProviderConfig}`;
+                }
             } else {
-                config += `\n\ndefaultTest:\n  ${assertConfig}`;
+                if (assertConfig) {
+                    config += `\n\ndefaultTest:\n  ${assertConfig}`;
+                }
             }
         } else {
             // 沒有 LLM Grader 評分，只需要 assert 配置
@@ -408,13 +433,15 @@ function generateGraderProviderConfig(provider) {
         case 'azure-openai':
             const azureEndpoint = document.getElementById('azureEndpoint').value;
             const azureApiKey = document.getElementById('azureApiKey').value;
-            const azureDeployment = document.getElementById('azureDeployment').value;
+            const azureModel = document.getElementById('azureModel').value;
+            const azureApiVersion = document.getElementById('azureApiVersion').value;
             
             providerConfig = `    provider:
-      id: azure:${azureDeployment}
+      id: openai:${azureModel}
       config:
         apiKey: "${azureApiKey || 'your-api-key'}"
-        apiBaseUrl: "${azureEndpoint || 'https://your-resource.openai.azure.com'}"`;
+        apiBaseUrl: "${azureEndpoint || 'https://your-resource.openai.azure.com'}"
+        apiVersion: "${azureApiVersion || '2024-02-15-preview'}"`;
             break;
             
         case 'google':

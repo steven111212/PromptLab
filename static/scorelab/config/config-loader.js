@@ -222,6 +222,114 @@ async function loadConfigToForm(config) {
         
         // 測試問題信息已在 showCurrentTestInfo 函數中處理
         
+        // 載入 Grader Provider 配置（無論是否有評分標準）
+        const providerMatch = yamlContent.match(/defaultTest:\s*\n\s*options:\s*\n\s*provider:\s*\n\s*id:\s*([^\n]+)/);
+        if (providerMatch) {
+            const providerId = providerMatch[1].trim();
+            console.log('找到 Provider ID:', providerId);
+            
+            // 解析 provider 類型和模型
+            // 先檢查是否為Azure OpenAI（優先級最高）
+            if (providerId.startsWith('openai:') && 
+                (yamlContent.includes('apiBaseUrl') || yamlContent.includes('apiVersion'))) {
+                // Azure OpenAI配置
+                document.getElementById('llmProvider').value = 'azure-openai';
+                const model = providerId.replace('openai:', '');
+                setTimeout(() => {
+                    ScoringCriteria.updateLLMProviderConfig();
+                    setTimeout(() => {
+                        const azureModelSelect = document.getElementById('azureModel');
+                        if (azureModelSelect) {
+                            azureModelSelect.value = model;
+                        }
+                        
+                        // 載入 Azure 配置
+                        const apiKeyMatch = yamlContent.match(/apiKey:\s*["]?([^"\n]+)["]?/);
+                        if (apiKeyMatch) {
+                            const azureApiKey = document.getElementById('azureApiKey');
+                            if (azureApiKey) {
+                                azureApiKey.value = apiKeyMatch[1].trim();
+                            }
+                        }
+                        
+                        const apiBaseUrlMatch = yamlContent.match(/apiBaseUrl:\s*["]?([^"\n]+)["]?/);
+                        if (apiBaseUrlMatch) {
+                            const azureApiBaseUrl = document.getElementById('azureApiBaseUrl');
+                            if (azureApiBaseUrl) {
+                                azureApiBaseUrl.value = apiBaseUrlMatch[1].trim();
+                            }
+                        }
+                        
+                        const apiVersionMatch = yamlContent.match(/apiVersion:\s*["]?([^"\n]+)["]?/);
+                        if (apiVersionMatch) {
+                            const azureApiVersion = document.getElementById('azureApiVersion');
+                            if (azureApiVersion) {
+                                azureApiVersion.value = apiVersionMatch[1].trim();
+                            }
+                        }
+                    }, 100);
+                }, 100);
+            } else if (providerId.startsWith('openai:')) {
+                // 一般OpenAI配置
+                document.getElementById('llmProvider').value = 'openai';
+                const model = providerId.replace('openai:', '');
+                setTimeout(() => {
+                    ScoringCriteria.updateLLMProviderConfig();
+                    setTimeout(() => {
+                        const openaiModelSelect = document.getElementById('openaiModel');
+                        if (openaiModelSelect) {
+                            openaiModelSelect.value = model;
+                        }
+                        
+                        // 載入 API Key
+                        const apiKeyMatch = yamlContent.match(/apiKey:\s*["]?([^"\n]+)["]?/);
+                        if (apiKeyMatch) {
+                            const openaiApiKey = document.getElementById('openaiApiKey');
+                            if (openaiApiKey) {
+                                openaiApiKey.value = apiKeyMatch[1].trim();
+                            }
+                        }
+                    }, 100);
+                }, 100);
+            } else if (providerId.startsWith('anthropic:')) {
+                document.getElementById('llmProvider').value = 'anthropic';
+                const model = providerId.replace('anthropic:', '');
+                setTimeout(() => {
+                    ScoringCriteria.updateLLMProviderConfig();
+                    setTimeout(() => {
+                        const anthropicModelSelect = document.getElementById('anthropicModel');
+                        if (anthropicModelSelect) {
+                            anthropicModelSelect.value = model;
+                        }
+                    }, 100);
+                }, 100);
+            } else if (providerId.startsWith('google:')) {
+                document.getElementById('llmProvider').value = 'google';
+                const model = providerId.replace('google:', '');
+                setTimeout(() => {
+                    ScoringCriteria.updateLLMProviderConfig();
+                    setTimeout(() => {
+                        const googleModelSelect = document.getElementById('googleModel');
+                        if (googleModelSelect) {
+                            googleModelSelect.value = model;
+                        }
+                    }, 100);
+                }, 100);
+            } else if (providerId.startsWith('azure:')) {
+                document.getElementById('llmProvider').value = 'azure-openai';
+                const model = providerId.replace('azure:', '');
+                setTimeout(() => {
+                    ScoringCriteria.updateLLMProviderConfig();
+                    setTimeout(() => {
+                        const azureModelSelect = document.getElementById('azureModel');
+                        if (azureModelSelect) {
+                            azureModelSelect.value = model;
+                        }
+                    }, 100);
+                }, 100);
+            }
+        }
+
         // 檢查評分標準
         if (yamlContent.includes('assert:')) {
             // 檢查 JavaScript 驗證
@@ -248,53 +356,41 @@ async function loadConfigToForm(config) {
                 }
             }
             
+            // 檢查事實性檢查
+            if (yamlContent.includes('type: factuality')) {
+                document.getElementById('enableFactuality').checked = true;
+                ScoringCriteria.toggleFactualityConfig();
+                
+                // 載入事實性檢查變數
+                const factualityMatch = yamlContent.match(/type:\s*factuality\s*\n\s*value:\s*["]?([^"\n]+)["]?/);
+                if (factualityMatch) {
+                    const factualityVariable = factualityMatch[1].trim();
+                    const factualityVariableSelect = document.getElementById('factualityVariable');
+                    if (factualityVariableSelect) {
+                        factualityVariableSelect.value = factualityVariable;
+                    }
+                }
+            }
+            
+            // 檢查 BERT Score (F1)
+            if (yamlContent.includes('get_assert_bert_f1')) {
+                document.getElementById('enableBertScore').checked = true;
+            }
+            
+            // 檢查 BERT Recall
+            if (yamlContent.includes('get_assert_bert_recall')) {
+                document.getElementById('enableBertRecall').checked = true;
+            }
+            
+            // 檢查 BERT Precision
+            if (yamlContent.includes('get_assert_bert_precision')) {
+                document.getElementById('enableBertPrecision').checked = true;
+            }
+            
             // 檢查 G-Eval
             if (yamlContent.includes('type: g-eval') || yamlContent.includes('type: llm-rubric')) {
                 document.getElementById('enableGEval').checked = true;
                 ScoringCriteria.toggleGEvalConfig();
-                
-                // 載入 Grader Provider 配置
-                const providerMatch = yamlContent.match(/defaultTest:\s*\n\s*options:\s*\n\s*provider:\s*\n\s*id:\s*([^\n]+)/);
-                if (providerMatch) {
-                    const providerId = providerMatch[1].trim();
-                    console.log('找到 Provider ID:', providerId);
-                    
-                    // 解析 provider 類型和模型
-                    if (providerId.startsWith('openai:')) {
-                        document.getElementById('llmProvider').value = 'openai';
-                        const model = providerId.replace('openai:', '');
-                        setTimeout(() => {
-                            ScoringCriteria.updateLLMProviderConfig();
-                            setTimeout(() => {
-                                const openaiModelSelect = document.getElementById('openaiModel');
-                                if (openaiModelSelect) {
-                                    openaiModelSelect.value = model;
-                                }
-                                
-                                // 載入 API Key
-                                const apiKeyMatch = yamlContent.match(/apiKey:\s*["]?([^"\n]+)["]?/);
-                                if (apiKeyMatch) {
-                                    const openaiApiKey = document.getElementById('openaiApiKey');
-                                    if (openaiApiKey) {
-                                        openaiApiKey.value = apiKeyMatch[1].trim();
-                                    }
-                                }
-                            }, 100);
-                        }, 100);
-                    } else if (providerId.startsWith('anthropic:')) {
-                        document.getElementById('llmProvider').value = 'anthropic';
-                        const model = providerId.replace('anthropic:', '');
-                        setTimeout(() => {
-                            ScoringCriteria.updateLLMProviderConfig();
-                            setTimeout(() => {
-                                const anthropicModelSelect = document.getElementById('anthropicModel');
-                                if (anthropicModelSelect) {
-                                    anthropicModelSelect.value = model;
-                                }
-                            }, 100);
-                        }, 100);
-                    }
-                }
                 
                 // 嘗試解析 G-Eval 配置
                 // 先嘗試解析多行評分標準（value: 後面跟著列表）
