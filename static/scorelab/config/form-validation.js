@@ -353,8 +353,10 @@ function generateGraderProviderConfig(provider) {
     
     switch (provider) {
         case 'openai':
-            const openaiModel = document.getElementById('openaiModel').value;
-            const openaiApiKey = document.getElementById('openaiApiKey').value;
+            const openaiModelElement = document.getElementById('openaiModel');
+            const openaiApiKeyElement = document.getElementById('openaiApiKey');
+            const openaiModel = openaiModelElement ? openaiModelElement.value : '';
+            const openaiApiKey = openaiApiKeyElement ? openaiApiKeyElement.value : '';
             
             providerConfig = `    provider:
       id: openai:${openaiModel}
@@ -363,8 +365,10 @@ function generateGraderProviderConfig(provider) {
             break;
             
         case 'anthropic':
-            const anthropicModel = document.getElementById('anthropicModel').value;
-            const anthropicApiKey = document.getElementById('anthropicApiKey').value;
+            const anthropicModelElement = document.getElementById('anthropicModel');
+            const anthropicApiKeyElement = document.getElementById('anthropicApiKey');
+            const anthropicModel = anthropicModelElement ? anthropicModelElement.value : '';
+            const anthropicApiKey = anthropicApiKeyElement ? anthropicApiKeyElement.value : '';
             
             providerConfig = `    provider:
       id: anthropic:${anthropicModel}
@@ -373,20 +377,25 @@ function generateGraderProviderConfig(provider) {
             break;
             
         case 'azure-openai':
-            const azureEndpoint = document.getElementById('azureEndpoint').value;
-            const azureApiKey = document.getElementById('azureApiKey').value;
-            const azureDeployment = document.getElementById('azureDeployment').value;
+            const azureEndpointElement = document.getElementById('azureEndpoint');
+            const azureApiKeyElement = document.getElementById('azureApiKey');
+            const azureModelElement = document.getElementById('azureModel');
+            const azureEndpoint = azureEndpointElement ? azureEndpointElement.value : '';
+            const azureApiKey = azureApiKeyElement ? azureApiKeyElement.value : '';
+            const azureModel = azureModelElement ? azureModelElement.value : '';
             
             providerConfig = `    provider:
-      id: azure:${azureDeployment}
+      id: azure:chat:${azureModel}
       config:
         apiKey: "${azureApiKey || 'your-api-key'}"
-        apiBaseUrl: "${azureEndpoint || 'https://your-resource.openai.azure.com'}"`;
+        apiHost: "${azureEndpoint || 'https://your-resource.openai.azure.com'}"`;
             break;
             
         case 'google':
-            const googleModel = document.getElementById('googleModel').value;
-            const googleApiKey = document.getElementById('googleApiKey').value;
+            const googleModelElement = document.getElementById('googleModel');
+            const googleApiKeyElement = document.getElementById('googleApiKey');
+            const googleModel = googleModelElement ? googleModelElement.value : '';
+            const googleApiKey = googleApiKeyElement ? googleApiKeyElement.value : '';
             
             providerConfig = `    provider:
       id: google:${googleModel}
@@ -395,9 +404,12 @@ function generateGraderProviderConfig(provider) {
             break;
             
         case 'custom':
-            const customEndpoint = document.getElementById('customEndpoint').value;
-            const customApiKey = document.getElementById('customApiKey').value;
-            const customModel = document.getElementById('customModel').value;
+            const customEndpointElement = document.getElementById('customEndpoint');
+            const customApiKeyElement = document.getElementById('customApiKey');
+            const customModelElement = document.getElementById('customModel');
+            const customEndpoint = customEndpointElement ? customEndpointElement.value : '';
+            const customApiKey = customApiKeyElement ? customApiKeyElement.value : '';
+            const customModel = customModelElement ? customModelElement.value : '';
             
             providerConfig = `    provider:
       id: http
@@ -493,7 +505,7 @@ function resetScoringCriteriaList() {
 
 // 匯出表單驗證相關的函數供其他模組使用
 window.FormValidation = {
-    saveConfiguration,
+    saveProject,
     saveConfigForm,
     saveFriendlyConfig,
     generateConfigFromForm,

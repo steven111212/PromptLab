@@ -162,11 +162,29 @@ def register_api_routes(app):
     def test_api():
         """測試API設定"""
         data = request.json
-        method = data.get('method', 'POST')
-        url = data.get('url', '')
-        headers = data.get('headers', {})
-        body = data.get('body', '')
-        transform_response = data.get('transformResponse', '')
+        
+        # 檢查是否為新的CSV資料測試格式
+        if 'config' in data and 'testData' in data:
+            # 新的CSV資料測試格式
+            config = data.get('config', {})
+            test_data = data.get('testData', {})
+            
+            method = config.get('method', 'POST')
+            url = config.get('url', '')
+            headers = config.get('headers', {})
+            body = config.get('body', '')
+            transform_response = config.get('transformResponse', '')
+            
+            # 記錄CSV資料測試
+            print(f"CSV資料測試 - 使用資料: {test_data}")
+            
+        else:
+            # 傳統的手動測試格式
+            method = data.get('method', 'POST')
+            url = data.get('url', '')
+            headers = data.get('headers', {})
+            body = data.get('body', '')
+            transform_response = data.get('transformResponse', '')
         
         result, status_code = api_test_service.test_api(method, url, headers, body, transform_response)
         return jsonify(result), status_code
@@ -232,3 +250,47 @@ def register_api_routes(app):
         except Exception as e:
             print(f"獲取CSV headers錯誤: {e}")
             return jsonify({'error': f'獲取CSV headers失敗: {str(e)}'}), 500
+
+    @app.route('/api/get-csv-content/<config_id>/<filename>', methods=['GET'])
+    def get_csv_content(config_id, filename):
+        """獲取已配置CSV檔案的內容"""
+        try:
+            from src.services.config_service import ConfigService
+            config_service = ConfigService()
+            
+            # 獲取配置資訊
+            config_result, status_code = config_service.get_config(config_id)
+            if status_code != 200:
+                return jsonify({'error': '配置不存在'}), 404
+            
+            config = config_result['parsed']
+            
+            # 檢查是否有tests配置
+            if 'tests' in config and config['tests']:
+                for test in config['tests']:
+                    if isinstance(test, str) and test.startswith('file://'):
+                        test_filename = test.replace('file://', '')
+                        
+                        # 檢查檔案名稱是否匹配
+                        if test_filename == filename:
+                            # 構建檔案路徑
+                            import os
+                            config_dir = os.path.join('configs', config_id)
+                            csv_path = os.path.join(config_dir, filename)
+                            
+                            if os.path.exists(csv_path):
+                                # 讀取CSV檔案內容
+                                with open(csv_path, 'r', encoding='utf-8') as f:
+                                    csv_content = f.read()
+                                
+                                return jsonify({
+                                    'success': True,
+                                    'data': csv_content,
+                                    'filename': filename
+                                }), 200
+            
+            return jsonify({'error': '沒有找到指定的CSV檔案'}), 404
+            
+        except Exception as e:
+            print(f"獲取CSV內容錯誤: {e}")
+            return jsonify({'error': f'獲取CSV內容失敗: {str(e)}'}), 500

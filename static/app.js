@@ -411,8 +411,10 @@ function generateGraderProviderConfig(provider) {
     
     switch (provider) {
         case 'openai':
-            const openaiModel = document.getElementById('openaiModel').value;
-            const openaiApiKey = document.getElementById('openaiApiKey').value;
+            const openaiModelElement = document.getElementById('openaiModel');
+            const openaiApiKeyElement = document.getElementById('openaiApiKey');
+            const openaiModel = openaiModelElement ? openaiModelElement.value : '';
+            const openaiApiKey = openaiApiKeyElement ? openaiApiKeyElement.value : '';
             
             providerConfig = `    provider:
       id: openai:${openaiModel}
@@ -421,8 +423,10 @@ function generateGraderProviderConfig(provider) {
             break;
             
         case 'anthropic':
-            const anthropicModel = document.getElementById('anthropicModel').value;
-            const anthropicApiKey = document.getElementById('anthropicApiKey').value;
+            const anthropicModelElement = document.getElementById('anthropicModel');
+            const anthropicApiKeyElement = document.getElementById('anthropicApiKey');
+            const anthropicModel = anthropicModelElement ? anthropicModelElement.value : '';
+            const anthropicApiKey = anthropicApiKeyElement ? anthropicApiKeyElement.value : '';
             
             providerConfig = `    provider:
       id: anthropic:${anthropicModel}
@@ -431,22 +435,25 @@ function generateGraderProviderConfig(provider) {
             break;
             
         case 'azure-openai':
-            const azureEndpoint = document.getElementById('azureEndpoint').value;
-            const azureApiKey = document.getElementById('azureApiKey').value;
-            const azureModel = document.getElementById('azureModel').value;
-            const azureApiVersion = document.getElementById('azureApiVersion').value;
+            const azureEndpointElement = document.getElementById('azureEndpoint');
+            const azureApiKeyElement = document.getElementById('azureApiKey');
+            const azureModelElement = document.getElementById('azureModel');
+            const azureEndpoint = azureEndpointElement ? azureEndpointElement.value : '';
+            const azureApiKey = azureApiKeyElement ? azureApiKeyElement.value : '';
+            const azureModel = azureModelElement ? azureModelElement.value : '';
             
             providerConfig = `    provider:
-      id: openai:${azureModel}
+      id: azure:chat:${azureModel}
       config:
         apiKey: "${azureApiKey || 'your-api-key'}"
-        apiBaseUrl: "${azureEndpoint || 'https://your-resource.openai.azure.com'}"
-        apiVersion: "${azureApiVersion || '2024-02-15-preview'}"`;
+        apiHost: "${azureEndpoint || 'https://your-resource.openai.azure.com'}"`;
             break;
             
         case 'google':
-            const googleModel = document.getElementById('googleModel').value;
-            const googleApiKey = document.getElementById('googleApiKey').value;
+            const googleModelElement = document.getElementById('googleModel');
+            const googleApiKeyElement = document.getElementById('googleApiKey');
+            const googleModel = googleModelElement ? googleModelElement.value : '';
+            const googleApiKey = googleApiKeyElement ? googleApiKeyElement.value : '';
             
             providerConfig = `    provider:
       id: google:${googleModel}

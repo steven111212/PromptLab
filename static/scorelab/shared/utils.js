@@ -59,14 +59,14 @@ function validateFriendlyForm() {
     const requestBody = document.getElementById('requestBody').value;
     
     if (!configName.trim()) {
-        showAlert('請輸入配置名稱', 'warning');
+        showAlert('請輸入專案名稱', 'warning');
         return false;
     }
     
-    // 檢查配置名稱是否包含無效字符
+    // 檢查專案名稱是否包含無效字符
     const invalidChars = /[<>:"/\\|?*]/;
     if (invalidChars.test(configName)) {
-        showAlert('配置名稱不能包含以下字符: < > : " / \\ | ? *', 'warning');
+        showAlert('專案名稱不能包含以下字符: < > : " / \\ | ? *', 'warning');
         return false;
     }
     

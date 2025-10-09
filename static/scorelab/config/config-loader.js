@@ -30,10 +30,15 @@ function showCurrentTestInfo(yamlContent) {
                         </ul>
                         <small class="text-muted d-block mt-2">
                             <i class="fas fa-lightbulb me-1"></i>
-                            如果要更改測試問題，可以上傳新的 CSV 檔案替換現有設定
+                            系統將自動載入此檔案進行測試，如需更改可上傳新的 CSV 檔案
                         </small>
                     </div>
                 `;
+                
+                // 自動載入已存在的測試檔案
+                if (fileNames.length > 0) {
+                    loadExistingTestFile(fileNames[0]);
+                }
             }
         }
     }
@@ -75,17 +80,17 @@ function showCurrentTestInfo(yamlContent) {
     if (testInfoHtml) {
         // 使用 setTimeout 確保 DOM 已經渲染完成
         setTimeout(() => {
-            // 尋找步驟3的測試問題設定區域
-            const step3 = document.getElementById('step3');
-            if (step3) {
+            // 尋找步驟2的測試問題設定區域
+            const step2 = document.getElementById('step2');
+            if (step2) {
                 // 移除舊的提醒
-                const existingAlert = step3.querySelector('.alert');
+                const existingAlert = step2.querySelector('.alert');
                 if (existingAlert) {
                     existingAlert.remove();
                 }
                 
                 // 在步驟標題後插入提醒
-                const stepHeader = step3.querySelector('.step-header');
+                const stepHeader = step2.querySelector('.step-header');
                 if (stepHeader) {
                     const infoDiv = document.createElement('div');
                     infoDiv.innerHTML = testInfoHtml;
@@ -230,11 +235,13 @@ async function loadConfigToForm(config) {
             
             // 解析 provider 類型和模型
             // 先檢查是否為Azure OpenAI（優先級最高）
-            if (providerId.startsWith('openai:') && 
-                (yamlContent.includes('apiBaseUrl') || yamlContent.includes('apiVersion'))) {
+            if (providerId.startsWith('azure:') || 
+                (providerId.startsWith('openai:') && yamlContent.includes('apiHost'))) {
                 // Azure OpenAI配置
                 document.getElementById('llmProvider').value = 'azure-openai';
-                const model = providerId.replace('openai:', '');
+                const model = providerId.startsWith('azure:') ? 
+                    providerId.replace('azure:chat:', '') : 
+                    providerId.replace('openai:', '');
                 setTimeout(() => {
                     ScoringCriteria.updateLLMProviderConfig();
                     setTimeout(() => {
@@ -252,21 +259,15 @@ async function loadConfigToForm(config) {
                             }
                         }
                         
-                        const apiBaseUrlMatch = yamlContent.match(/apiBaseUrl:\s*["]?([^"\n]+)["]?/);
-                        if (apiBaseUrlMatch) {
-                            const azureApiBaseUrl = document.getElementById('azureApiBaseUrl');
-                            if (azureApiBaseUrl) {
-                                azureApiBaseUrl.value = apiBaseUrlMatch[1].trim();
+                        const apiHostMatch = yamlContent.match(/apiHost:\s*["]?([^"\n]+)["]?/);
+                        if (apiHostMatch) {
+                            const azureEndpoint = document.getElementById('azureEndpoint');
+                            if (azureEndpoint) {
+                                azureEndpoint.value = apiHostMatch[1].trim();
                             }
                         }
                         
-                        const apiVersionMatch = yamlContent.match(/apiVersion:\s*["]?([^"\n]+)["]?/);
-                        if (apiVersionMatch) {
-                            const azureApiVersion = document.getElementById('azureApiVersion');
-                            if (azureApiVersion) {
-                                azureApiVersion.value = apiVersionMatch[1].trim();
-                            }
-                        }
+                        // API Version 已移除，不再載入
                     }, 100);
                 }, 100);
             } else if (providerId.startsWith('openai:')) {
@@ -472,8 +473,162 @@ async function loadConfigToForm(config) {
     }
 }
 
+// 載入已存在的測試檔案
+async function loadExistingTestFile(filename) {
+    try {
+        console.log('開始載入已存在的測試檔案:', filename);
+        
+        // 獲取當前配置ID
+        const selectedConfig = ConfigManager.selectedConfig();
+        if (!selectedConfig || !selectedConfig.id) {
+            console.log('沒有選中的配置，無法載入測試檔案');
+            return;
+        }
+        
+        // 從後端獲取CSV檔案內容
+        const response = await fetch(`/api/get-csv-content/${selectedConfig.id}/${encodeURIComponent(filename)}`);
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            console.log('成功載入CSV檔案內容:', result.data);
+            
+            // 解析CSV內容
+            const csvData = parseCSVContent(result.data);
+            if (csvData && csvData.length > 0) {
+                // 儲存到全域變數
+                window.csvData = csvData;
+                
+                // 更新API測試區域
+                updateAPITestWithCSV();
+                
+                // 顯示檔案預覽
+                showCSVPreview(csvData);
+                
+                console.log(`成功載入 ${csvData.length} 筆測試資料`);
+            } else {
+                console.error('CSV檔案內容為空或格式錯誤');
+            }
+        } else {
+            console.error('載入CSV檔案失敗:', result.error);
+        }
+    } catch (error) {
+        console.error('載入已存在測試檔案時發生錯誤:', error);
+    }
+}
+
+// 解析CSV內容
+function parseCSVContent(csvContent) {
+    try {
+        const lines = csvContent.split('\n').filter(line => line.trim());
+        if (lines.length < 2) {
+            console.error('CSV檔案格式不正確');
+            return null;
+        }
+        
+        // 解析標題行
+        const headers = lines[0].split(',').map(h => h.trim());
+        console.log('CSV標題:', headers);
+        
+        // 解析資料行
+        const csvData = [];
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i];
+            const cells = [];
+            let current = '';
+            let inQuotes = false;
+            let j = 0;
+            
+            while (j < line.length) {
+                const char = line[j];
+                
+                if (char === '"') {
+                    if (inQuotes && j + 1 < line.length && line[j + 1] === '"') {
+                        // 轉義引號
+                        current += '"';
+                        j += 2;
+                        continue;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    cells.push(current.trim());
+                    current = '';
+                    j++;
+                    continue;
+                }
+                
+                current += char;
+                j++;
+            }
+            
+            // 添加最後一個欄位
+            cells.push(current.trim());
+            
+            // 確保欄位數量匹配
+            if (cells.length === headers.length) {
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = cells[index] || '';
+                });
+                csvData.push(row);
+            } else {
+                console.warn(`第${i}行欄位數量不匹配: 期望${headers.length}, 實際${cells.length}`);
+            }
+        }
+        
+        return csvData;
+    } catch (error) {
+        console.error('解析CSV內容時發生錯誤:', error);
+        return null;
+    }
+}
+
+// 顯示CSV預覽
+function showCSVPreview(csvData) {
+    const preview = document.getElementById('csvPreview');
+    const table = document.getElementById('csvPreviewTable');
+    
+    if (preview && table && csvData && csvData.length > 0) {
+        const headers = Object.keys(csvData[0]);
+        
+        let tableHTML = '<thead><tr>';
+        headers.forEach(header => {
+            tableHTML += `<th>${header}</th>`;
+        });
+        tableHTML += '</tr></thead><tbody>';
+        
+        // 顯示前5行數據
+        for (let i = 0; i < Math.min(5, csvData.length); i++) {
+            tableHTML += '<tr>';
+            headers.forEach(header => {
+                const content = csvData[i][header] || '';
+                const truncated = content.length > 50 ? content.substring(0, 50) + '...' : content;
+                const showMoreBtn = content.length > 50 ? 
+                    `<button type="button" class="btn btn-link btn-sm p-0 ms-1" onclick="toggleFullContent(this)" data-full-content="${content.replace(/"/g, '&quot;')}">顯示更多</button>` : '';
+                
+                tableHTML += `<td>
+                    <div class="csv-cell-content">
+                        ${truncated}
+                        ${showMoreBtn}
+                    </div>
+                </td>`;
+            });
+            tableHTML += '</tr>';
+        }
+        
+        tableHTML += '</tbody>';
+        table.innerHTML = tableHTML;
+        preview.style.display = 'block';
+        
+        console.log('CSV預覽已顯示');
+    }
+}
+
 // 匯出配置載入相關的函數供其他模組使用
 window.ConfigLoader = {
     showCurrentTestInfo,
-    loadConfigToForm
+    loadConfigToForm,
+    loadExistingTestFile,
+    parseCSVContent,
+    showCSVPreview
 };

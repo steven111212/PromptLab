@@ -8,7 +8,7 @@ class ApiTestService:
     """API測試相關服務"""
     
     def test_api(self, method, url, headers, body, transform_response):
-        """測試API配置"""
+        """測試API"""
         try:
             if not url:
                 return {'success': False, 'error': 'URL不能為空'}, 400

@@ -13,6 +13,19 @@ async function testAPI() {
         return;
     }
     
+    // 檢查是否有CSV資料且用戶選擇了CSV測試模式
+    const testModeCSV = document.getElementById('testModeCSV');
+    if (testModeCSV && testModeCSV.checked && window.csvData && window.csvData.length > 0) {
+        // 使用CSV資料測試
+        const csvTestSelect = document.getElementById('csvTestSelect');
+        if (csvTestSelect && csvTestSelect.value) {
+            const index = parseInt(csvTestSelect.value);
+            const testData = window.csvData[index];
+            await testAPIWithCSVData(testData);
+            return;
+        }
+    }
+    
     // 隱藏之前的結果
     testResult.style.display = 'none';
     testError.style.display = 'none';
@@ -25,7 +38,7 @@ async function testAPI() {
         // 收集API配置
         const apiConfig = collectAPIConfig();
         
-        console.log('收集到的API配置:', apiConfig);
+        console.log('收集到的API設定:', apiConfig);
         
         if (!apiConfig.isValid) {
             throw new Error(apiConfig.error);
@@ -246,6 +259,191 @@ function buildAPIRequest(config, testQuestion) {
     };
 }
 
+// 構建使用CSV資料的API請求
+function buildAPIRequestWithCSVData(config, csvData) {
+    const protocol = config.useHttps ? 'https' : 'http';
+    const url = `${protocol}://${config.httpHost}${config.httpPath.startsWith('/') ? config.httpPath : '/' + config.httpPath}`;
+    
+    console.log('構建CSV資料API請求詳情:');
+    console.log('  - protocol:', protocol);
+    console.log('  - host:', config.httpHost);
+    console.log('  - path:', config.httpPath);
+    console.log('  - 最終URL:', url);
+    console.log('  - CSV資料:', csvData);
+    
+    // 構建headers
+    const headers = {
+        'Content-Type': config.httpContentType || 'application/json'
+    };
+    
+    // 添加認證
+    if (config.authType && config.authValue) {
+        switch (config.authType) {
+            case 'bearer':
+                headers['Authorization'] = `Bearer ${config.authValue}`;
+                break;
+            case 'basic':
+                headers['Authorization'] = `Basic ${btoa(config.authValue)}`;
+                break;
+            case 'apikey':
+                headers['Authorization'] = `Bearer ${config.authValue}`;
+                break;
+            case 'custom':
+                headers['Authorization'] = config.authValue;
+                break;
+        }
+    }
+    
+    console.log('構建的headers:', headers);
+    
+    // 替換CSV資料中的變量
+    let body = config.requestBody;
+    
+    // 智能替換CSV資料
+    Object.keys(csvData).forEach(key => {
+        const placeholder = `{{${key}}}`;
+        let value = csvData[key];
+        
+        // 處理CSV資料中的引號問題
+        if (typeof value === 'string') {
+            // 轉義內部引號，避免JSON格式錯誤
+            value = value.replace(/"/g, '\\"');
+        }
+        
+        // 直接替換placeholder，保持JSON格式
+        body = body.replace(new RegExp(placeholder, 'g'), value);
+    });
+    
+    // 如果還有未替換的{{prompt}}，使用第一個欄位的值
+    if (body.includes('{{prompt}}')) {
+        const firstKey = Object.keys(csvData)[0];
+        const firstValue = csvData[firstKey];
+        if (firstValue !== undefined && firstValue !== '') {
+            // 檢查是否已經在引號內
+            const quotedPrompt = `"{{prompt}}"`;
+            if (body.includes(quotedPrompt)) {
+                body = body.replace(/\{\{prompt\}\}/g, `"${firstValue}"`);
+            } else {
+                body = body.replace(/\{\{prompt\}\}/g, firstValue);
+            }
+        }
+    }
+    
+    console.log('原始body:', config.requestBody);
+    console.log('替換後body:', body);
+    console.log('CSV資料:', csvData);
+    
+    // 驗證JSON格式
+    try {
+        const parsed = JSON.parse(body);
+        console.log('JSON格式驗證通過');
+        console.log('解析後的JSON:', parsed);
+    } catch (jsonError) {
+        console.error('JSON格式錯誤:', jsonError);
+        console.error('錯誤位置:', jsonError.message);
+        console.error('有問題的body:', body);
+        
+        // 嘗試找到問題位置
+        const errorMatch = jsonError.message.match(/position (\d+)/);
+        if (errorMatch) {
+            const position = parseInt(errorMatch[1]);
+            console.error('問題位置附近的內容:', body.substring(Math.max(0, position - 50), position + 50));
+        }
+        
+        throw new Error(`JSON格式錯誤: ${jsonError.message}`);
+    }
+    
+    return {
+        method: config.httpMethod,
+        url: url,
+        headers: headers,
+        body: body,
+        transformResponse: config.transformResponse,
+        csvData: csvData
+    };
+}
+
+// 使用CSV資料測試API（內部函數）
+async function testAPIWithCSVData(csvData) {
+    const testButton = document.getElementById('testAPIButton');
+    const testResult = document.getElementById('testResult');
+    const testError = document.getElementById('testError');
+    
+    // 隱藏之前的結果
+    testResult.style.display = 'none';
+    testError.style.display = 'none';
+    
+    // 設置按鈕為載入狀態
+    testButton.disabled = true;
+    testButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>測試中...';
+    
+    try {
+        // 收集API配置
+        const apiConfig = collectAPIConfig();
+        
+        if (!apiConfig.isValid) {
+            throw new Error(apiConfig.error);
+        }
+        
+        // 構建請求（使用CSV資料）
+        const requestConfig = buildAPIRequestWithCSVData(apiConfig, csvData);
+        
+        // 顯示請求詳情
+        document.getElementById('requestDetails').textContent = 
+            `${requestConfig.method} ${requestConfig.url}`;
+        
+        // 發送測試請求
+        const startTime = Date.now();
+        const response = await fetch('/api/test-api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                config: requestConfig,
+                testData: csvData
+            })
+        });
+        
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // 顯示成功結果
+            document.getElementById('apiResponse').textContent = JSON.stringify(result.data, null, 2);
+            
+            // 如果有轉換設定，顯示轉換後的結果
+            if (result.transformed) {
+                document.getElementById('transformedResponse').textContent = result.transformed;
+                document.getElementById('transformedResult').style.display = 'block';
+            } else {
+                document.getElementById('transformedResult').style.display = 'none';
+            }
+            
+            testResult.style.display = 'block';
+            showAlert(`API測試成功！回應時間: ${responseTime}ms`, 'success');
+        } else {
+            throw new Error(result.error || 'API測試失敗');
+        }
+        
+    } catch (error) {
+        console.error('API測試錯誤:', error);
+        document.getElementById('errorMessage').textContent = error.message;
+        testError.style.display = 'block';
+        showAlert(`API測試失敗: ${error.message}`, 'danger');
+    } finally {
+        // 恢復按鈕狀態
+        testButton.disabled = false;
+        testButton.innerHTML = '<i class="fas fa-play me-2"></i>測試API';
+    }
+}
+
 // 顯示測試成功結果
 function displayTestSuccess(result, responseTime, transformResponse) {
     const testResult = document.getElementById('testResult');
@@ -292,6 +490,7 @@ function displayTestError(errorMessage) {
 // 匯出API測試相關的函數供其他模組使用
 window.APITest = {
     testAPI,
+    buildAPIRequestWithCSVData,
     collectAPIConfig,
     parseRawHttpRequest,
     buildAPIRequest,

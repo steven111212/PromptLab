@@ -18,8 +18,8 @@ function nextStep(stepNumber) {
     // 更新進度指示器
     updateProgressSteps(stepNumber);
     
-    // 如果進入步驟3且有配置數據，重新顯示測試問題信息
-    if (stepNumber === 3 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
+    // 如果進入步驟2且有配置數據，重新顯示測試問題信息
+    if (stepNumber === 2 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
         ConfigLoader.showCurrentTestInfo(ConfigManager.selectedConfig().content);
     }
 }
@@ -41,8 +41,8 @@ function prevStep(stepNumber) {
     // 更新進度指示器
     updateProgressSteps(stepNumber);
     
-    // 如果回到步驟3且有配置數據，重新顯示測試問題信息
-    if (stepNumber === 3 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
+    // 如果回到步驟2且有配置數據，重新顯示測試問題信息
+    if (stepNumber === 2 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
         ConfigLoader.showCurrentTestInfo(ConfigManager.selectedConfig().content);
     }
 }
@@ -80,8 +80,8 @@ function jumpToStep(stepNumber) {
     // 更新進度指示器
     updateProgressSteps(stepNumber);
     
-    // 如果跳轉到步驟3且有配置數據，重新顯示測試問題信息
-    if (stepNumber === 3 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
+    // 如果跳轉到步驟2且有配置數據，重新顯示測試問題信息
+    if (stepNumber === 2 && ConfigManager.selectedConfig() && ConfigManager.selectedConfig().content) {
         ConfigLoader.showCurrentTestInfo(ConfigManager.selectedConfig().content);
     }
 }

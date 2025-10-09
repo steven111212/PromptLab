@@ -25,9 +25,10 @@ function updateLLMProviderConfig() {
                     <label class="form-label small">選擇模型 *</label>
                     <select class="form-select form-select-sm" id="openaiModel" required>
                         <option value="">請選擇模型</option>
-                        <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
                         <option value="gpt-4o">GPT-4o</option>
-                        <option value="gpt-5">GPT-5</option>
+                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        <option value="gpt-4.1">GPT-4.1</option>
+                        <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
                     </select>
                 </div>
             `;
@@ -67,42 +68,11 @@ function updateLLMProviderConfig() {
                     <label class="form-label small">選擇模型 *</label>
                     <select class="form-select form-select-sm" id="azureModel" required>
                         <option value="">請選擇模型</option>
-                        <optgroup label="GPT-5 Series">
-                            <option value="gpt-5">GPT-5</option>
-                            <option value="gpt-5-mini">GPT-5 Mini</option>
-                            <option value="gpt-5-nano">GPT-5 Nano</option>
-                            <option value="gpt-5-chat">GPT-5 Chat</option>
-                        </optgroup>
-                        <optgroup label="GPT-4 Series">
-                            <option value="gpt-4o">GPT-4o</option>
-                            <option value="gpt-4o-mini">GPT-4o Mini</option>
-                            <option value="gpt-4.1">GPT-4.1</option>
-                            <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
-                            <option value="gpt-4.1-nano">GPT-4.1 Nano</option>
-                        </optgroup>
-                        <optgroup label="Reasoning Models">
-                            <option value="o1">O1</option>
-                            <option value="o1-mini">O1 Mini</option>
-                            <option value="o1-pro">O1 Pro</option>
-                            <option value="o3">O3</option>
-                            <option value="o3-mini">O3 Mini</option>
-                            <option value="o3-pro">O3 Pro</option>
-                            <option value="o4-mini">O4 Mini</option>
-                        </optgroup>
-                        <optgroup label="Specialized Models">
-                            <option value="computer-use-preview">Computer Use Preview</option>
-                            <option value="gpt-image-1">GPT Image 1</option>
-                            <option value="codex-mini-latest">Codex Mini Latest</option>
-                        </optgroup>
-                        <optgroup label="Deep Research Models">
-                            <option value="o3-deep-research">O3 Deep Research</option>
-                            <option value="o4-mini-deep-research">O4 Mini Deep Research</option>
-                        </optgroup>
+                        <option value="gpt-4o">GPT-4o</option>
+                        <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        <option value="gpt-4.1">GPT-4.1</option>
+                        <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
                     </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label small">API Version</label>
-                    <input type="text" class="form-control form-control-sm" id="azureApiVersion" placeholder="2024-02-15-preview" value="2024-02-15-preview">
                 </div>
             `;
             break;

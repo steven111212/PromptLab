@@ -43,6 +43,11 @@ async function showConfigForm(config, isEdit) {
         // 新增模式，重置表單
         FormValidation.resetScoringCriteriaList();
     }
+    
+    // 初始化動態測試表單功能
+    setTimeout(() => {
+        initializeDynamicTestForm();
+    }, 100);
 }
 
 // 生成專案表單HTML
@@ -54,67 +59,42 @@ function generateConfigFormHTML() {
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="step active clickable" data-step="1" onclick="jumpToStep(1)">
                         <span class="step-number">1</span>
-                        <span class="step-label">基本設定</span>
+                        <span class="step-label">API設定</span>
                     </div>
                     <div class="step-line"></div>
                     <div class="step clickable" data-step="2" onclick="jumpToStep(2)">
                         <span class="step-number">2</span>
-                        <span class="step-label">API配置</span>
+                        <span class="step-label">上傳問題集及測試API</span>
                     </div>
                     <div class="step-line"></div>
                     <div class="step clickable" data-step="3" onclick="jumpToStep(3)">
                         <span class="step-number">3</span>
-                        <span class="step-label">測試問題</span>
-                    </div>
-                    <div class="step-line"></div>
-                    <div class="step clickable" data-step="4" onclick="jumpToStep(4)">
-                        <span class="step-number">4</span>
                         <span class="step-label">評分標準</span>
                     </div>
                 </div>
             </div>
 
             <form id="configFormContent" onsubmit="return false;">
-                <!-- 步驟 1: 基本資訊 -->
+                <!-- 步驟 1: API設定 -->
                 <div class="form-step" id="step1" style="display: block;">
                     <div class="step-header mb-4">
-                        <h5 class="text-primary"><i class="fas fa-info-circle me-2"></i>基本資訊</h5>
-                        <p class="text-muted">設定你的評測配置基本資訊</p>
+                        <h5 class="text-primary"><i class="fas fa-robot me-2"></i>API設定</h5>
+                        <p class="text-muted">設定專案名稱和要測試的API端點</p>
                     </div>
                     
-                    <div class="row">
+                    <!-- 專案名稱 -->
+                    <div class="row mb-4">
                         <div class="col-md-8">
-                            <label class="form-label">配置名稱 *</label>
+                            <label class="form-label">專案名稱 *</label>
                             <input type="text" class="form-control form-control-lg" id="configName" placeholder="例如：台電客服評測" required>
                             <small class="form-text text-muted">請勿使用特殊字符: < > : " / \\ | ? *</small>
                         </div>
                     </div>
                     
-                    <div class="step-navigation mt-4">
-                        <div class="d-flex justify-content-end">
-                            <div class="btn-group">
-                        <button type="button" class="btn btn-primary" onclick="nextStep(2)">
-                            下一步：API配置 <i class="fas fa-arrow-right ms-2"></i>
-                        </button>
-                                <button type="button" class="btn btn-outline-secondary" onclick="cancelConfigForm()">
-                                    <i class="fas fa-times me-2"></i>取消
-                        </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 步驟 2: API配置 -->
-                <div class="form-step" id="step2" style="display: none;">
-                    <div class="step-header mb-4">
-                        <h5 class="text-primary"><i class="fas fa-robot me-2"></i>被測API配置</h5>
-                        <p class="text-muted">配置要測試的API端點和請求格式</p>
-                    </div>
-                    
-                    <!-- HTTP Request 配置 -->
+                    <!-- HTTP Request 設定 -->
                     <div class="card mb-4">
                         <div class="card-header">
-                            <h6 class="mb-0"><i class="fas fa-globe me-2"></i>HTTP 請求配置</h6>
+                            <h6 class="mb-0"><i class="fas fa-globe me-2"></i>HTTP 請求設定</h6>
                         </div>
                         <div class="card-body">
                             <!-- HTTPS 支援 -->
@@ -147,13 +127,13 @@ function generateConfigFormHTML() {
                                                 <option value="PATCH">PATCH</option>
                                             </select>
                                         </div>
-                        <div class="col-md-8">
+                                        <div class="col-md-8">
                                             <input type="text" class="form-control" id="httpPath" required>
-                            </div>
+                                        </div>
                                     </div>
-                        </div>
-                    </div>
-                    
+                                </div>
+                            </div>
+                            
                             <!-- Host -->
                             <div class="row mb-3">
                                 <div class="col-md-3">
@@ -196,18 +176,17 @@ function generateConfigFormHTML() {
                                     </div>
                                 </div>
                             </div>
-                            
                         </div>
                     </div>
                     
-                    <!-- Request Body 配置 -->
+                    <!-- Request Body 設定 -->
                     <div class="card mb-4">
                         <div class="card-header">
-                            <h6 class="mb-0"><i class="fas fa-code me-2"></i>Request Body 配置</h6>
+                            <h6 class="mb-0"><i class="fas fa-code me-2"></i>Request Body 設定</h6>
                         </div>
                         <div class="card-body">
                             <div class="row mb-3">
-                        <div class="col-12">
+                                <div class="col-12">
                                     <label class="form-label">Request Body 原始內容</label>
                                     <textarea class="form-control" id="requestBody" rows="6" ></textarea>
                                 </div>
@@ -215,12 +194,72 @@ function generateConfigFormHTML() {
                         </div>
                     </div>
                     
-                    <!-- 進階配置 -->
+                    <!-- 進階設定 -->
                     <div class="row mb-4">
                         <div class="col-md-8">
                             <label class="form-label">Response Transform</label>
                             <input type="text" class="form-control" id="transformResponse">
                             <small class="form-text text-muted">例如：json.response, json.choices[0].message.content</small>
+                        </div>
+                    </div>
+                    
+                    
+                    <div class="step-navigation mt-4">
+                        <div class="d-flex justify-content-end">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" onclick="nextStep(2)">
+                                    下一步：上傳問題集及測試API <i class="fas fa-arrow-right ms-2"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="cancelConfigForm()">
+                                    <i class="fas fa-times me-2"></i>取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步驟 2: 上傳問題集及測試API -->
+                <div class="form-step" id="step2" style="display: none;">
+                    <div class="step-header mb-4">
+                        <h5 class="text-primary"><i class="fas fa-upload me-2"></i>上傳問題集及測試API</h5>
+                        <p class="text-muted">上傳測試問題並測試API連接</p>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="questionSource" id="questionSourceUpload" value="upload" checked onchange="toggleQuestionInput()">
+                                <label class="form-check-label" for="questionSourceUpload">
+                                    <i class="fas fa-file-csv me-2"></i>上傳CSV檔案
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 上傳測試集檔案 -->
+                    <div id="uploadQuestionsSection" class="mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-upload me-2"></i>上傳測試集檔案
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <input type="file" class="form-control" id="csvFile" accept=".csv" onchange="handleCSVUpload(this)">
+                                    <small class="form-text text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        請確保欄位名稱與 API Request Body 中的變量名稱與CSV檔案中的欄位名稱一致
+                                    </small>
+                                </div>
+                                <div id="csvPreview" style="display: none;">
+                                    <h6>檔案預覽：</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-bordered" id="csvPreviewTable">
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -230,17 +269,57 @@ function generateConfigFormHTML() {
                             <h6 class="mb-0"><i class="fas fa-flask me-2"></i>API測試</h6>
                         </div>
                         <div class="card-body">
-                            <p class="text-muted mb-3">測試您配置的API是否能正常運作</p>
+                            <p class="text-muted mb-3">測試您設定的API是否能正常運作</p>
                             
-                            <div class="row mb-3">
-                                <div class="col-md-8">
-                                    <label class="form-label">測試問題</label>
-                                    <input type="text" class="form-control" id="testQuestion" placeholder="輸入一個測試問題，例如：你好，請自我介紹" value="你好，請自我介紹">
+                            <!-- 測試方式選擇 -->
+                            <div class="mb-3">
+                                <label class="form-label">測試方式</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="testMode" id="testModeManual" value="manual" checked onchange="toggleTestMode()">
+                                    <label class="form-check-label" for="testModeManual">
+                                        <i class="fas fa-keyboard me-2"></i>手動輸入測試問題
+                                    </label>
                                 </div>
-                                <div class="col-md-4 d-flex align-items-end">
-                                    <button type="button" class="btn btn-info w-100" onclick="testAPI()" id="testAPIButton">
-                                        <i class="fas fa-play me-2"></i>測試API
-                                    </button>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="testMode" id="testModeCSV" value="csv" onchange="toggleTestMode()">
+                                    <label class="form-check-label" for="testModeCSV">
+                                        <i class="fas fa-file-csv me-2"></i>使用CSV資料測試
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- 手動輸入模式 -->
+                            <div id="manualTestMode" class="mb-3">
+                                <div id="dynamicTestForm">
+                                    <!-- 動態生成的測試表單將在這裡顯示 -->
+                                </div>
+                            </div>
+                            
+                            <!-- CSV資料測試模式 -->
+                            <div id="csvTestMode" class="mb-3" style="display: none;">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>提示：</strong>測試時會使用上傳檔案的第一筆資料
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <label class="form-label">測試資料</label>
+                                        <div class="form-control-plaintext bg-light p-2 rounded">
+                                            <i class="fas fa-file-csv me-2 text-success"></i>
+                                            將使用CSV檔案的第一筆資料進行測試
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 統一的測試按鈕區域 -->
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="d-flex justify-content-center">
+                                        <button type="button" class="btn btn-info btn-lg px-4" onclick="executeAPITest()" id="unifiedTestButton">
+                                            <i class="fas fa-play me-2"></i>測試API
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -283,7 +362,7 @@ function generateConfigFormHTML() {
                                     <pre id="errorMessage" class="mb-0 mt-2" style="white-space: pre-wrap; font-size: 14px;"></pre>
                                 </div>
                                 <div class="text-muted">
-                                    <small><i class="fas fa-lightbulb me-1"></i>請檢查API配置是否正確，包括URL、認證資訊和請求格式</small>
+                                    <small><i class="fas fa-lightbulb me-1"></i>請檢查API設定是否正確，包括URL、認證資訊和請求格式</small>
                                 </div>
                             </div>
                         </div>
@@ -292,91 +371,20 @@ function generateConfigFormHTML() {
                     <div class="step-navigation mt-4">
                         <div class="d-flex justify-content-between">
                             <button type="button" class="btn btn-outline-secondary" onclick="prevStep(1)">
-                            <i class="fas fa-arrow-left me-2"></i>上一步
-                        </button>
-                            <div class="btn-group">
-                        <button type="button" class="btn btn-primary" onclick="nextStep(3)">
-                            下一步：測試問題 <i class="fas fa-arrow-right ms-2"></i>
-                        </button>
-                                <button type="button" class="btn btn-outline-secondary" onclick="cancelConfigForm()">
-                                    <i class="fas fa-times me-2"></i>取消
-                        </button>
-                            </div>
+                                <i class="fas fa-arrow-left me-2"></i>上一步
+                            </button>
+                            <button type="button" class="btn btn-outline-success" onclick="nextStep(3)">
+                                下一步：評分標準（可選） <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 步驟 3: 測試問題配置 -->
+                <!-- 步驟 3: 評分標準配置（可選） -->
                 <div class="form-step" id="step3" style="display: none;">
                     <div class="step-header mb-4">
-                        <h5 class="text-primary"><i class="fas fa-question-circle me-2"></i>測試問題配置</h5>
-                        <p class="text-muted">選擇測試問題的來源</p>
-                    </div>
-                    
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="questionSource" id="questionSourceUpload" value="upload" checked onchange="toggleQuestionInput()">
-                                <label class="form-check-label" for="questionSourceUpload">
-                                    <i class="fas fa-file-csv me-2"></i>上傳CSV檔案
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <!-- 上傳測試集檔案 -->
-                    <div id="uploadQuestionsSection" class="mb-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-upload me-2"></i>上傳測試集檔案
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <input type="file" class="form-control" id="csvFile" accept=".csv" onchange="handleCSVUpload(this)">
-                                    <small class="form-text text-muted">
-                                        <i class="fas fa-info-circle me-1"></i>
-                                        請確保欄位名稱與 API Request Body 中的變量名稱與CSV檔案中的欄位名稱一致
-                                    </small>
-                                </div>
-                                <div id="csvPreview" style="display: none;">
-                                    <h6>檔案預覽：</h6>
-                                    <div class="table-responsive">
-                                        <table class="table table-sm table-bordered" id="csvPreviewTable">
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="step-navigation mt-4">
-                        <div class="d-flex justify-content-between">
-                            <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">
-                            <i class="fas fa-arrow-left me-2"></i>上一步
-                        </button>
-                            <div class="btn-group">
-                        <button type="button" class="btn btn-outline-success me-2" onclick="nextStep(4)">
-                            下一步：評分標準（可選） <i class="fas fa-arrow-right ms-2"></i>
-                        </button>
-                        <button type="button" class="btn btn-primary" onclick="saveConfiguration()">
-                            <i class="fas fa-save me-2"></i><span id="saveButtonText">創建配置</span>
-                        </button>
-                                <button type="button" class="btn btn-outline-secondary" onclick="cancelConfigForm()">
-                                    <i class="fas fa-times me-2"></i>取消
-                        </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            <!-- 步驟 4: 評分標準配置（可選） -->
-            <div class="form-step" id="step4" style="display: none;">
-                <div class="step-header mb-4">
-                    <h5 class="text-success"><i class="fas fa-chart-line me-2"></i>評分標準配置</h5>
-                    <p class="text-muted">這個步驟是可選的。你可以跳過此步驟直接創建配置，或者設定評分標準來自動評估API回覆品質。</p>
+                        <h5 class="text-success"><i class="fas fa-chart-line me-2"></i>評分標準設定</h5>
+                        <p class="text-muted">這個步驟是可選的。你可以跳過此步驟直接創建專案，或者設定評分標準來自動評估API回覆品質。</p>
                     
                     <div class="alert alert-info">
                         <i class="fas fa-lightbulb me-2"></i>
@@ -573,16 +581,11 @@ function generateConfigFormHTML() {
 
                 <div class="step-navigation mt-4">
                     <div class="d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-secondary" onclick="prevStep(3)">
-                        <i class="fas fa-arrow-left me-2"></i>上一步
-                    </button>
-                        <div class="btn-group">
-                    <button type="button" class="btn btn-primary" onclick="saveConfiguration()">
-                                <i class="fas fa-save me-2"></i><span id="saveButtonTextStep4">創建配置</span>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="cancelConfigForm()">
-                                <i class="fas fa-times me-2"></i>取消
-                    </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">
+                            <i class="fas fa-arrow-left me-2"></i>上一步
+                        </button>
+                        <div class="text-muted">
+                            <small><i class="fas fa-info-circle me-1"></i>請使用右上角的按鈕來儲存或取消專案</small>
                         </div>
                     </div>
                 </div>
@@ -593,7 +596,81 @@ function generateConfigFormHTML() {
     `;
 }
 
+// 全域變數儲存CSV資料
+window.csvData = null;
+
+// 切換完整內容顯示
+function toggleFullContent(button) {
+    const cellContent = button.parentElement;
+    const fullContent = button.getAttribute('data-full-content');
+    const truncated = fullContent.substring(0, 50) + '...';
+    
+    if (button.textContent === '顯示更多') {
+        cellContent.innerHTML = fullContent + 
+            '<button type="button" class="btn btn-link btn-sm p-0 ms-1" onclick="toggleFullContent(this)" data-full-content="' + fullContent.replace(/"/g, '&quot;') + '">顯示較少</button>';
+    } else {
+        cellContent.innerHTML = truncated + 
+            '<button type="button" class="btn btn-link btn-sm p-0 ms-1" onclick="toggleFullContent(this)" data-full-content="' + fullContent.replace(/"/g, '&quot;') + '">顯示更多</button>';
+    }
+}
+
+// 切換測試資料內容顯示（已移除預覽功能，保留函數避免錯誤）
+function toggleTestDataContent(button) {
+    // 預覽功能已移除，此函數保留以避免錯誤
+}
+
+// 切換JSON預覽顯示
+function toggleJSONPreview(button) {
+    const jsonDiv = button.parentElement;
+    const fullContent = button.getAttribute('data-full-content');
+    const truncated = fullContent.substring(0, 300) + '...';
+    
+    if (button.textContent === '顯示更多') {
+        jsonDiv.innerHTML = '<pre>' + fullContent + '</pre>' + 
+            '<button type="button" class="btn btn-link btn-sm p-0 ms-1" onclick="toggleJSONPreview(this)" data-full-content="' + fullContent.replace(/"/g, '&quot;') + '">顯示較少</button>';
+    } else {
+        jsonDiv.innerHTML = '<pre>' + truncated + '</pre>' + 
+            '<button type="button" class="btn btn-link btn-sm p-0 ms-1" onclick="toggleJSONPreview(this)" data-full-content="' + fullContent.replace(/"/g, '&quot;') + '">顯示更多</button>';
+    }
+}
+
 // 處理CSV上傳
+// 使用更簡單但更可靠的CSV解析方法
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    let i = 0;
+    
+    while (i < line.length) {
+        const char = line[i];
+        
+        if (char === '"') {
+            if (inQuotes && i + 1 < line.length && line[i + 1] === '"') {
+                // 處理轉義的引號 ""
+                current += '"';
+                i += 2; // 跳過兩個引號
+                continue;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+            i++;
+            continue;
+        }
+        
+        current += char;
+        i++;
+    }
+    
+    // 添加最後一個欄位
+    result.push(current.trim());
+    
+    return result;
+}
+
 function handleCSVUpload(input) {
     const file = input.files[0];
     if (!file) return;
@@ -601,8 +678,70 @@ function handleCSVUpload(input) {
     const reader = new FileReader();
     reader.onload = function(e) {
         const csv = e.target.result;
-        const lines = csv.split('\n');
+        
+        // 使用更簡單的CSV解析方法
+        const lines = csv.split('\n').filter(line => line.trim());
+        if (lines.length < 2) {
+            showAlert('CSV檔案格式不正確', 'error');
+            return;
+        }
+        
+        // 解析標題行
         const headers = lines[0].split(',').map(h => h.trim());
+        console.log('CSV標題:', headers);
+        
+        // 解析資料行
+        const csvData = [];
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i];
+            const cells = [];
+            let current = '';
+            let inQuotes = false;
+            let j = 0;
+            
+            while (j < line.length) {
+                const char = line[j];
+                
+                if (char === '"') {
+                    if (inQuotes && j + 1 < line.length && line[j + 1] === '"') {
+                        // 轉義引號
+                        current += '"';
+                        j += 2;
+                        continue;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    cells.push(current.trim());
+                    current = '';
+                    j++;
+                    continue;
+                }
+                
+                current += char;
+                j++;
+            }
+            
+            // 添加最後一個欄位
+            cells.push(current.trim());
+            
+            // 確保欄位數量匹配
+            if (cells.length === headers.length) {
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = cells[index] || '';
+                });
+                csvData.push(row);
+                console.log(`第${i}行解析結果:`, cells);
+            } else {
+                console.warn(`第${i}行欄位數量不匹配: 期望${headers.length}, 實際${cells.length}`);
+            }
+        }
+        
+        console.log('解析後的CSV資料:', csvData);
+        
+        // 儲存到全域變數
+        window.csvData = csvData;
         
         // 更新事實性檢查變數選項（從當前上傳的檔案）
         if (window.ScoringCriteria && window.ScoringCriteria.updateFactualityVariables) {
@@ -620,25 +759,457 @@ function handleCSVUpload(input) {
         tableHTML += '</tr></thead><tbody>';
         
         // 顯示前5行數據
-        for (let i = 1; i < Math.min(6, lines.length); i++) {
-            if (lines[i].trim()) {
-                const cells = lines[i].split(',').map(c => c.trim());
-                tableHTML += '<tr>';
-                cells.forEach(cell => {
-                    tableHTML += `<td>${cell}</td>`;
-                });
-                tableHTML += '</tr>';
-            }
+        for (let i = 0; i < Math.min(5, csvData.length); i++) {
+            tableHTML += '<tr>';
+            headers.forEach(header => {
+                const content = csvData[i][header] || '';
+                const truncated = content.length > 50 ? content.substring(0, 50) + '...' : content;
+                const showMoreBtn = content.length > 50 ? 
+                    `<button type="button" class="btn btn-link btn-sm p-0 ms-1" onclick="toggleFullContent(this)" data-full-content="${content.replace(/"/g, '&quot;')}">顯示更多</button>` : '';
+                
+                tableHTML += `<td>
+                    <div class="csv-cell-content">
+                        ${truncated}
+                        ${showMoreBtn}
+                    </div>
+                </td>`;
+            });
+            tableHTML += '</tr>';
         }
         
         tableHTML += '</tbody>';
         table.innerHTML = tableHTML;
         preview.style.display = 'block';
         
-        showAlert(`成功載入CSV檔案，包含 ${lines.length - 1} 個測試問題`, 'success');
+        // 更新API測試區域
+        updateAPITestWithCSV();
+        
+        showAlert(`成功載入CSV檔案，包含 ${csvData.length} 個測試問題`, 'success');
     };
     
     reader.readAsText(file);
+}
+
+// 更新API測試區域以支援CSV資料
+function updateAPITestWithCSV() {
+    if (window.csvData && window.csvData.length > 0) {
+        // 更新統一測試按鈕狀態
+        updateUnifiedTestButton();
+    }
+}
+
+// 切換測試模式
+function toggleTestMode() {
+    const manualMode = document.getElementById('manualTestMode');
+    const csvMode = document.getElementById('csvTestMode');
+    const testModeManual = document.getElementById('testModeManual');
+    
+    if (testModeManual.checked) {
+        manualMode.style.display = 'block';
+        csvMode.style.display = 'none';
+        // 生成動態測試表單
+        generateDynamicTestForm();
+    } else {
+        manualMode.style.display = 'none';
+        csvMode.style.display = 'block';
+    }
+    
+    // 更新統一測試按鈕的狀態
+    updateUnifiedTestButton();
+}
+
+// 更新統一測試按鈕的狀態
+function updateUnifiedTestButton() {
+    const testModeManual = document.getElementById('testModeManual');
+    const unifiedButton = document.getElementById('unifiedTestButton');
+    
+    if (unifiedButton) {
+        if (testModeManual && testModeManual.checked) {
+            // 手動模式：檢查是否有有效的輸入
+            const hasValidInput = checkManualTestInput();
+            unifiedButton.disabled = !hasValidInput;
+        } else {
+            // CSV模式：檢查是否有上傳的CSV檔案
+            const hasCSVData = window.csvData && window.csvData.length > 0;
+            unifiedButton.disabled = !hasCSVData;
+        }
+    }
+}
+
+// 檢查手動測試輸入是否有效
+function checkManualTestInput() {
+    const fields = analyzeRequestBody();
+    
+    if (fields.length === 0) {
+        // 傳統模式：檢查testQuestion
+        const testQuestion = document.getElementById('testQuestion');
+        return testQuestion && testQuestion.value.trim() !== '';
+    } else {
+        // 動態表單模式：檢查所有欄位
+        for (const field of fields) {
+            const inputElement = document.getElementById(`testField_${field.name}`);
+            if (!inputElement || inputElement.value.trim() === '') {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+// 統一的API測試執行函數
+async function executeAPITest() {
+    const testModeManual = document.getElementById('testModeManual');
+    
+    if (testModeManual && testModeManual.checked) {
+        // 手動模式：使用動態表單測試
+        await testAPIWithDynamicForm();
+    } else {
+        // CSV模式：使用CSV資料測試
+        await testAPIWithCSV();
+    }
+}
+
+// 更新測試按鈕的一致性
+function updateTestButtonConsistency() {
+    const testModeManual = document.getElementById('testModeManual');
+    const manualMode = document.getElementById('manualTestMode');
+    const csvMode = document.getElementById('csvTestMode');
+    
+    // 確保兩個模式都使用相同的按鈕ID和樣式
+    if (testModeManual && testModeManual.checked) {
+        // 手動模式：確保按鈕在動態表單中
+        const dynamicForm = document.getElementById('dynamicTestForm');
+        if (dynamicForm) {
+            const existingButton = dynamicForm.querySelector('#testAPIButton');
+            if (!existingButton) {
+                // 如果沒有按鈕，添加一個
+                const buttonContainer = dynamicForm.querySelector('.d-flex.align-items-end');
+                if (buttonContainer) {
+                    buttonContainer.innerHTML = `
+                        <button type="button" class="btn btn-info w-100" onclick="testAPIWithDynamicForm()" id="testAPIButton">
+                            <i class="fas fa-play me-2"></i>測試API
+                        </button>
+                    `;
+                }
+            }
+        }
+    } else {
+        // CSV模式：確保按鈕存在且可用
+        const csvButton = document.getElementById('testCSVButton');
+        if (csvButton) {
+            csvButton.disabled = false;
+            csvButton.innerHTML = '<i class="fas fa-play me-2"></i>測試API';
+        }
+    }
+}
+
+// 分析request body並提取需要填寫的欄位
+function analyzeRequestBody() {
+    const requestBody = document.getElementById('requestBody').value;
+    if (!requestBody.trim()) {
+        return [];
+    }
+    
+    try {
+        // 嘗試解析JSON
+        const jsonBody = JSON.parse(requestBody);
+        return extractFieldsFromJSON(jsonBody);
+    } catch (error) {
+        // 如果不是JSON，嘗試解析其他格式
+        return extractFieldsFromText(requestBody);
+    }
+}
+
+// 從JSON中提取欄位
+function extractFieldsFromJSON(obj, prefix = '') {
+    const fields = [];
+    
+    for (const [key, value] of Object.entries(obj)) {
+        const fieldPath = prefix ? `${prefix}.${key}` : key;
+        
+        if (typeof value === 'string') {
+            // 檢查是否包含變數（如 {{prompt}}, {{question}} 等）
+            if (value.includes('{{') && value.includes('}}')) {
+                const variables = value.match(/\{\{([^}]+)\}\}/g);
+                if (variables) {
+                    variables.forEach(variable => {
+                        const varName = variable.replace(/\{\{|\}\}/g, '');
+                        if (!fields.find(f => f.name === varName)) {
+                            fields.push({
+                                name: varName,
+                                path: fieldPath,
+                                type: 'string',
+                                placeholder: `請輸入${varName}`,
+                                defaultValue: ''
+                            });
+                        }
+                    });
+                }
+            }
+        } else if (typeof value === 'object' && value !== null) {
+            // 遞歸處理嵌套對象
+            fields.push(...extractFieldsFromJSON(value, fieldPath));
+        }
+    }
+    
+    return fields;
+}
+
+// 從文本中提取欄位
+function extractFieldsFromText(text) {
+    const fields = [];
+    const variablePattern = /\{\{([^}]+)\}\}/g;
+    let match;
+    
+    while ((match = variablePattern.exec(text)) !== null) {
+        const varName = match[1];
+        if (!fields.find(f => f.name === varName)) {
+            fields.push({
+                name: varName,
+                path: 'text',
+                type: 'string',
+                placeholder: `請輸入${varName}`,
+                defaultValue: ''
+            });
+        }
+    }
+    
+    return fields;
+}
+
+// 生成動態測試表單
+function generateDynamicTestForm() {
+    const fields = analyzeRequestBody();
+    const testFormContainer = document.getElementById('dynamicTestForm');
+    
+    if (!testFormContainer) {
+        console.error('找不到動態測試表單容器');
+        return;
+    }
+    
+    if (fields.length === 0) {
+        // 沒有找到變數，顯示傳統的單一輸入框
+        testFormContainer.innerHTML = `
+            <div class="row">
+                <div class="col-12">
+                    <label class="form-label">測試問題</label>
+                    <input type="text" class="form-control" id="testQuestion" placeholder="輸入一個測試問題，例如：你好，請自我介紹" value="你好，請自我介紹" oninput="updateUnifiedTestButton()">
+                </div>
+            </div>
+        `;
+    } else {
+        // 生成多欄位表單
+        let formHTML = '<div class="row">';
+        
+        fields.forEach((field, index) => {
+            const colClass = fields.length === 1 ? 'col-12' : 'col-md-6';
+            formHTML += `
+                <div class="${colClass} mb-3">
+                    <label class="form-label">${field.name}</label>
+                    <input type="text" class="form-control" id="testField_${field.name}" 
+                           placeholder="${field.placeholder}" value="${field.defaultValue}" oninput="updateUnifiedTestButton()">
+                </div>
+            `;
+        });
+        
+        formHTML += '</div>';
+        testFormContainer.innerHTML = formHTML;
+    }
+    
+    // 更新統一按鈕狀態
+    updateUnifiedTestButton();
+}
+
+// 使用動態表單測試API
+async function testAPIWithDynamicForm() {
+    const fields = analyzeRequestBody();
+    const testButton = document.getElementById('unifiedTestButton');
+    const testResult = document.getElementById('testResult');
+    const testError = document.getElementById('testError');
+    
+    // 隱藏之前的結果
+    testResult.style.display = 'none';
+    testError.style.display = 'none';
+    
+    // 設置按鈕為載入狀態
+    testButton.disabled = true;
+    testButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>測試中...';
+    
+    try {
+        // 收集API配置
+        const apiConfig = collectAPIConfig();
+        
+        if (!apiConfig.isValid) {
+            throw new Error(apiConfig.error);
+        }
+        
+        // 構建請求，替換request body中的變數
+        let requestBody = apiConfig.requestBody;
+        
+        if (fields.length === 0) {
+            // 使用傳統的 {{prompt}} 替換
+            const testQuestion = document.getElementById('testQuestion').value.trim();
+            if (!testQuestion) {
+                throw new Error('請輸入測試問題');
+            }
+            requestBody = requestBody.replace(/\{\{prompt\}\}/g, testQuestion);
+        } else {
+            // 使用動態表單的值替換
+            fields.forEach(field => {
+                const inputElement = document.getElementById(`testField_${field.name}`);
+                if (inputElement) {
+                    const value = inputElement.value.trim();
+                    if (!value) {
+                        throw new Error(`請填寫 ${field.name} 欄位`);
+                    }
+                    requestBody = requestBody.replace(new RegExp(`\\{\\{${field.name}\\}\\}`, 'g'), value);
+                }
+            });
+        }
+        
+        // 構建請求配置
+        const requestConfig = {
+            method: apiConfig.httpMethod,
+            url: buildAPIRequest(apiConfig, '').url,
+            headers: buildAPIRequest(apiConfig, '').headers,
+            body: requestBody,
+            transformResponse: apiConfig.transformResponse
+        };
+        
+        // 顯示請求詳情
+        document.getElementById('requestDetails').textContent = 
+            `${requestConfig.method} ${requestConfig.url}`;
+        
+        // 發送測試請求
+        const startTime = Date.now();
+        const response = await fetch('/api/test-api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestConfig)
+        });
+        
+        const responseTime = Date.now() - startTime;
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            // 顯示成功結果
+            displayTestSuccess(result, responseTime, apiConfig.transformResponse);
+        } else {
+            // 顯示錯誤
+            throw new Error(result.error || '測試失敗');
+        }
+        
+    } catch (error) {
+        console.error('API測試錯誤:', error);
+        displayTestError(error.message);
+    } finally {
+        // 恢復按鈕狀態
+        testButton.disabled = false;
+        testButton.innerHTML = '<i class="fas fa-play me-2"></i>測試API';
+    }
+}
+
+// 載入測試資料（簡化版本，只使用第一筆資料）
+function loadTestData() {
+    // 這個函數現在不需要做任何事情，因為我們直接使用第一筆資料
+    // 保留函數以避免錯誤，但內容為空
+}
+
+// 使用CSV資料測試API
+async function testAPIWithCSV() {
+    const testButton = document.getElementById('unifiedTestButton');
+    const testResult = document.getElementById('testResult');
+    const testError = document.getElementById('testError');
+    
+    if (!window.csvData || window.csvData.length === 0) {
+        showAlert('請先上傳CSV檔案', 'warning');
+        return;
+    }
+    
+    // 直接使用第一筆資料
+    const testData = window.csvData[0];
+    
+    // 隱藏之前的結果
+    testResult.style.display = 'none';
+    testError.style.display = 'none';
+    
+    // 設置按鈕為載入狀態
+    testButton.disabled = true;
+    testButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>測試中...';
+    
+    try {
+        // 收集API配置
+        const apiConfig = collectAPIConfig();
+        
+        if (!apiConfig.isValid) {
+            throw new Error(apiConfig.error);
+        }
+        
+        // 構建請求（使用CSV資料）
+        const requestConfig = buildAPIRequestWithCSVData(apiConfig, testData);
+        
+        // 顯示請求詳情
+        document.getElementById('requestDetails').textContent = 
+            `${requestConfig.method} ${requestConfig.url}`;
+        
+        // 發送測試請求
+        const startTime = Date.now();
+        const response = await fetch('/api/test-api', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                config: requestConfig,
+                testData: testData
+            })
+        });
+        
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // 如果有轉換設定，只顯示轉換後的結果
+            if (result.transformedResponse) {
+                document.getElementById('apiResponse').textContent = result.transformedResponse;
+                document.getElementById('transformedResult').style.display = 'none';
+            } else {
+                // 如果沒有轉換設定，顯示原始回應
+                document.getElementById('apiResponse').textContent = JSON.stringify(result.response, null, 2);
+                document.getElementById('transformedResult').style.display = 'none';
+            }
+            
+            testResult.style.display = 'block';
+            showAlert(`API測試成功！回應時間: ${responseTime}ms`, 'success');
+        } else {
+            throw new Error(result.error || 'API測試失敗');
+        }
+        
+    } catch (error) {
+        console.error('API測試錯誤:', error);
+        const errorMessage = document.getElementById('errorMessage');
+        if (errorMessage) {
+            errorMessage.textContent = error.message;
+        }
+        if (testError) {
+            testError.style.display = 'block';
+        }
+        showAlert(`API測試失敗: ${error.message}`, 'danger');
+    } finally {
+        // 恢復按鈕狀態
+        if (testButton) {
+            testButton.disabled = false;
+            testButton.innerHTML = '<i class="fas fa-play me-2"></i>測試API';
+        }
+    }
 }
 
 // 從已配置的CSV檔案中獲取變數
@@ -748,12 +1319,52 @@ function cancelConfigForm() {
     hideConfigForm();
 }
 
+// 添加request body監聽器
+function addRequestBodyListener() {
+    const requestBodyElement = document.getElementById('requestBody');
+    if (requestBodyElement) {
+        requestBodyElement.addEventListener('input', function() {
+            // 如果當前是手動輸入模式，重新生成表單
+            const testModeManual = document.getElementById('testModeManual');
+            if (testModeManual && testModeManual.checked) {
+                generateDynamicTestForm();
+            }
+        });
+    }
+}
+
+// 初始化動態表單功能
+function initializeDynamicTestForm() {
+    // 添加request body監聽器
+    addRequestBodyListener();
+    
+    // 如果當前是手動輸入模式，生成初始表單
+    const testModeManual = document.getElementById('testModeManual');
+    if (testModeManual && testModeManual.checked) {
+        generateDynamicTestForm();
+    }
+}
+
 // 匯出配置表單相關的函數供其他模組使用
 window.ConfigForm = {
     showConfigForm,
     generateConfigFormHTML,
     handleCSVUpload,
+    updateAPITestWithCSV,
+    toggleTestMode,
+    loadTestData,
+    testAPIWithCSV,
+    toggleFullContent,
+    toggleTestDataContent,
+    toggleJSONPreview,
     toggleQuestionInput,
     hideConfigForm,
-    cancelConfigForm
+    cancelConfigForm,
+    generateDynamicTestForm,
+    analyzeRequestBody,
+    testAPIWithDynamicForm,
+    initializeDynamicTestForm,
+    updateUnifiedTestButton,
+    executeAPITest,
+    checkManualTestInput
 };
