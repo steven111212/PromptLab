@@ -131,6 +131,69 @@ async function loadConfigToForm(config) {
         // 檢查並顯示當前專案的測試問題信息
         showCurrentTestInfo(yamlContent);
         
+        // 儲存事實性檢查的配置
+        let factualityConfig = null;
+        if (yamlContent.includes('type: factuality')) {
+            const factualityMatch = yamlContent.match(/type:\s*factuality\s*\n\s*value:\s*["]?([^"\n]+)["]?/);
+            if (factualityMatch) {
+                factualityConfig = factualityMatch[1].trim();
+                // 先勾選事實性檢查
+                document.getElementById('enableFactuality').checked = true;
+                ScoringCriteria.toggleFactualityConfig();
+            }
+        }
+
+        // 檢查是否有CSV檔案配置
+        if (yamlContent.includes('tests:')) {
+            const testsMatch = yamlContent.match(/tests:\s*\n((?:.*\n?)*?)(?=\n[a-zA-Z]|$)/);
+            if (testsMatch) {
+                const tests = testsMatch[1].trim().split('\n')
+                    .map(line => line.replace(/^\s*-\s*/, ''))
+                    .filter(line => line.trim());
+                if (tests.length > 0) {
+                    // 解析檔案名稱（處理 file:// 前綴）
+                    const fileName = tests[0].replace('file://', '');
+                    
+                    // 從配置目錄讀取CSV檔案
+                    const configId = config.id;
+                    try {
+                        const response = await fetch(`/api/get-csv-content/${configId}/${encodeURIComponent(fileName)}`);
+                        const result = await response.json();
+                        
+                        if (response.ok && result.success) {
+                            // 解析CSV內容
+                            const csvData = parseCSVContent(result.data);
+                            if (csvData && csvData.length > 0) {
+                                // 更新全域變數
+                                window.csvData = csvData;
+                                
+                                // 更新事實性檢查變數選項
+                                const headers = Object.keys(csvData[0]);
+                                if (window.ScoringCriteria && window.ScoringCriteria.updateFactualityVariables) {
+                                    window.ScoringCriteria.updateFactualityVariables(headers);
+                                    
+                                    // 設置事實性檢查的值
+                                    if (factualityConfig) {
+                                        setTimeout(() => {
+                                            const factualityVariableSelect = document.getElementById('factualityVariable');
+                                            if (factualityVariableSelect) {
+                                                factualityVariableSelect.value = factualityConfig;
+                                            }
+                                        }, 100);
+                                    }
+                                }
+                                
+                                // 顯示CSV預覽
+                                showCSVPreview(csvData);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('載入CSV檔案失敗:', error);
+                    }
+                }
+            }
+        }
+        
         // 基本資訊
         const descriptionMatch = yamlContent.match(/description:\s*["']?([^"'\n]+)["']?/);
         if (descriptionMatch) {
@@ -357,21 +420,7 @@ async function loadConfigToForm(config) {
                 }
             }
             
-            // 檢查事實性檢查
-            if (yamlContent.includes('type: factuality')) {
-                document.getElementById('enableFactuality').checked = true;
-                ScoringCriteria.toggleFactualityConfig();
-                
-                // 載入事實性檢查變數
-                const factualityMatch = yamlContent.match(/type:\s*factuality\s*\n\s*value:\s*["]?([^"\n]+)["]?/);
-                if (factualityMatch) {
-                    const factualityVariable = factualityMatch[1].trim();
-                    const factualityVariableSelect = document.getElementById('factualityVariable');
-                    if (factualityVariableSelect) {
-                        factualityVariableSelect.value = factualityVariable;
-                    }
-                }
-            }
+            // 事實性檢查的配置已經在CSV載入後處理了
             
             // 檢查 BERT Score (F1)
             if (yamlContent.includes('get_assert_bert_f1')) {
@@ -492,19 +541,25 @@ async function loadExistingTestFile(filename) {
         if (response.ok && result.success) {
             console.log('成功載入CSV檔案內容:', result.data);
             
-            // 解析CSV內容
-            const csvData = parseCSVContent(result.data);
-            if (csvData && csvData.length > 0) {
-                // 儲存到全域變數
-                window.csvData = csvData;
-                
-                // 更新API測試區域
-                updateAPITestWithCSV();
-                
-                // 顯示檔案預覽
-                showCSVPreview(csvData);
-                
-                console.log(`成功載入 ${csvData.length} 筆測試資料`);
+                // 解析CSV內容
+                const csvData = parseCSVContent(result.data);
+                if (csvData && csvData.length > 0) {
+                    // 儲存到全域變數
+                    window.csvData = csvData;
+                    
+                    // 更新API測試區域
+                    updateAPITestWithCSV();
+                    
+                    // 顯示檔案預覽
+                    showCSVPreview(csvData);
+                    
+                    // 更新事實性檢查變數選項
+                    const headers = Object.keys(csvData[0]);
+                    if (window.ScoringCriteria && window.ScoringCriteria.updateFactualityVariables) {
+                        window.ScoringCriteria.updateFactualityVariables(headers);
+                    }
+                    
+                    console.log(`成功載入 ${csvData.length} 筆測試資料`);
             } else {
                 console.error('CSV檔案內容為空或格式錯誤');
             }

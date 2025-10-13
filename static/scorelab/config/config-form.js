@@ -405,45 +405,9 @@ function generateConfigFormHTML() {
                         <div class="card-body">
                             <p class="text-muted small mb-3">選擇一個或多個內建評分指標</p>
 
-                            <!-- 回覆長度檢查 -->
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="enableJavascript" onchange="ScoringCriteria.toggleJavascriptConfig()">
-                                    <label class="form-check-label" for="enableJavascript">
-                                        <i class="fas fa-ruler me-2"></i>回覆長度檢查
-                                    </label>
-                                </div>
-                                <div id="javascriptConfig" style="display: none;" class="mt-2 ps-4">
-                                    <div class="row">
-                                        <div class="col-12 mb-2">
-                                            <label class="form-label small">驗證條件</label>
-                                            <select class="form-select form-select-sm" id="javascriptCondition" onchange="ScoringCriteria.updateJavascriptCondition()">
-                                    <option value="length">回覆長度檢查</option>
-                                    <option value="custom">自定義條件</option>
-                                </select>
-                            </div>
-                                        <div class="col-12" id="lengthConfig">
-                                            <label class="form-label small">最小長度</label>
-                                            <input type="number" class="form-control form-control-sm" id="minLength" value="100" min="1">
-                            </div>
-                                        <div class="col-12" id="customConfig" style="display: none;">
-                                            <label class="form-label small">自定義表達式</label>
-                                            <textarea class="form-control form-control-sm" id="customJavascript" rows="2" placeholder="output.length >= 100"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                            </div>
 
                             <!-- 其他 Metric 評分選項 -->
 
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="enableSimilarity">
-                                    <label class="form-check-label" for="enableSimilarity">
-                                        <i class="fas fa-search me-2"></i>語義相似度
-                                    </label>
-                                </div>
-                            </div>
                             
                             <div class="mb-2">
                                 <div class="form-check">
@@ -472,14 +436,6 @@ function generateConfigFormHTML() {
                                 </div>
                             </div>
                                               
-                            <div class="mb-2">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="enableContains">
-                                    <label class="form-check-label" for="enableContains">
-                                        <i class="fas fa-search-plus me-2"></i>包含檢查
-                                    </label>
-                                </div>
-                            </div>
                                                                
                         </div>
                     </div>

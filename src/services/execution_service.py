@@ -1,5 +1,6 @@
 """配置執行服務"""
 import subprocess
+import os
 from pathlib import Path
 
 
@@ -24,16 +25,68 @@ class ExecutionService:
             
             # 在配置目錄中執行 promptfoo eval
             try:
-                result = subprocess.run(
-                    'promptfoo eval',
-                    cwd=str(config_dir),
-                    shell=True,
-                    capture_output=True,
-                    text=True,
-                    encoding='utf-8',
-                    errors='replace',
-                    timeout=300  # 5分鐘超時
-                )
+                # 構建完整的命令
+                if os.name == 'nt':
+                    # Windows: 嘗試多個可能的 conda 安裝位置
+                    possible_paths = [
+                        os.path.join(os.environ.get('USERPROFILE', ''), 'anaconda3', 'Scripts', 'activate.bat'),
+                        os.path.join(os.environ.get('USERPROFILE', ''), 'miniconda3', 'Scripts', 'activate.bat'),
+                        os.path.join(os.environ.get('LOCALAPPDATA', ''), 'anaconda3', 'Scripts', 'activate.bat'),
+                        os.path.join(os.environ.get('LOCALAPPDATA', ''), 'miniconda3', 'Scripts', 'activate.bat'),
+                        os.path.join(os.environ.get('PROGRAMFILES', ''), 'anaconda3', 'Scripts', 'activate.bat'),
+                        os.path.join(os.environ.get('PROGRAMFILES', ''), 'miniconda3', 'Scripts', 'activate.bat'),
+                        # 如果有設置 CONDA_BAT 環境變數
+                        os.environ.get('CONDA_BAT', '')
+                    ]
+                    
+                    conda_path = None
+                    for path in possible_paths:
+                        if path and os.path.exists(path):
+                            conda_path = path
+                            break
+                    
+                    if not conda_path:
+                        print("嘗試過的路徑:")
+                        for path in possible_paths:
+                            print(f"- {path}")
+                        return {'error': '找不到 Conda 執行檔，請確保已安裝 Anaconda 或 Miniconda'}, 500
+                    
+                    print(f"找到 conda 執行檔: {conda_path}")
+                    
+                    # 構建完整命令
+                    activate_cmd = f'"{conda_path}" activate LLM'
+                    eval_cmd = f'cmd /c "{activate_cmd} && promptfoo eval"'
+                    
+                    print(f"執行命令: {eval_cmd}")
+                    
+                    result = subprocess.run(
+                        eval_cmd,
+                        cwd=str(config_dir),
+                        shell=True,
+                        capture_output=True,
+                        text=True,
+                        encoding='utf-8',
+                        errors='replace',
+                        timeout=300  # 5分鐘超時
+                    )
+                else:
+                    # Linux/Mac
+                    eval_cmd = 'conda activate LLM && promptfoo eval'
+                    result = subprocess.run(
+                        eval_cmd,
+                        cwd=str(config_dir),
+                        shell=True,
+                        capture_output=True,
+                        text=True,
+                        encoding='utf-8',
+                        errors='replace',
+                        timeout=300,  # 5分鐘超時
+                        executable='/bin/bash'
+                    )
+                
+                print(f"命令輸出: {result.stdout}")
+                print(f"錯誤輸出: {result.stderr}")
+                print(f"返回碼: {result.returncode}")
                 
                 # 檢查是否成功執行（即使有測試失敗，只要沒有嚴重錯誤就算成功）
                 if result.returncode == 0 or (result.returncode != 0 and "Evaluation complete" in result.stdout):

@@ -2,13 +2,13 @@ from typing import Dict, Any, Union
 from bert_score import score
 
 def get_assert_bert_f1(output: str, context: Dict[str, Any]) -> Dict[str, Any]:
-    reference = context["vars"].get("summary", "")
+    reference = context["vars"].get("expected_answer", "")
     
     if not reference:
         return {
             "pass": False,
             "score": 0.0,
-            "reason": "No reference provided in context.vars.summary"
+            "reason": "No reference provided in context.vars.expected_answer"
         }
 
 
@@ -29,13 +29,13 @@ def get_assert_bert_f1(output: str, context: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 def get_assert_bert_recall(output: str, context: Dict[str, Any]) -> Dict[str, Any]:
-    reference = context["vars"].get("summary", "")
+    reference = context["vars"].get("expected_answer", "")
     
     if not reference:
         return {
             "pass": False,
             "score": 0.0,
-            "reason": "No reference provided in context.vars.summary"
+            "reason": "No reference provided in context.vars.expected_answer"
         }
 
 
@@ -56,13 +56,13 @@ def get_assert_bert_recall(output: str, context: Dict[str, Any]) -> Dict[str, An
     }
 
 def get_assert_bert_precision(output: str, context: Dict[str, Any]) -> Dict[str, Any]:
-    reference = context["vars"].get("summary", "")
+    reference = context["vars"].get("expected_answer", "")
     
     if not reference:
         return {
             "pass": False,
             "score": 0.0,
-            "reason": "No reference provided in context.vars.summary"
+            "reason": "No reference provided in context.vars.expected_answer"
         }
 
 

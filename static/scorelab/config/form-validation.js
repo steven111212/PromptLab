@@ -80,17 +80,14 @@ async function saveConfigForm() {
         
         // 處理檔案上傳
         let uploadedFile = null;
-        const questionSourceRadio = document.querySelector('input[name="questionSource"]:checked');
-        const questionSource = questionSourceRadio ? questionSourceRadio.value : 'manual';
-        if (questionSource === 'upload') {
-            const questionFile = document.getElementById('questionFile').files[0];
-            if (questionFile) {
-                const fileContent = await readFileAsBase64(questionFile);
-                uploadedFile = {
-                    filename: questionFile.name,
-                    content: fileContent
-                };
-            }
+        const csvFileInput = document.getElementById('csvFile');
+        if (csvFileInput && csvFileInput.files.length > 0) {
+            const csvFile = csvFileInput.files[0];
+            const fileContent = await readFileAsBase64(csvFile);
+            uploadedFile = {
+                filename: csvFile.name,
+                content: fileContent
+            };
         }
         
         console.log('生成的專案內容:', config);
@@ -150,17 +147,14 @@ async function saveFriendlyConfig() {
         
         // 處理檔案上傳
         let uploadedFile = null;
-        const questionSourceRadio = document.querySelector('input[name="questionSource"]:checked');
-        const questionSource = questionSourceRadio ? questionSourceRadio.value : 'manual';
-        if (questionSource === 'upload') {
-            const questionFile = document.getElementById('questionFile').files[0];
-            if (questionFile) {
-                const fileContent = await readFileAsBase64(questionFile);
-                uploadedFile = {
-                    filename: questionFile.name,
-                    content: fileContent
-                };
-            }
+        const csvFileInput = document.getElementById('csvFile');
+        if (csvFileInput && csvFileInput.files.length > 0) {
+            const csvFile = csvFileInput.files[0];
+            const fileContent = await readFileAsBase64(csvFile);
+            uploadedFile = {
+                filename: csvFile.name,
+                content: fileContent
+            };
         }
         
         console.log('生成的專案內容:', config);
@@ -230,7 +224,7 @@ function generateConfigFromForm() {
         const csvFileInput = document.getElementById('csvFile');
         if (csvFileInput && csvFileInput.files.length > 0) {
             const questionFile = csvFileInput.files[0];
-            testsConfig = `  - file://${questionFile.name}`;
+            testsConfig = `tests:\n  - file://${questionFile.name}`;
         }
     }
     
@@ -252,39 +246,51 @@ function generateConfigFromForm() {
             providersConfig += `\n      method: ${httpMethod}`;
         }
         
-        // 添加路徑專案
-        providersConfig += `\n      path: "${httpPath}"`;
-        
-        // 添加 Host 專案
-        providersConfig += `\n      host: "${httpHost}"`;
-        
-        // 添加 Content-Type 專案
-        if (httpContentType) {
-            providersConfig += `\n      headers:
-        Content-Type: "${httpContentType}"`;
-        }
-        
-        // 添加認證專案
+        // 使用 request 格式
+        providersConfig += `\n      request: |
+        ${httpMethod} ${httpPath} HTTP/1.1
+        Host: ${httpHost}
+        Content-Type: ${httpContentType}`;
+
+        // 添加認證標頭
         if (authType && authValue) {
             switch (authType) {
                 case 'bearer':
-                    providersConfig += `\n        Authorization: "Bearer ${authValue}"`;
+                    providersConfig += `\n        Authorization: Bearer ${authValue}`;
                     break;
                 case 'basic':
-                    providersConfig += `\n        Authorization: "Basic ${btoa(authValue)}"`;
+                    providersConfig += `\n        Authorization: Basic ${btoa(authValue)}`;
                     break;
                 case 'apikey':
-                    providersConfig += `\n        Authorization: "Bearer ${authValue}"`;
+                    providersConfig += `\n        Authorization: ${authValue}`;
                     break;
                 case 'custom':
-                    providersConfig += `\n        Authorization: "${authValue}"`;
+                    providersConfig += `\n        Authorization: ${authValue}`;
                     break;
             }
         }
         
-        // 添加 Request Body 專案
-        providersConfig += `\n      body: |
-${requestBody.split('\n').map(line => `        ${line}`).join('\n')}`;
+        // 添加空行和 Request Body（保持正確的縮排）
+        providersConfig += `\n\n`;
+        // 嘗試解析並重新格式化 JSON
+        try {
+            const jsonBody = JSON.parse(requestBody);
+            const formattedBody = JSON.stringify(jsonBody, null, 2)
+                .split('\n')
+                .map(line => `        ${line}`) // 添加基本縮排
+                .join('\n');
+            providersConfig += formattedBody;
+        } catch (e) {
+            // 如果不是有效的 JSON，使用原始文本
+            const bodyLines = requestBody.split('\n');
+            bodyLines.forEach((line, index) => {
+                if (index === 0) {
+                    providersConfig += `        ${line.trimStart()}`;
+                } else {
+                    providersConfig += `\n        ${line.trimStart()}`;
+                }
+            });
+        }
         
         // 添加 Transform Response 專案
         if (transformResponse) {
@@ -293,53 +299,89 @@ ${requestBody.split('\n').map(line => `        ${line}`).join('\n')}`;
     }
     
     // 生成評分標準專案
-    let assertionsConfig = '';
-    const enableJavascript = document.getElementById('enableJavascript').checked;
+    let defaultTestConfig = '';
     const enableGEval = document.getElementById('enableGEval').checked;
+    const enableFactuality = document.getElementById('enableFactuality')?.checked;
     
-    if (enableJavascript || enableGEval) {
-        assertionsConfig = 'assertions:';
+    // 檢查是否需要 defaultTest
+    if (enableGEval || enableFactuality) {
+        defaultTestConfig = 'defaultTest:';
         
-        // JavaScript 評分標準
-        if (enableJavascript) {
-            const javascriptCondition = document.getElementById('javascriptCondition').value;
-            let javascriptExpression = '';
-            
-            if (javascriptCondition === 'length') {
-                const minLength = document.getElementById('minLength').value;
-                javascriptExpression = `output.length >= ${minLength}`;
-            } else if (javascriptCondition === 'custom') {
-                javascriptExpression = document.getElementById('customJavascript').value;
-            }
-            
-            if (javascriptExpression) {
-                assertionsConfig += `
-  - type: javascript
-    value: "${javascriptExpression}"`;
+        // 如果有 G-Eval 或事實性檢查，需要添加 provider
+        if (enableGEval || enableFactuality) {
+            const llmProvider = document.getElementById('llmProvider')?.value;
+            if (llmProvider) {
+                const graderProviderConfig = generateGraderProviderConfig(llmProvider);
+                if (graderProviderConfig) {
+                    defaultTestConfig += `\n  options:\n${graderProviderConfig}`;
+                }
             }
         }
+        
+        // 添加 assert
+        defaultTestConfig += '\n  assert:';
+        
+        // 事實性檢查評分標準
+        if (enableFactuality) {
+            const factualityVariable = document.getElementById('factualityVariable');
+            if (factualityVariable && factualityVariable.value) {
+                defaultTestConfig += `
+    - type: factuality
+      value: "${factualityVariable.value}"`;
+            }
+        }
+        
         
         // G-Eval 評分標準
         if (enableGEval) {
             const criteriaList = document.querySelectorAll('#gevalCriteriaList input[type="text"]');
             criteriaList.forEach(input => {
                 if (input.value.trim()) {
-                    assertionsConfig += `
-  - type: llm-rubric
-    value: "${input.value.trim()}"`;
+                    defaultTestConfig += `
+    - type: g-eval
+      value: ${input.value.trim()}`;
                 }
             });
+        }
+        
+        // BERT Score 評分標準
+        const enableBertScore = document.getElementById('enableBertScore')?.checked;
+        if (enableBertScore) {
+            defaultTestConfig += `
+    - type: python
+      value: file://../../assert/bert_scoring.py:get_assert_bert_f1
+    - type: python
+      value: file://../../assert/bert_scoring.py:get_assert_bert_recall
+    - type: python
+      value: file://../../assert/bert_scoring.py:get_assert_bert_precision`;
         }
     }
     
     // 生成完整的 YAML 專案
-    let yamlConfig = `description: ${configName}
-
-${providersConfig}
-
-${testsConfig}
-
-${assertionsConfig}`;
+    let yamlConfig = `description: ${configName}\n\nprompts: "dummy"`;
+    
+    if (providersConfig) {
+        yamlConfig += `\n\n${providersConfig}`;
+    }
+    
+    // 檢查CSV檔案配置
+    const csvFileInput = document.getElementById('csvFile');
+    if (csvFileInput && csvFileInput.files.length > 0) {
+        // 如果有新上傳的檔案，使用新檔案
+        const csvFile = csvFileInput.files[0];
+        yamlConfig += `\n\ntests:\n  - file://${csvFile.name}`;
+    } else if (ConfigManager.selectedConfig()) {
+        // 如果是編輯模式且沒有新上傳的檔案，保留原本的tests配置
+        const originalContent = ConfigManager.selectedConfig().content;
+        const testsMatch = originalContent.match(/tests:\s*\n((?:.*\n)*?)(?=\n\s*[a-zA-Z]|\n\s*$)/);
+        if (testsMatch) {
+            yamlConfig += `\n\ntests:\n${testsMatch[1].trim()}`;
+        }
+    }
+    
+    if (defaultTestConfig) {
+        yamlConfig += `\n\n${defaultTestConfig}`;
+    }
     
     console.log('最終生成的專案:', yamlConfig);
     return yamlConfig;
@@ -467,19 +509,6 @@ function resetScoringCriteriaList() {
         console.log('toggleQuestionInput 函數調用失敗:', e);
     }
     
-    // 重置 JavaScript 專案（安全檢查）
-    const enableJavascript = document.getElementById('enableJavascript');
-    const javascriptConfig = document.getElementById('javascriptConfig');
-    const javascriptCondition = document.getElementById('javascriptCondition');
-    const minLength = document.getElementById('minLength');
-    const customJavascript = document.getElementById('customJavascript');
-    
-    if (enableJavascript) enableJavascript.checked = false;
-    if (javascriptConfig) javascriptConfig.style.display = 'none';
-    if (javascriptCondition) javascriptCondition.value = 'length';
-    if (minLength) minLength.value = '100';
-    if (customJavascript) customJavascript.value = '';
-    updateJavascriptCondition();
     
     // 重置 G-Eval 專案
     const enableGEval = document.getElementById('enableGEval');

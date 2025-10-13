@@ -117,33 +117,11 @@ function updateLLMProviderConfig() {
     configArea.innerHTML = configHTML;
 }
 
-// 切換 JavaScript 配置顯示
-function toggleJavascriptConfig() {
-    const checkbox = document.getElementById('enableJavascript');
-    const config = document.getElementById('javascriptConfig');
-    config.style.display = checkbox.checked ? 'block' : 'none';
-}
-
 // 切換 G-Eval 配置顯示
 function toggleGEvalConfig() {
     const checkbox = document.getElementById('enableGEval');
     const config = document.getElementById('gevalConfig');
     config.style.display = checkbox.checked ? 'block' : 'none';
-}
-
-// 更新 JavaScript 條件配置
-function updateJavascriptCondition() {
-    const condition = document.getElementById('javascriptCondition').value;
-    const lengthConfig = document.getElementById('lengthConfig');
-    const customConfig = document.getElementById('customConfig');
-    
-    if (condition === 'length') {
-        lengthConfig.style.display = 'block';
-        customConfig.style.display = 'none';
-    } else if (condition === 'custom') {
-        lengthConfig.style.display = 'none';
-        customConfig.style.display = 'block';
-    }
 }
 
 // 更新評分模型配置
@@ -226,9 +204,7 @@ function updateFactualityVariables(csvHeaders) {
 // 匯出評分標準相關的函數供其他模組使用
 window.ScoringCriteria = {
     updateLLMProviderConfig,
-    toggleJavascriptConfig,
     toggleGEvalConfig,
-    updateJavascriptCondition,
     updateGradingModelFields,
     addGEvalCriteria,
     removeGEvalCriteria,

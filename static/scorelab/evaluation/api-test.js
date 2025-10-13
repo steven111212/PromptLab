@@ -306,8 +306,8 @@ function buildAPIRequestWithCSVData(config, csvData) {
         
         // 處理CSV資料中的引號問題
         if (typeof value === 'string') {
-            // 轉義內部引號，避免JSON格式錯誤
-            value = value.replace(/"/g, '\\"');
+            // 轉義所有類型的引號，避免JSON格式錯誤
+            value = value.replace(/["""]/g, '\\"');
         }
         
         // 直接替換placeholder，保持JSON格式
@@ -319,13 +319,8 @@ function buildAPIRequestWithCSVData(config, csvData) {
         const firstKey = Object.keys(csvData)[0];
         const firstValue = csvData[firstKey];
         if (firstValue !== undefined && firstValue !== '') {
-            // 檢查是否已經在引號內
-            const quotedPrompt = `"{{prompt}}"`;
-            if (body.includes(quotedPrompt)) {
-                body = body.replace(/\{\{prompt\}\}/g, `"${firstValue}"`);
-            } else {
-                body = body.replace(/\{\{prompt\}\}/g, firstValue);
-            }
+            // 直接替換值，讓 JSON.parse/stringify 處理引號
+            body = body.replace(/\{\{prompt\}\}/g, firstValue);
         }
     }
     

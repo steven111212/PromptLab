@@ -286,9 +286,7 @@ function generateOutputResultCell(test, index, evalId) {
             ${!test.success && test.grading_info?.reason ? 
                 `<div class="mt-2 text-danger" style="font-size: 0.85rem;">
                     <i class="fas fa-exclamation-circle me-1"></i>
-                    ${test.grading_info.reason.length > 50 ? 
-                        test.grading_info.reason.substring(0, 50) + '...' : 
-                        test.grading_info.reason}
+                    ${test.grading_info.reason}
                 </div>` : ''
             }
         </div>
@@ -381,14 +379,9 @@ async function showTestDetails(testIndex, evalId) {
                             }
                         </div>
                     </td>
-                    <td style="border: 1px solid #dee2e6; padding: 8px; max-width: 250px; word-wrap: break-word;">
+                    <td style="border: 1px solid #dee2e6; padding: 8px; max-width: 400px; word-wrap: break-word;">
                         <div style="font-size: 0.85rem; line-height: 1.3;">
-                            ${assertion.reason ? 
-                                (assertion.reason.length > 100 ? 
-                                    assertion.reason.substring(0, 100) + '...' : 
-                                    assertion.reason) : 
-                                '無原因說明'
-                            }
+                            ${assertion.reason || '無原因說明'}
                         </div>
                     </td>
                 </tr>

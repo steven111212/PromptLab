@@ -93,14 +93,15 @@ function validateFriendlyForm() {
     
 
     
-    // 驗證評分標準
+    // 驗證評分標準（可選）
     const enableJavascript = document.getElementById('enableJavascript').checked;
     const enableGEval = document.getElementById('enableGEval').checked;
     
-    if (!enableJavascript && !enableGEval) {
-        showAlert('請至少添加一個評分標準', 'warning');
-        return false;
-    }
+    // 評分標準為可選項，不強制要求
+    // if (!enableJavascript && !enableGEval) {
+    //     showAlert('請至少添加一個評分標準', 'warning');
+    //     return false;
+    // }
     
     // 驗證 JavaScript 評分配置
     if (enableJavascript) {
