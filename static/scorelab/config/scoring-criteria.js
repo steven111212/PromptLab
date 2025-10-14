@@ -170,7 +170,20 @@ function toggleFactualityConfig() {
         
         // 如果顯示配置，嘗試載入變數
         if (checkbox.checked) {
+            // 保存當前選擇的值
+            const factualityVariable = document.getElementById('factualityVariable');
+            const currentValue = factualityVariable ? factualityVariable.value : '';
+            
+            // 載入變數選項
             loadFactualityVariablesFromConfig();
+            
+            // 恢復之前選擇的值
+            if (currentValue && factualityVariable) {
+                setTimeout(() => {
+                    factualityVariable.value = currentValue;
+                    console.log('恢復事實性檢查變數選擇:', currentValue);
+                }, 100);
+            }
         }
     }
 }
@@ -184,6 +197,10 @@ function updateFactualityVariables(csvHeaders) {
         return;
     }
     
+    // 保存當前選擇的值
+    const currentValue = factualityVariableSelect.value;
+    console.log('當前選擇的值:', currentValue);
+    
     // 清空現有選項
     factualityVariableSelect.innerHTML = '<option value="">請選擇CSV檔案中的變數</option>';
     
@@ -196,6 +213,12 @@ function updateFactualityVariables(csvHeaders) {
             option.textContent = header;
             factualityVariableSelect.appendChild(option);
         });
+        
+        // 如果之前有選擇值，嘗試恢復
+        if (currentValue) {
+            factualityVariableSelect.value = currentValue;
+            console.log('恢復選擇的值:', currentValue);
+        }
     } else {
         console.log('沒有找到CSV標題');
     }

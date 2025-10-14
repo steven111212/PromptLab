@@ -178,9 +178,15 @@ async function loadConfigToForm(config) {
                                             const factualityVariableSelect = document.getElementById('factualityVariable');
                                             if (factualityVariableSelect) {
                                                 factualityVariableSelect.value = factualityConfig;
+                                                console.log('設置事實性檢查變數:', factualityConfig);
                                             }
-                                        }, 100);
+                                        }, 200);
                                     }
+                                }
+                                
+                                // 更新變數選擇器（包括問題變數和事實性檢查變數）
+                                if (window.ConfigForm && window.ConfigForm.updatePromptVariableSelect) {
+                                    window.ConfigForm.updatePromptVariableSelect();
                                 }
                                 
                                 // 顯示CSV預覽
@@ -199,6 +205,26 @@ async function loadConfigToForm(config) {
         if (descriptionMatch) {
             document.getElementById('configName').value = descriptionMatch[1];
             console.log('設置專案名稱:', descriptionMatch[1]);
+        }
+        
+        // 載入 prompts 設定
+        const promptsMatch = yamlContent.match(/prompts:\s*["']?([^"'\n]+)["']?/);
+        if (promptsMatch) {
+            let promptVariable = promptsMatch[1].trim();
+            // 移除 {{}} 標記，只保留變數名稱
+            if (promptVariable.startsWith('{{') && promptVariable.endsWith('}}')) {
+                promptVariable = promptVariable.slice(2, -2);
+            }
+            if (promptVariable && promptVariable !== 'dummy') {
+                // 延遲設定，確保問題變數選擇器已經更新
+                setTimeout(() => {
+                    const promptSelect = document.getElementById('promptVariable');
+                    if (promptSelect) {
+                        promptSelect.value = promptVariable;
+                        console.log('設置問題變數:', promptVariable);
+                    }
+                }, 800); // 增加延遲時間，確保 CSV 資料已載入
+            }
         }
         
         // 檢查是否有 providers 設定（格式一）
@@ -448,7 +474,11 @@ async function loadConfigToForm(config) {
                 if (valueSection) {
                     const criteria = valueSection[1].trim().split('\n')
                         .map(line => line.replace(/^\s*-\s*/, '').replace(/^["']/, '').replace(/["']$/, ''))
-                        .filter(line => line.trim());
+                        .filter(line => line.trim())
+                        .map(criterion => {
+                            // 移除自動添加的中文回覆要求
+                            return criterion.replace(/，用繁體中文回答你的評分原因。$/, '');
+                        });
                     
                     console.log('解析到的 G-Eval 評分標準:', criteria);
                     
@@ -479,11 +509,20 @@ async function loadConfigToForm(config) {
                         }
                     }, 100);
                 } else {
-                    // 嘗試解析單行評分標準
-                    const gevalMatch = yamlContent.match(/type:\s*(?:g-eval|llm-rubric)\s*\n\s*value:\s*([^\n]+)/);
-                    if (gevalMatch) {
-                        const criterion = gevalMatch[1].trim();
-                        console.log('解析到的單行 G-Eval 評分標準:', criterion);
+                    // 嘗試解析多個 G-Eval 配置
+                    const gevalMatches = yamlContent.match(/type:\s*(?:g-eval|llm-rubric)\s*\n\s*value:\s*["']?([^"'\n]+)["']?/g);
+                    if (gevalMatches && gevalMatches.length > 0) {
+                        const criteria = gevalMatches.map(match => {
+                            const valueMatch = match.match(/value:\s*["']?([^"'\n]+)["']?/);
+                            if (valueMatch) {
+                                let criterion = valueMatch[1].trim();
+                                // 移除自動添加的中文回覆要求
+                                return criterion.replace(/，用繁體中文回答你的評分原因。$/, '');
+                            }
+                            return null;
+                        }).filter(criterion => criterion !== null);
+                        
+                        console.log('解析到的多個 G-Eval 評分標準:', criteria);
                         
                         // 使用 setTimeout 確保 DOM 已經渲染完成
                         setTimeout(() => {
@@ -492,21 +531,25 @@ async function loadConfigToForm(config) {
                             if (gevalCriteriaList) {
                                 gevalCriteriaList.innerHTML = '';
                                 
-                                // 添加單個評分標準
-                                ScoringCriteria.addGEvalCriteria();
-                                
-                                // 設置值
-                                setTimeout(() => {
-                                    const inputGroups = gevalCriteriaList.querySelectorAll('.input-group');
-                                    const lastInputGroup = inputGroups[inputGroups.length - 1];
-                                    if (lastInputGroup) {
-                                        const input = lastInputGroup.querySelector('input[type="text"]');
-                                        if (input) {
-                                            input.value = criterion;
-                                            console.log('設置單行評分標準:', criterion);
-                                        }
-                                    }
-                                }, 50);
+                                // 為每個評分標準添加輸入框
+                                criteria.forEach((criterion, index) => {
+                                    setTimeout(() => {
+                                        ScoringCriteria.addGEvalCriteria();
+                                        
+                                        // 設置值 - 使用更長的延遲確保 DOM 更新完成
+                                        setTimeout(() => {
+                                            const inputGroups = gevalCriteriaList.querySelectorAll('.input-group');
+                                            const targetInputGroup = inputGroups[index];
+                                            if (targetInputGroup) {
+                                                const input = targetInputGroup.querySelector('input[type="text"]');
+                                                if (input) {
+                                                    input.value = criterion;
+                                                    console.log(`設置評分標準 ${index + 1}:`, criterion);
+                                                }
+                                            }
+                                        }, 100 + (index * 50)); // 增加延遲時間
+                                    }, 50 + (index * 30)); // 增加延遲時間
+                                });
                             }
                         }, 100);
                     }

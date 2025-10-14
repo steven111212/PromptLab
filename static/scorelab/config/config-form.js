@@ -392,6 +392,33 @@ function generateConfigFormHTML() {
                     </div>
                 </div>
 
+                <!-- 變數選擇區域 -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-tags me-2"></i>變數設定
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">選擇問題變數</label>
+                                <select class="form-select" id="promptVariable">
+                                    <option value="">請選擇CSV檔案中的問題欄位</option>
+                                </select>
+                                <small class="form-text text-muted">選擇CSV檔案中代表用戶問題的欄位，這將用於評測API回應</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">選擇參考答案變數</label>
+                                <select class="form-select" id="factualityVariable">
+                                    <option value="">請選擇CSV檔案中的參考答案欄位</option>
+                                </select>
+                                <small class="form-text text-muted">選擇CSV檔案中代表參考答案的欄位，用於事實性檢查評分</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 評分標準配置區域 -->
                 <div class="row">
                     <!-- 左欄：Metric 評分 -->
@@ -493,14 +520,9 @@ function generateConfigFormHTML() {
                                     </label>
                                 </div>
                                 <div id="factualityConfig" style="display: none;" class="mt-2 ps-4">
-                                    <div class="row">
-                                        <div class="col-12 mb-2">
-                                            <label class="form-label small">選擇參考答案變數</label>
-                                            <select class="form-select form-select-sm" id="factualityVariable">
-                                                <option value="">請選擇CSV檔案中參考答案的變數</option>
-                                            </select>
-                                            <small class="form-text text-muted">從已配置的CSV檔案中選擇參考答案的變數</small>
-                                        </div>
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>提示：</strong>請在上方的「變數設定」區域選擇參考答案變數
                                     </div>
                                 </div>
                             </div>
@@ -703,6 +725,9 @@ function handleCSVUpload(input) {
         if (window.ScoringCriteria && window.ScoringCriteria.updateFactualityVariables) {
             window.ScoringCriteria.updateFactualityVariables(headers);
         }
+
+        // 更新問題變數選擇器
+        updatePromptVariableSelect();
 
         // 顯示預覽
         const preview = document.getElementById('csvPreview');
@@ -1168,6 +1193,57 @@ async function testAPIWithCSV() {
     }
 }
 
+// 更新問題變數選擇器
+function updatePromptVariableSelect() {
+    const promptSelect = document.getElementById('promptVariable');
+    const factualitySelect = document.getElementById('factualityVariable');
+    
+    if (!promptSelect) return;
+    
+    // 保留預設選項
+    promptSelect.innerHTML = '<option value="">請選擇CSV檔案中的問題欄位</option>';
+    if (factualitySelect) {
+        factualitySelect.innerHTML = '<option value="">請選擇CSV檔案中的參考答案欄位</option>';
+    }
+    
+    if (window.csvData && window.csvData.length > 0) {
+        // 從 CSV 標題獲取變數
+        const headers = Object.keys(window.csvData[0]);
+        console.log('更新變數選擇器，可用標題:', headers);
+        
+        // 更新問題變數選擇器
+        headers.forEach(header => {
+            const option = document.createElement('option');
+            option.value = header;
+            option.textContent = header;
+            promptSelect.appendChild(option);
+        });
+        
+        // 更新事實性檢查變數選擇器
+        if (factualitySelect) {
+            headers.forEach(header => {
+                const option = document.createElement('option');
+                option.value = `{{${header}}}`;
+                option.textContent = header;
+                factualitySelect.appendChild(option);
+            });
+        }
+        
+        // 啟用選擇器
+        promptSelect.disabled = false;
+        if (factualitySelect) {
+            factualitySelect.disabled = false;
+        }
+    } else {
+        // 如果沒有 CSV 資料，禁用選擇器
+        promptSelect.disabled = true;
+        if (factualitySelect) {
+            factualitySelect.disabled = true;
+        }
+        console.log('沒有 CSV 資料，禁用變數選擇器');
+    }
+}
+
 // 從已配置的CSV檔案中獲取變數
 async function loadFactualityVariablesFromConfig() {
     console.log('loadFactualityVariablesFromConfig 被調用');
@@ -1322,5 +1398,6 @@ window.ConfigForm = {
     initializeDynamicTestForm,
     updateUnifiedTestButton,
     executeAPITest,
-    checkManualTestInput
+    checkManualTestInput,
+    updatePromptVariableSelect
 };

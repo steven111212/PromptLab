@@ -303,6 +303,9 @@ function generateConfigFromForm() {
     const enableGEval = document.getElementById('enableGEval').checked;
     const enableFactuality = document.getElementById('enableFactuality')?.checked;
     
+    console.log('事實性檢查狀態:', enableFactuality);
+    console.log('事實性檢查元素:', document.getElementById('enableFactuality'));
+    
     // 檢查是否需要 defaultTest
     if (enableGEval || enableFactuality) {
         defaultTestConfig = 'defaultTest:';
@@ -324,10 +327,15 @@ function generateConfigFromForm() {
         // 事實性檢查評分標準
         if (enableFactuality) {
             const factualityVariable = document.getElementById('factualityVariable');
+            console.log('事實性檢查變數元素:', factualityVariable);
+            console.log('事實性檢查變數值:', factualityVariable?.value);
             if (factualityVariable && factualityVariable.value) {
                 defaultTestConfig += `
     - type: factuality
       value: "${factualityVariable.value}"`;
+                console.log('已添加事實性檢查到配置');
+            } else {
+                console.log('事實性檢查變數為空或不存在');
             }
         }
         
@@ -337,9 +345,12 @@ function generateConfigFromForm() {
             const criteriaList = document.querySelectorAll('#gevalCriteriaList input[type="text"]');
             criteriaList.forEach(input => {
                 if (input.value.trim()) {
+                    const criteria = input.value.trim();
+                    // 自動添加中文回覆要求
+                    const fullCriteria = `${criteria}，用繁體中文回答你的評分原因。`;
                     defaultTestConfig += `
     - type: g-eval
-      value: ${input.value.trim()}`;
+      value: "${fullCriteria}"`;
                 }
             });
         }
@@ -357,8 +368,13 @@ function generateConfigFromForm() {
         }
     }
     
+    // 獲取選擇的問題變數
+    const promptVariable = document.getElementById('promptVariable');
+    const selectedPromptVariable = promptVariable ? promptVariable.value : '';
+    
     // 生成完整的 YAML 專案
-    let yamlConfig = `description: ${configName}\n\nprompts: "dummy"`;
+    const promptValue = selectedPromptVariable ? `{{${selectedPromptVariable}}}` : 'dummy';
+    let yamlConfig = `description: ${configName}\n\nprompts: "${promptValue}"`;
     
     if (providersConfig) {
         yamlConfig += `\n\n${providersConfig}`;
