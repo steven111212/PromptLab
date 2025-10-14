@@ -495,11 +495,11 @@ function generateConfigFormHTML() {
                                 <div id="factualityConfig" style="display: none;" class="mt-2 ps-4">
                                     <div class="row">
                                         <div class="col-12 mb-2">
-                                            <label class="form-label small">選擇變數</label>
+                                            <label class="form-label small">選擇參考答案變數</label>
                                             <select class="form-select form-select-sm" id="factualityVariable">
-                                                <option value="">請選擇CSV檔案中的變數</option>
+                                                <option value="">請選擇CSV檔案中參考答案的變數</option>
                                             </select>
-                                            <small class="form-text text-muted">從已配置的CSV檔案中選擇變數</small>
+                                            <small class="form-text text-muted">從已配置的CSV檔案中選擇參考答案的變數</small>
                                         </div>
                                     </div>
                                 </div>

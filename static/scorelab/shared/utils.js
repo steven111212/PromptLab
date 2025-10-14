@@ -94,8 +94,11 @@ function validateFriendlyForm() {
 
     
     // 驗證評分標準（可選）
-    const enableJavascript = document.getElementById('enableJavascript').checked;
-    const enableGEval = document.getElementById('enableGEval').checked;
+    const enableJavascriptElement = document.getElementById('enableJavascript');
+    const enableGEvalElement = document.getElementById('enableGEval');
+    
+    const enableJavascript = enableJavascriptElement ? enableJavascriptElement.checked : false;
+    const enableGEval = enableGEvalElement ? enableGEvalElement.checked : false;
     
     // 評分標準為可選項，不強制要求
     // if (!enableJavascript && !enableGEval) {

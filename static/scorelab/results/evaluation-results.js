@@ -155,6 +155,30 @@ async function loadEvaluationDetail(evalId) {
                 </div>
             </div>
             
+            <!-- 圖表區域 -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>延遲分佈圖</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="latencyChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-chart-line me-2"></i>BERT Score F1 分佈圖</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="bertScoreChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- 測試案例詳情表格 -->
             ${generateTestCaseTable(detail)}
         `;
@@ -163,6 +187,9 @@ async function loadEvaluationDetail(evalId) {
         
         // 儲存詳細數據供彈出視窗使用
         window.currentEvalDetail = detail;
+        
+        // 生成圖表
+        generateCharts(detail);
         
     } catch (error) {
         console.error('載入評估詳細結果失敗:', error);
@@ -518,6 +545,188 @@ async function viewOutput(evalId) {
 // 刷新結果
 function refreshResults() {
     loadEvaluationResults();
+}
+
+// 生成圖表
+function generateCharts(detail) {
+    // 生成延遲分佈圖
+    generateLatencyChart(detail);
+    
+    // 生成 BERT Score F1 分佈圖
+    generateBertScoreChart(detail);
+}
+
+// 生成延遲分佈圖
+function generateLatencyChart(detail) {
+    const ctx = document.getElementById('latencyChart');
+    if (!ctx) return;
+    
+    // 收集延遲數據
+    const latencies = detail.details
+        .map(test => test.latency)
+        .filter(latency => latency !== undefined && latency !== null)
+        .map(latency => parseFloat(latency));
+    
+    if (latencies.length === 0) {
+        ctx.parentElement.innerHTML = '<p class="text-muted text-center">無延遲數據</p>';
+        return;
+    }
+    
+    // 計算分佈
+    const minLatency = Math.min(...latencies);
+    const maxLatency = Math.max(...latencies);
+    const binSize = Math.max(10, Math.ceil((maxLatency - minLatency) / 10));
+    const bins = {};
+    
+    latencies.forEach(latency => {
+        const bin = Math.floor(latency / binSize) * binSize;
+        bins[bin] = (bins[bin] || 0) + 1;
+    });
+    
+    const labels = Object.keys(bins).map(Number).sort((a, b) => a - b);
+    const data = labels.map(label => bins[label]);
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels.map(label => `${label}-${label + binSize}ms`),
+            datasets: [{
+                label: 'Count',
+                data: data,
+                backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                borderColor: 'rgba(34, 197, 94, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Latency (ms)'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Count'
+                    },
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Count: ${context.parsed.y}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 生成 BERT Score F1 分佈圖
+function generateBertScoreChart(detail) {
+    const ctx = document.getElementById('bertScoreChart');
+    if (!ctx) return;
+    
+    // 收集 BERT Score F1 數據
+    const bertScores = [];
+    detail.details.forEach(test => {
+        if (test.assertions) {
+            test.assertions.forEach(assertion => {
+                if (assertion.type === 'python' && assertion.score !== undefined) {
+                    // 檢查是否是 BERT Score F1
+                    if (assertion.reason && assertion.reason.includes('BERTScore F1')) {
+                        bertScores.push(parseFloat(assertion.score));
+                    }
+                }
+            });
+        }
+    });
+    
+    if (bertScores.length === 0) {
+        ctx.parentElement.innerHTML = '<p class="text-muted text-center">無 BERT Score F1 數據</p>';
+        return;
+    }
+    
+    // 計算分佈
+    const minScore = Math.min(...bertScores);
+    const maxScore = Math.max(...bertScores);
+    const binSize = Math.max(0.1, Math.ceil((maxScore - minScore) / 10 * 10) / 10);
+    const bins = {};
+    
+    bertScores.forEach(score => {
+        const bin = Math.floor(score / binSize) * binSize;
+        bins[bin] = (bins[bin] || 0) + 1;
+    });
+    
+    const labels = Object.keys(bins).map(Number).sort((a, b) => a - b);
+    const data = labels.map(label => bins[label]);
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels.map(label => `${label.toFixed(1)}-${(label + binSize).toFixed(1)}`),
+            datasets: [{
+                label: 'Count',
+                data: data,
+                backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'BERT Score F1'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Count'
+                    },
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Count: ${context.parsed.y}`;
+                        }
+                    }
+                }
+            }
+        }
+    });
 }
 
 // 頁面載入時初始化
