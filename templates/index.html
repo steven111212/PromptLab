@@ -315,101 +315,8 @@
 
                     <!-- 評估結果 -->
                     <div id="results" class="tab-content" style="display: none;">
-                        <!-- 標題和評估按鈕 -->
-                        <div class="d-flex justify-content-between align-items-center mb-3 px-3">
-                            <div class="d-flex align-items-center">
-                                <div class="dropdown me-2">
-                                    <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                        <i class="fas fa-play me-1"></i>
-                                        Eval
-                                    </button>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="#" onclick="startEvaluation('quick')">
-                                            <i class="fas fa-bolt me-2"></i>Quick Eval
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="#" onclick="startEvaluation('full')">
-                                            <i class="fas fa-check-double me-2"></i>Full Eval
-                                        </a></li>
-                                    </ul>
-                                </div>
-                                <button class="btn btn-outline-secondary" onclick="refreshResults()">
-                                    <i class="fas fa-sync-alt me-1"></i>
-                                    Refresh
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- 工具列 -->
-                        <div class="border-bottom bg-white py-2 px-3 mb-3">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center gap-3">
-                                    <!-- 縮放控制 -->
-                                    <div class="dropdown">
-                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            100% <i class="fas fa-chevron-down ms-1"></i>
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#">150%</a></li>
-                                            <li><a class="dropdown-item" href="#">100%</a></li>
-                                            <li><a class="dropdown-item" href="#">75%</a></li>
-                                            <li><a class="dropdown-item" href="#">50%</a></li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <!-- 顯示控制 -->
-                                    <div class="dropdown">
-                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            Show all results <i class="fas fa-chevron-down ms-1"></i>
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#">Show all results</a></li>
-                                            <li><a class="dropdown-item" href="#">Show failures only</a></li>
-                                            <li><a class="dropdown-item" href="#">Show successes only</a></li>
-                                        </ul>
-                                    </div>
-
-                                    <!-- 搜尋框 -->
-                                    <div class="input-group input-group-sm" style="width: 200px;">
-                                        <span class="input-group-text bg-white border-end-0">
-                                            <i class="fas fa-search text-muted"></i>
-                                        </span>
-                                        <input type="text" class="form-control border-start-0" placeholder="Text or regex">
-                                        <button class="btn btn-outline-secondary" type="button">
-                                            <i class="fas fa-filter"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="d-flex align-items-center gap-2">
-                                    <!-- 欄位設定 -->
-                                    <button class="btn btn-outline-secondary btn-sm" title="欄位設定">
-                                        <i class="fas fa-columns me-1"></i>
-                                        Columns (4)
-                                    </button>
-                                    
-                                    <!-- 表格設定 -->
-                                    <button class="btn btn-outline-secondary btn-sm" title="表格設定">
-                                        <i class="fas fa-table me-1"></i>
-                                        Table Settings
-                                    </button>
-
-                                    <!-- 評估動作 -->
-                                    <div class="dropdown">
-                                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                            Eval actions <i class="fas fa-chevron-down ms-1"></i>
-                                        </button>
-                                        <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="#" onclick="refreshResults()">
-                                                <i class="fas fa-sync-alt me-2"></i>重新整理
-                                            </a></li>
-                                            <li><a class="dropdown-item" href="#">
-                                                <i class="fas fa-file-export me-2"></i>匯出結果
-                                            </a></li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- 標題和間距 -->
+                        <div class="mb-3"></div>
 
                         <!-- 結果列表 -->
                         <div class="px-3">
@@ -809,12 +716,8 @@
                                                     <div class="col-md-6">
                                                         <label class="form-label">OpenAI 模型</label>
                                                         <select class="form-select" id="openaiModel">
-                                                            <option value="gpt-4-1">OpenAI: GPT-4.1</option>
-                                                            <option value="gpt-4-1-mini">OpenAI: GPT-4.1 Mini</option>
-                                                            <option value="gpt-4-1-nano">OpenAI: GPT-4.1 Nano</option>
                                                             <option value="gpt-4o">OpenAI: GPT-4o</option>
                                                             <option value="gpt-4o-mini" selected>OpenAI: GPT-4o Mini</option>
-                                                            <option value="o3">OpenAI: GPT-o3 (with thinking)</option>
                                                         </select>
                                                     </div>
                                                     <div class="col-md-6">

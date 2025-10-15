@@ -366,6 +366,30 @@ function generateConfigFromForm() {
     - type: python
       value: file://../../assert/bert_scoring.py:get_assert_bert_precision`;
         }
+        
+        // IContains 評分標準
+        const enableIContains = document.getElementById('enableIContains')?.checked;
+        if (enableIContains) {
+            const icontainsValue = document.getElementById('icontainsValue')?.value;
+            if (icontainsValue && icontainsValue.trim()) {
+                defaultTestConfig += `
+    - type: icontains
+      value: "${icontainsValue.trim()}"`;
+            }
+        }
+        
+        // ROUGE-N 評分標準
+        const enableRougeN = document.getElementById('enableRougeN')?.checked;
+        if (enableRougeN) {
+            const factualityVariable = document.getElementById('factualityVariable')?.value;
+            const rougeNThreshold = document.getElementById('rougeNThreshold')?.value || '0.6';
+            if (factualityVariable && factualityVariable.trim()) {
+                defaultTestConfig += `
+    - type: rouge-n
+      threshold: ${parseFloat(rougeNThreshold)}
+      value: "${factualityVariable.trim()}"`;
+            }
+        }
     }
     
     // 獲取選擇的問題變數
@@ -535,6 +559,24 @@ function resetScoringCriteriaList() {
     if (gevalConfig) gevalConfig.style.display = 'none';
     if (openaiModel) openaiModel.value = 'gpt-4o-mini';
     updateGradingModelFields();
+    
+    // 重置 IContains 專案
+    const enableIContains = document.getElementById('enableIContains');
+    const icontainsConfig = document.getElementById('icontainsConfig');
+    const icontainsValue = document.getElementById('icontainsValue');
+    
+    if (enableIContains) enableIContains.checked = false;
+    if (icontainsConfig) icontainsConfig.style.display = 'none';
+    if (icontainsValue) icontainsValue.value = '';
+    
+    // 重置 ROUGE-N 專案
+    const enableRougeN = document.getElementById('enableRougeN');
+    const rougeNConfig = document.getElementById('rougeNConfig');
+    const rougeNThreshold = document.getElementById('rougeNThreshold');
+    
+    if (enableRougeN) enableRougeN.checked = false;
+    if (rougeNConfig) rougeNConfig.style.display = 'none';
+    if (rougeNThreshold) rougeNThreshold.value = '0.6';
     
     // 重置 G-Eval 評分標準列表
     const gevalCriteriaList = document.getElementById('gevalCriteriaList');

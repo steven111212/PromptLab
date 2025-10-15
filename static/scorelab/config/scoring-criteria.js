@@ -70,8 +70,6 @@ function updateLLMProviderConfig() {
                         <option value="">請選擇模型</option>
                         <option value="gpt-4o">GPT-4o</option>
                         <option value="gpt-4o-mini">GPT-4o Mini</option>
-                        <option value="gpt-4.1">GPT-4.1</option>
-                        <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
                     </select>
                 </div>
             `;
@@ -161,6 +159,24 @@ function removeGEvalCriteria(button) {
     button.parentElement.remove();
 }
 
+// 切換 IContains 配置顯示
+function toggleIContainsConfig() {
+    const checkbox = document.getElementById('enableIContains');
+    const config = document.getElementById('icontainsConfig');
+    if (config) {
+        config.style.display = checkbox.checked ? 'block' : 'none';
+    }
+}
+
+// 切換 ROUGE-N 配置顯示
+function toggleRougeNConfig() {
+    const checkbox = document.getElementById('enableRougeN');
+    const config = document.getElementById('rougeNConfig');
+    if (config) {
+        config.style.display = checkbox.checked ? 'block' : 'none';
+    }
+}
+
 // 切換事實性檢查配置顯示
 function toggleFactualityConfig() {
     const checkbox = document.getElementById('enableFactuality');
@@ -224,6 +240,7 @@ function updateFactualityVariables(csvHeaders) {
     }
 }
 
+
 // 匯出評分標準相關的函數供其他模組使用
 window.ScoringCriteria = {
     updateLLMProviderConfig,
@@ -232,5 +249,7 @@ window.ScoringCriteria = {
     addGEvalCriteria,
     removeGEvalCriteria,
     toggleFactualityConfig,
-    updateFactualityVariables
+    updateFactualityVariables,
+    toggleIContainsConfig,
+    toggleRougeNConfig
 };

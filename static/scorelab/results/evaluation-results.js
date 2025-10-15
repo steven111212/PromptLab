@@ -71,6 +71,11 @@ async function loadEvaluationResults() {
                     </tbody>
                 </table>
             </div>
+            <div class="d-flex justify-content-end mt-3">
+                <button class="btn btn-outline-secondary" onclick="refreshResults()">
+                    <i class="fas fa-sync-alt me-1"></i>刷新
+                </button>
+            </div>
         `;
         
         container.innerHTML = resultsHtml;
@@ -481,71 +486,23 @@ async function showTestDetails(testIndex, evalId) {
     }
 }
 
-// 開始評估
-async function startEvaluation(type) {
-    try {
-        console.log(`開始 ${type} 評估...`);
-        // 這裡可以調用後端 API 開始評估
-        alert(`${type} 評估功能開發中...`);
-    } catch (error) {
-        console.error('開始評估失敗:', error);
-        alert('開始評估失敗: ' + error.message);
+// 自動載入結果
+function autoLoadResults() {
+    const resultsContainer = document.getElementById('resultsTable');
+    const resultsTab = document.getElementById('results');
+    
+    if (resultsContainer && resultsTab && resultsTab.style.display !== 'none') {
+        loadEvaluationResults();
     }
 }
 
-// 查看輸出
-async function viewOutput(evalId) {
-    try {
-        const detail = await EvaluationAPI.getDetail(evalId);
-        
-        const outputHtml = `
-            <div class="modal fade" id="outputModal" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">評估輸出 - ${evalId}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <pre class="bg-dark text-light p-3 rounded" style="max-height: 500px; overflow-y: auto; font-size: 0.85rem;">${
-                                detail.details.map((test, index) => 
-                                    `=== 測試案例 ${index + 1} ===\n${test.output || test.error || '無輸出'}\n`
-                                ).join('\n')
-                            }</pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // 移除舊的模態框
-        const existingModal = document.getElementById('outputModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-        
-        // 添加新的模態框到頁面
-        document.body.insertAdjacentHTML('beforeend', outputHtml);
-        
-        // 顯示模態框
-        const modal = new bootstrap.Modal(document.getElementById('outputModal'));
-        modal.show();
-        
-        // 模態框關閉後移除DOM元素
-        document.getElementById('outputModal').addEventListener('hidden.bs.modal', function () {
-            this.remove();
-        });
-        
-    } catch (error) {
-        console.error('載入輸出失敗:', error);
-        alert('載入輸出失敗: ' + error.message);
-    }
-}
+// 頁面載入時自動載入結果
+document.addEventListener('DOMContentLoaded', autoLoadResults);
 
-// 刷新結果
-function refreshResults() {
-    loadEvaluationResults();
-}
+// 切換到結果頁面時自動載入
+document.querySelectorAll('[data-tab="results"]').forEach(tab => {
+    tab.addEventListener('click', autoLoadResults);
+});
 
 // 生成圖表
 function generateCharts(detail) {

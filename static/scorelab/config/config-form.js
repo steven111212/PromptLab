@@ -462,6 +462,42 @@ function generateConfigFormHTML() {
                                     </label>
                                 </div>
                             </div>
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableIContains" onchange="ScoringCriteria.toggleIContainsConfig()">
+                                    <label class="form-check-label" for="enableIContains">
+                                        <i class="fas fa-search me-2"></i>Contains 
+                                    </label>
+                                </div>
+                                <div id="icontainsConfig" style="display: none;" class="mt-2 ps-4">
+                                    <div class="row">
+                                        <div class="col-12 mb-2">
+                                            <label class="form-label small">期望包含的文字</label>
+                                            <input type="text" class="form-control form-control-sm" id="icontainsValue" placeholder="輸入期望包含的文字">
+                                            <small class="form-text text-muted">檢查 LLM 輸出是否包含指定的文字</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="enableRougeN" onchange="ScoringCriteria.toggleRougeNConfig()">
+                                    <label class="form-check-label" for="enableRougeN">
+                                        <i class="fas fa-chart-bar me-2"></i>ROUGE-N
+                                    </label>
+                                </div>
+                                <div id="rougeNConfig" style="display: none;" class="mt-2 ps-4">
+                                    <div class="row">
+                                        <div class="col-12 mb-2">
+                                            <label class="form-label small">閾值 (0.0 - 1.0)</label>
+                                            <input type="number" class="form-control form-control-sm" id="rougeNThreshold" placeholder="0.6" min="0" max="1" step="0.1" value="0.6">
+                                            <small class="form-text text-muted">ROUGE-N 分數的最低閾值，將使用變數設定區域的參考答案變數</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                                               
                                                                
                         </div>

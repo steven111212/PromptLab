@@ -424,24 +424,45 @@ async function loadConfigToForm(config) {
         if (yamlContent.includes('assert:')) {
             // 檢查 JavaScript 驗證
             if (yamlContent.includes('type: javascript')) {
-                document.getElementById('enableJavascript').checked = true;
-                ScoringCriteria.toggleJavascriptConfig();
+                const enableJavascript = document.getElementById('enableJavascript');
+                if (enableJavascript) {
+                    enableJavascript.checked = true;
+                    if (window.ScoringCriteria && window.ScoringCriteria.toggleJavascriptConfig) {
+                        ScoringCriteria.toggleJavascriptConfig();
+                    }
+                }
                 
                 const jsMatch = yamlContent.match(/type:\s*javascript\s*\n\s*value:\s*([^\n]+)/);
                 if (jsMatch) {
                     const jsValue = jsMatch[1].trim();
                     if (jsValue.includes('length')) {
-                        document.getElementById('javascriptCondition').value = 'length';
-                        ScoringCriteria.updateJavascriptCondition();
+                        const javascriptCondition = document.getElementById('javascriptCondition');
+                        if (javascriptCondition) {
+                            javascriptCondition.value = 'length';
+                            if (window.ScoringCriteria && window.ScoringCriteria.updateJavascriptCondition) {
+                                ScoringCriteria.updateJavascriptCondition();
+                            }
+                        }
                         
                         const lengthMatch = jsValue.match(/length\s*>=\s*(\d+)/);
                         if (lengthMatch) {
-                            document.getElementById('minLength').value = lengthMatch[1];
+                            const minLength = document.getElementById('minLength');
+                            if (minLength) {
+                                minLength.value = lengthMatch[1];
+                            }
                         }
                     } else {
-                        document.getElementById('javascriptCondition').value = 'custom';
-                        ScoringCriteria.updateJavascriptCondition();
-                        document.getElementById('customJavascript').value = jsValue;
+                        const javascriptCondition = document.getElementById('javascriptCondition');
+                        if (javascriptCondition) {
+                            javascriptCondition.value = 'custom';
+                            if (window.ScoringCriteria && window.ScoringCriteria.updateJavascriptCondition) {
+                                ScoringCriteria.updateJavascriptCondition();
+                            }
+                        }
+                        const customJavascript = document.getElementById('customJavascript');
+                        if (customJavascript) {
+                            customJavascript.value = jsValue;
+                        }
                     }
                 }
             }
@@ -450,23 +471,84 @@ async function loadConfigToForm(config) {
             
             // 檢查 BERT Score (F1)
             if (yamlContent.includes('get_assert_bert_f1')) {
-                document.getElementById('enableBertScore').checked = true;
+                const enableBertScore = document.getElementById('enableBertScore');
+                if (enableBertScore) {
+                    enableBertScore.checked = true;
+                }
             }
             
             // 檢查 BERT Recall
             if (yamlContent.includes('get_assert_bert_recall')) {
-                document.getElementById('enableBertRecall').checked = true;
+                const enableBertRecall = document.getElementById('enableBertRecall');
+                if (enableBertRecall) {
+                    enableBertRecall.checked = true;
+                }
             }
             
             // 檢查 BERT Precision
             if (yamlContent.includes('get_assert_bert_precision')) {
-                document.getElementById('enableBertPrecision').checked = true;
+                const enableBertPrecision = document.getElementById('enableBertPrecision');
+                if (enableBertPrecision) {
+                    enableBertPrecision.checked = true;
+                }
+            }
+            
+            // 檢查 IContains
+            if (yamlContent.includes('type: icontains')) {
+                const enableIContains = document.getElementById('enableIContains');
+                if (enableIContains) {
+                    enableIContains.checked = true;
+                    if (window.ScoringCriteria && window.ScoringCriteria.toggleIContainsConfig) {
+                        ScoringCriteria.toggleIContainsConfig();
+                    }
+                }
+                
+                const icontainsMatch = yamlContent.match(/type:\s*icontains\s*\n\s*value:\s*["']?([^"'\n]+)["']?/);
+                if (icontainsMatch) {
+                    const icontainsValue = icontainsMatch[1].trim();
+                    const icontainsValueInput = document.getElementById('icontainsValue');
+                    if (icontainsValueInput) {
+                        icontainsValueInput.value = icontainsValue;
+                        console.log('設置 IContains 值:', icontainsValue);
+                    }
+                }
+            }
+            
+            // 檢查 ROUGE-N
+            if (yamlContent.includes('type: rouge-n')) {
+                const enableRougeN = document.getElementById('enableRougeN');
+                if (enableRougeN) {
+                    enableRougeN.checked = true;
+                    if (window.ScoringCriteria && window.ScoringCriteria.toggleRougeNConfig) {
+                        ScoringCriteria.toggleRougeNConfig();
+                    }
+                }
+                
+                const rougeNMatch = yamlContent.match(/type:\s*rouge-n\s*\n\s*threshold:\s*([0-9.]+)\s*\n\s*value:\s*["']?([^"'\n]+)["']?/);
+                if (rougeNMatch) {
+                    const rougeNThreshold = rougeNMatch[1].trim();
+                    const rougeNValue = rougeNMatch[2].trim();
+                    
+                    const rougeNThresholdInput = document.getElementById('rougeNThreshold');
+                    if (rougeNThresholdInput) {
+                        rougeNThresholdInput.value = rougeNThreshold;
+                        console.log('設置 ROUGE-N 閾值:', rougeNThreshold);
+                    }
+                    
+                    // ROUGE-N 使用事實性檢查的變數，所以不需要單獨設定變數
+                    console.log('ROUGE-N 將使用事實性檢查的變數:', rougeNValue);
+                }
             }
             
             // 檢查 G-Eval
             if (yamlContent.includes('type: g-eval') || yamlContent.includes('type: llm-rubric')) {
-                document.getElementById('enableGEval').checked = true;
-                ScoringCriteria.toggleGEvalConfig();
+                const enableGEval = document.getElementById('enableGEval');
+                if (enableGEval) {
+                    enableGEval.checked = true;
+                    if (window.ScoringCriteria && window.ScoringCriteria.toggleGEvalConfig) {
+                        ScoringCriteria.toggleGEvalConfig();
+                    }
+                }
                 
                 // 嘗試解析 G-Eval 配置
                 // 先嘗試解析多行評分標準（value: 後面跟著列表）
