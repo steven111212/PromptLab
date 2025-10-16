@@ -2,30 +2,80 @@
 // 處理所有與後端 API 的交互
 
 class EvaluationAPI {
+    // API 超時設置（30秒）
+    static TIMEOUT = 30000;
+    
+    // 帶超時的 fetch
+    static async fetchWithTimeout(url, options = {}) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), this.TIMEOUT);
+        
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal
+            });
+            clearTimeout(timeout);
+            return response;
+        } catch (error) {
+            clearTimeout(timeout);
+            if (error.name === 'AbortError') {
+                throw new Error('請求超時（30秒），請檢查網絡連接或後端服務');
+            }
+            throw error;
+        }
+    }
+    
     // 獲取評估結果列表
     static async getResults() {
+        const startTime = Date.now();
+        console.log('[API] 開始獲取評估結果列表...');
+        
         try {
-            const response = await fetch('/api/evaluation-results');
+            const response = await this.fetchWithTimeout('/api/evaluation-results');
+            const duration = Date.now() - startTime;
+            
+            console.log(`[API] 評估結果列表響應：${response.status}, 耗時：${duration}ms`);
+            
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[API] 評估結果列表錯誤響應：', errorText);
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            return await response.json();
+            
+            const data = await response.json();
+            console.log(`[API] 成功獲取 ${data.length || 0} 個評估結果`);
+            return data;
         } catch (error) {
-            console.error('獲取評估結果失敗:', error);
+            const duration = Date.now() - startTime;
+            console.error(`[API] 獲取評估結果失敗（耗時${duration}ms）:`, error);
             throw new Error(`獲取評估結果失敗: ${error.message}`);
         }
     }
 
     // 獲取評估詳細結果
     static async getDetail(evalId) {
+        const startTime = Date.now();
+        console.log(`[API] 開始獲取評估詳情: ${evalId}`);
+        
         try {
-            const response = await fetch(`/api/evaluation-results/${encodeURIComponent(evalId)}`);
+            const response = await this.fetchWithTimeout(`/api/evaluation-results/${encodeURIComponent(evalId)}`);
+            const duration = Date.now() - startTime;
+            
+            console.log(`[API] 評估詳情響應：${response.status}, 耗時：${duration}ms`);
+            
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[API] 評估詳情錯誤響應：', errorText);
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            return await response.json();
+            
+            const data = await response.json();
+            console.log(`[API] 成功獲取評估詳情，包含 ${data.details?.length || 0} 個測試案例`);
+            return data;
         } catch (error) {
-            console.error('獲取評估詳情失敗:', error);
+            const duration = Date.now() - startTime;
+            console.error(`[API] 獲取評估詳情失敗（耗時${duration}ms）:`, error);
             throw new Error(`獲取評估詳情失敗: ${error.message}`);
         }
     }

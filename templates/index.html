@@ -205,6 +205,122 @@
             transition: box-shadow 0.3s ease;
         }
 
+        /* ==================== 配置預覽樣式 ==================== */
+        
+        /* 配置預覽友善顯示樣式 */
+        .config-preview-friendly {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .preview-section {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .preview-section-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 1px solid #dee2e6;
+            padding: 0.75rem 1rem;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .preview-section-header i {
+            font-size: 1.1rem;
+        }
+        
+        .preview-section-body {
+            padding: 1rem;
+        }
+        
+        .preview-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+        
+        .preview-item:last-child {
+            margin-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .preview-label {
+            font-weight: 600;
+            color: #6c757d;
+            min-width: 100px;
+            flex-shrink: 0;
+            margin-right: 0.75rem;
+        }
+        
+        .preview-value {
+            flex: 1;
+            color: #212529;
+            word-break: break-word;
+        }
+        
+        .preview-value code {
+            background: #f8f9fa;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            color: #e83e8c;
+        }
+        
+        .preview-footer {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            text-align: center;
+        }
+        
+        .preview-footer .btn {
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+        }
+        
+        /* 原始配置區塊樣式 */
+        #rawConfigSection {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        #rawConfigSection .preview-section-header {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+        
+        #rawConfigSection pre {
+            background: #ffffff !important;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .preview-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .preview-label {
+                min-width: auto;
+                margin-bottom: 0.25rem;
+                margin-right: 0;
+            }
+        }
+
         /* ==================== Phase 1 & 2: UX 提升樣式 ==================== */
         
         /* Toast 通知系統 */
@@ -623,45 +739,54 @@
         /* 統計卡片 */
         .stat-card {
             background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
             border: 1px solid #e5e7eb;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
         .stat-card:hover {
             border-color: #3b82f6;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.12);
+            transform: translateY(-1px);
         }
 
         .stat-card-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            margin-bottom: 1rem;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .stat-card-content {
+            flex: 1;
+            min-width: 0;
         }
 
         .stat-card-value {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: 700;
             line-height: 1;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
 
         .stat-card-label {
             color: #6b7280;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 500;
+            margin-bottom: 0.125rem;
         }
 
         .stat-card-change {
-            font-size: 13px;
-            margin-top: 0.5rem;
+            font-size: 11px;
+            margin-top: 0.125rem;
         }
 
         .stat-card-change.positive {
@@ -846,6 +971,190 @@
 
         tr:hover .quick-actions {
             opacity: 1;
+        }
+
+        /* ==================== 評估詳細頁面增強 ==================== */
+        
+        /* 增強的統計卡片 - 超緊湊版 */
+        .detail-stat-card {
+            background: white;
+            border-radius: 6px;
+            padding: 0.75rem;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+
+        .detail-stat-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        .detail-stat-card.success {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .detail-stat-card.danger {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+
+        .detail-stat-card.info {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        }
+
+        .detail-stat-card.warning {
+            border-color: #f59e0b;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        }
+
+        .detail-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+            margin: 0.125rem 0;
+        }
+
+        .detail-stat-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .detail-stat-icon {
+            font-size: 16px;
+            margin-bottom: 0.125rem;
+            opacity: 0.6;
+        }
+
+        /* 篩選工具欄 */
+        .detail-filter-bar {
+            background: white;
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1rem;
+        }
+
+        .filter-btn-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.375rem 0.875rem;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .filter-btn:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+
+        .filter-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .filter-btn.active:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        /* 測試案例表格增強 */
+        .test-case-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .test-case-table thead th {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.3px;
+            padding: 0.75rem;
+            border: none;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .test-case-table tbody tr {
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .test-case-table tbody tr:hover {
+            background-color: #f9fafb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .test-case-table tbody tr.test-failed {
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+
+        .test-case-table tbody tr.test-failed:hover {
+            background-color: #fee2e2;
+        }
+
+        .test-case-table tbody tr.test-passed {
+            border-left: 4px solid #10b981;
+        }
+
+        .test-case-table tbody td {
+            padding: 0.75rem;
+            vertical-align: top;
+        }
+
+
+        /* 延遲信息 */
+        .latency-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+
+        .latency-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 11px;
+        }
+
+        .latency-fast {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .latency-normal {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .latency-slow {
+            background: #fee2e2;
+            color: #991b1b;
         }
     </style>
 </head>
@@ -1662,6 +1971,7 @@
     <script src="{{ url_for('static', filename='scorelab/evaluation/api-test.js') }}?v=20250915b"></script>
     
     <!-- ScoreLab 共享工具模組 -->
+    <script src="{{ url_for('static', filename='scorelab/shared/config-preview.js') }}?v=20250916a"></script>
     <script src="{{ url_for('static', filename='scorelab/shared/toast.js') }}?v=20250916a"></script>
     <script src="{{ url_for('static', filename='scorelab/shared/confirm-dialog.js') }}?v=20250916a"></script>
     <script src="{{ url_for('static', filename='scorelab/shared/utils.js') }}?v=20250915b"></script>
