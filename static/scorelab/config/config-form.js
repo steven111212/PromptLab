@@ -47,6 +47,10 @@ async function showConfigForm(config, isEdit) {
     // 初始化動態測試表單功能
     setTimeout(() => {
         initializeDynamicTestForm();
+        // 啟用即時表單驗證
+        if (window.Utils && window.Utils.setupLiveValidation) {
+            window.Utils.setupLiveValidation();
+        }
     }, 100);
 }
 
@@ -86,7 +90,7 @@ function generateConfigFormHTML() {
                     <div class="row mb-4">
                         <div class="col-md-8">
                             <label class="form-label">專案名稱 *</label>
-                            <input type="text" class="form-control form-control-lg" id="configName" placeholder="例如：台電客服評測" required>
+                            <input type="text" class="form-control form-control-lg" id="configName" placeholder="例如：客服評測" required>
                             <small class="form-text text-muted">請勿使用特殊字符: < > : " / \\ | ? *</small>
                         </div>
                     </div>

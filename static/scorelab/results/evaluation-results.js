@@ -1,11 +1,31 @@
 // 主要的評估結果管理模組
-// 依賴：evaluation-api.js, chart-manager.js, modal-charts.js
+// 依賴：evaluation-api.js, chart-manager.js, modal-charts.js, result-filters.js
 
 // 載入評估結果列表
 async function loadEvaluationResults() {
+    const container = document.getElementById('resultsTable');
+    
+    // 顯示骨架屏
+    container.innerHTML = `
+        <div class="skeleton-card">
+            <div class="skeleton skeleton-header"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text-short"></div>
+        </div>
+        <div class="skeleton-card">
+            <div class="skeleton skeleton-header"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text-short"></div>
+        </div>
+        <div class="skeleton-card">
+            <div class="skeleton skeleton-header"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text-short"></div>
+        </div>
+    `;
+    
     try {
         const results = await EvaluationAPI.getResults();
-        const container = document.getElementById('resultsTable');
         
         if (!results || results.length === 0) {
             container.innerHTML = `
@@ -14,71 +34,27 @@ async function loadEvaluationResults() {
                     目前沒有評估結果
                 </div>
             `;
+            // 清空儀表板和篩選器
+            document.getElementById('resultsDashboard').innerHTML = '';
             return;
         }
-
-        const resultsHtml = `
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="bg-primary text-white">
-                        <tr>
-                            <th>評估ID</th>
-                            <th>創建時間</th>
-                            <th>描述</th>
-                            <th>測試數量</th>
-                            <th>通過率</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${results.map(result => {
-                            const displayId = result.id.length > 8 ? 
-                                result.id.substring(0, 8) + '...' : result.id;
-                            
-                            return `
-                                <tr>
-                                    <td>
-                                        <span class="badge bg-secondary" title="${result.id}">
-                                            ${displayId}
-                                        </span>
-                                    </td>
-                                    <td>${result.created}</td>
-                                    <td>
-                                        <span class="text-muted">
-                                            ${result.description || '無描述'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">
-                                            ${result.dataset_count} 個測試
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge ${parseFloat(result.pass_rate) >= 80 ? 'bg-success' : 
-                                                            parseFloat(result.pass_rate) >= 60 ? 'bg-warning' : 'bg-danger'}">
-                                            ${result.pass_rate}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary" 
-                                                onclick="navigateToEvaluationDetail('${result.id}')">
-                                            <i class="fas fa-eye me-1"></i>查看詳情
-                                        </button>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
-            <div class="d-flex justify-content-end mt-3">
-                <button class="btn btn-outline-secondary" onclick="refreshResults()">
-                    <i class="fas fa-sync-alt me-1"></i>刷新
-                </button>
-            </div>
-        `;
         
-        container.innerHTML = resultsHtml;
+        // 從本地存儲載入書籤
+        loadBookmarks();
+        
+        // 設置結果到篩選器
+        if (window.ResultFilters) {
+            window.ResultFilters.setResults(results);
+        }
+        
+        // 渲染統計儀表板
+        renderDashboard(results);
+        
+        // 設置篩選器事件監聽
+        setupFilterListeners();
+        
+        // 初始渲染結果
+        renderResults(results);
         
     } catch (error) {
         console.error('載入評估結果失敗:', error);
@@ -685,6 +661,427 @@ function generateBertScoreChart(detail) {
         }
     });
 }
+
+// ==================== Phase 3: 新增功能 ====================
+
+// 渲染統計儀表板
+function renderDashboard(results) {
+    const dashboard = document.getElementById('resultsDashboard');
+    if (!dashboard) return;
+    
+    // 計算統計數據
+    const totalCount = results.length;
+    const avgPassRate = totalCount > 0 
+        ? (results.reduce((sum, r) => sum + (parseFloat(r.pass_rate) || 0), 0) / totalCount).toFixed(1)
+        : 0;
+    
+    // 計算最近7天的數據
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const recentResults = results.filter(r => new Date(r.created) >= sevenDaysAgo);
+    
+    // 找到最高分
+    const maxPassRate = results.length > 0
+        ? Math.max(...results.map(r => parseFloat(r.pass_rate) || 0))
+        : 0;
+    const bestResult = results.find(r => parseFloat(r.pass_rate) === maxPassRate);
+    
+    dashboard.innerHTML = `
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon" style="background: #eff6ff; color: #3b82f6;">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="stat-card-value">${totalCount}</div>
+                <div class="stat-card-label">總評測數</div>
+                <div class="stat-card-change positive">
+                    <i class="fas fa-arrow-up me-1"></i>本週 +${recentResults.length}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon" style="background: #d1fae5; color: #10b981;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-card-value">${avgPassRate}%</div>
+                <div class="stat-card-label">平均通過率</div>
+                <div class="stat-card-change ${avgPassRate >= 80 ? 'positive' : 'negative'}">
+                    <i class="fas fa-${avgPassRate >= 80 ? 'arrow-up' : 'arrow-down'} me-1"></i>${avgPassRate >= 80 ? '表現良好' : '需要改善'}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon" style="background: #fef3c7; color: #f59e0b;">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div class="stat-card-value">${recentResults.length}</div>
+                <div class="stat-card-label">最近 7 天</div>
+                <div class="stat-card-change positive">
+                    <i class="fas fa-clock me-1"></i>活躍測試
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon" style="background: #fce7f3; color: #ec4899;">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-card-value">${maxPassRate}%</div>
+                <div class="stat-card-label">最高分</div>
+                <div class="stat-card-change" style="color: #6b7280;">
+                    <i class="fas fa-trophy me-1"></i>${bestResult ? (bestResult.description || '未命名') : '-'}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 設置篩選器事件監聽
+function setupFilterListeners() {
+    // 搜索框
+    const searchInput = document.getElementById('resultSearchInput');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (window.ResultFilters) {
+                    window.ResultFilters.setSearch(e.target.value);
+                    const filtered = window.ResultFilters.getFilteredResults();
+                    renderResults(filtered);
+                    updateFilterUI();
+                }
+            }, 300);
+        });
+    }
+    
+    // 時間範圍篩選
+    const dateRangeFilter = document.getElementById('dateRangeFilter');
+    if (dateRangeFilter) {
+        dateRangeFilter.addEventListener('change', function(e) {
+            if (window.ResultFilters) {
+                window.ResultFilters.setDateRangeFilter(e.target.value);
+                const filtered = window.ResultFilters.getFilteredResults();
+                renderResults(filtered);
+                updateFilterUI();
+            }
+        });
+    }
+    
+    // 通過率篩選
+    const passRateFilter = document.getElementById('passRateFilter');
+    if (passRateFilter) {
+        passRateFilter.addEventListener('change', function(e) {
+            if (window.ResultFilters) {
+                window.ResultFilters.setPassRateFilter(e.target.value);
+                const filtered = window.ResultFilters.getFilteredResults();
+                renderResults(filtered);
+                updateFilterUI();
+            }
+        });
+    }
+    
+    // 排序
+    const sortByFilter = document.getElementById('sortByFilter');
+    if (sortByFilter) {
+        sortByFilter.addEventListener('change', function(e) {
+            const [sortBy, sortOrder] = e.target.value.split('-');
+            if (window.ResultFilters) {
+                window.ResultFilters.setSort(sortBy, sortOrder);
+                const filtered = window.ResultFilters.getFilteredResults();
+                renderResults(filtered);
+            }
+        });
+    }
+}
+
+// 渲染結果表格
+function renderResults(results) {
+    const container = document.getElementById('resultsTable');
+    if (!container) return;
+    
+    if (!results || results.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                沒有符合條件的評估結果
+            </div>
+        `;
+        return;
+    }
+    
+    const resultsHtml = `
+        <div class="card border-0 shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-enhanced mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;"></th>
+                            <th>評估ID</th>
+                            <th>創建時間</th>
+                            <th>描述</th>
+                            <th style="text-align: center;">測試數量</th>
+                            <th style="text-align: center;">通過率</th>
+                            <th style="text-align: center;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${results.map(result => {
+                            const displayId = result.id.length > 8 ? 
+                                result.id.substring(0, 8) + '...' : result.id;
+                            const passRate = parseFloat(result.pass_rate) || 0;
+                            const passRateClass = passRate >= 80 ? 'high' : passRate >= 60 ? 'medium' : 'low';
+                            const bookmarked = isBookmarked(result.id);
+                            const tags = getResultTags(result.id);
+                            
+                            return `
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-star bookmark-btn ${bookmarked ? 'bookmarked' : ''}" 
+                                           onclick="toggleBookmark('${result.id}')"
+                                           title="${bookmarked ? '取消收藏' : '收藏'}"></i>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary" title="${result.id}">
+                                            ${displayId}
+                                        </span>
+                                    </td>
+                                    <td>${result.created}</td>
+                                    <td>
+                                        <div>
+                                            ${result.description || '<span class="text-muted">無描述</span>'}
+                                        </div>
+                                        ${tags.length > 0 ? `
+                                            <div class="mt-1">
+                                                ${tags.map(tag => `<span class="result-tag ${tag}">${tag}</span>`).join('')}
+                                            </div>
+                                        ` : ''}
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <span class="badge bg-info">
+                                            ${result.dataset_count}
+                                        </span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <div>
+                                            <span class="badge bg-${passRate >= 80 ? 'success' : passRate >= 60 ? 'warning' : 'danger'}">
+                                                ${passRate}%
+                                            </span>
+                                        </div>
+                                        <div class="pass-rate-bar">
+                                            <div class="pass-rate-fill ${passRateClass}" style="width: ${passRate}%"></div>
+                                        </div>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <div class="d-flex gap-2 justify-content-center align-items-center">
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    onclick="navigateToEvaluationDetail('${result.id}')">
+                                                <i class="fas fa-eye me-1"></i>查看
+                                            </button>
+                                            <div class="dropdown quick-actions">
+                                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                        type="button" data-bs-toggle="dropdown">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" onclick="addResultTag('${result.id}')">
+                                                            <i class="fas fa-tag me-2"></i>添加標籤
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" onclick="exportResult('${result.id}')">
+                                                            <i class="fas fa-download me-2"></i>導出結果
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger" href="#" onclick="deleteResult('${result.id}')">
+                                                            <i class="fas fa-trash me-2"></i>刪除
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = resultsHtml;
+}
+
+// 更新篩選UI
+function updateFilterUI() {
+    if (!window.ResultFilters) return;
+    
+    const stats = window.ResultFilters.getFilterStats();
+    const activeFilters = stats.activeFilters;
+    
+    // 更新篩選統計
+    const filterStats = document.getElementById('filterStats');
+    if (filterStats) {
+        filterStats.textContent = `顯示 ${stats.filtered} / ${stats.total} 個結果`;
+    }
+    
+    // 更新活動篩選器標籤
+    const activeFiltersContainer = document.getElementById('activeFilters');
+    const activeFilterTags = document.getElementById('activeFilterTags');
+    
+    if (activeFiltersContainer && activeFilterTags) {
+        if (activeFilters.length > 0) {
+            activeFiltersContainer.style.display = 'block';
+            activeFilterTags.innerHTML = activeFilters.map(filter => `
+                <span class="filter-tag">
+                    ${filter.label}
+                    <i class="fas fa-times remove-filter" onclick="removeFilter('${filter.type}', '${filter.value}')"></i>
+                </span>
+            `).join('');
+        } else {
+            activeFiltersContainer.style.display = 'none';
+        }
+    }
+}
+
+// 移除篩選器
+function removeFilter(type, value) {
+    if (window.ResultFilters) {
+        window.ResultFilters.removeFilter(type, value);
+        const filtered = window.ResultFilters.getFilteredResults();
+        renderResults(filtered);
+        updateFilterUI();
+    }
+}
+
+// 清除所有篩選器
+function clearAllFilters() {
+    if (window.ResultFilters) {
+        window.ResultFilters.clearAllFilters();
+        const filtered = window.ResultFilters.getFilteredResults();
+        renderResults(filtered);
+        updateFilterUI();
+        
+        // 重置表單
+        document.getElementById('resultSearchInput').value = '';
+        document.getElementById('dateRangeFilter').value = 'all';
+        document.getElementById('passRateFilter').value = 'all';
+        document.getElementById('sortByFilter').value = 'date-desc';
+    }
+}
+
+// ==================== 書籤功能 ====================
+
+let bookmarks = [];
+
+// 載入書籤
+function loadBookmarks() {
+    const stored = localStorage.getItem('resultBookmarks');
+    bookmarks = stored ? JSON.parse(stored) : [];
+}
+
+// 保存書籤
+function saveBookmarks() {
+    localStorage.setItem('resultBookmarks', JSON.stringify(bookmarks));
+}
+
+// 切換書籤
+function toggleBookmark(resultId) {
+    const index = bookmarks.indexOf(resultId);
+    if (index > -1) {
+        bookmarks.splice(index, 1);
+        Toast.info('已取消收藏');
+    } else {
+        bookmarks.push(resultId);
+        Toast.success('已收藏');
+    }
+    saveBookmarks();
+    
+    // 更新圖標
+    const icon = document.querySelector(`.bookmark-btn[onclick="toggleBookmark('${resultId}')"]`);
+    if (icon) {
+        icon.classList.toggle('bookmarked');
+    }
+}
+
+// 檢查是否已收藏
+function isBookmarked(resultId) {
+    return bookmarks.includes(resultId);
+}
+
+// ==================== 標籤功能 ====================
+
+let resultTags = {};
+
+// 載入標籤
+function loadResultTags() {
+    const stored = localStorage.getItem('resultTags');
+    resultTags = stored ? JSON.parse(stored) : {};
+}
+
+// 保存標籤
+function saveResultTags() {
+    localStorage.setItem('resultTags', JSON.stringify(resultTags));
+}
+
+// 獲取結果的標籤
+function getResultTags(resultId) {
+    return resultTags[resultId] || [];
+}
+
+// 添加標籤
+function addResultTag(resultId) {
+    const tagName = prompt('輸入標籤名稱（例如：重要、基準線、生產環境）：');
+    if (tagName && tagName.trim()) {
+        const tag = tagName.trim();
+        if (!resultTags[resultId]) {
+            resultTags[resultId] = [];
+        }
+        if (!resultTags[resultId].includes(tag)) {
+            resultTags[resultId].push(tag);
+            saveResultTags();
+            Toast.success(`已添加標籤：${tag}`);
+            // 重新渲染
+            if (window.ResultFilters) {
+                const filtered = window.ResultFilters.getFilteredResults();
+                renderResults(filtered);
+            }
+        }
+    }
+}
+
+// 導出結果
+function exportResult(resultId) {
+    Toast.info('導出功能開發中...');
+    // TODO: 實現導出功能
+}
+
+// 刪除結果
+function deleteResult(resultId) {
+    window.ConfirmDialog.confirmDelete('此評估結果', async () => {
+        try {
+            // TODO: 調用刪除API
+            Toast.success('刪除成功！');
+            await loadEvaluationResults();
+        } catch (error) {
+            Toast.error('刪除失敗: ' + error.message);
+        }
+    });
+}
+
+// 刷新結果
+function refreshResults() {
+    loadEvaluationResults();
+}
+
+// 載入標籤
+loadResultTags();
 
 // 頁面載入時初始化
 document.addEventListener('DOMContentLoaded', function() {

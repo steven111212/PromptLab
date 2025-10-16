@@ -517,7 +517,15 @@ function generateGraderProviderConfig(provider) {
 function previewConfig() {
     const config = generateConfigFromForm();
     const preview = document.getElementById('configPreview');
-    preview.textContent = config;
+    
+    // 使用友好格式顯示配置
+    if (window.ConfigPreview) {
+        preview.innerHTML = window.ConfigPreview.generateFriendlyPreview(config);
+    } else {
+        // 降級：如果 ConfigPreview 未載入，顯示原始內容
+        preview.textContent = config;
+    }
+    
     new bootstrap.Modal(document.getElementById('configPreviewModal')).show();
 }
 

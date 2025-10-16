@@ -152,10 +152,134 @@ function validateFriendlyForm() {
     return true;
 }
 
+// 即時表單驗證
+function setupLiveValidation() {
+    // 專案名稱驗證
+    const configName = document.getElementById('configName');
+    if (configName) {
+        configName.addEventListener('blur', function() {
+            validateField(this, (value) => {
+                if (!value.trim()) {
+                    return { valid: false, message: '專案名稱不能為空' };
+                }
+                const invalidChars = /[<>:"/\\|?*]/;
+                if (invalidChars.test(value)) {
+                    return { valid: false, message: '不能包含特殊字符: < > : " / \\ | ? *' };
+                }
+                return { valid: true };
+            });
+        });
+        
+        // 輸入時移除錯誤狀態
+        configName.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                this.classList.remove('is-invalid');
+                const feedback = this.parentElement.querySelector('.invalid-feedback');
+                if (feedback) feedback.remove();
+            }
+        });
+    }
+    
+    // HTTP Host 驗證
+    const httpHost = document.getElementById('httpHost');
+    if (httpHost) {
+        httpHost.addEventListener('blur', function() {
+            validateField(this, (value) => {
+                if (!value.trim()) {
+                    return { valid: false, message: 'Host 不能為空' };
+                }
+                return { valid: true };
+            });
+        });
+        
+        httpHost.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                this.classList.remove('is-invalid');
+                const feedback = this.parentElement.querySelector('.invalid-feedback');
+                if (feedback) feedback.remove();
+            }
+        });
+    }
+    
+    // HTTP Path 驗證
+    const httpPath = document.getElementById('httpPath');
+    if (httpPath) {
+        httpPath.addEventListener('blur', function() {
+            validateField(this, (value) => {
+                if (!value.trim()) {
+                    return { valid: false, message: 'HTTP 路徑不能為空' };
+                }
+                return { valid: true };
+            });
+        });
+        
+        httpPath.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                this.classList.remove('is-invalid');
+                const feedback = this.parentElement.querySelector('.invalid-feedback');
+                if (feedback) feedback.remove();
+            }
+        });
+    }
+    
+    // Request Body 驗證
+    const requestBody = document.getElementById('requestBody');
+    if (requestBody) {
+        requestBody.addEventListener('blur', function() {
+            validateField(this, (value) => {
+                if (!value.trim()) {
+                    return { valid: false, message: 'Request Body 不能為空' };
+                }
+                // 檢查是否為有效的 JSON
+                try {
+                    JSON.parse(value);
+                    return { valid: true };
+                } catch (e) {
+                    return { valid: false, message: 'Request Body 必須是有效的 JSON 格式' };
+                }
+            });
+        });
+        
+        requestBody.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                this.classList.remove('is-invalid');
+                const feedback = this.parentElement.querySelector('.invalid-feedback');
+                if (feedback) feedback.remove();
+            }
+        });
+    }
+}
+
+// 驗證單個欄位
+function validateField(field, validator) {
+    const result = validator(field.value);
+    
+    // 移除之前的驗證狀態
+    field.classList.remove('is-valid', 'is-invalid');
+    const oldFeedback = field.parentElement.querySelector('.invalid-feedback, .valid-feedback');
+    if (oldFeedback) oldFeedback.remove();
+    
+    if (result.valid) {
+        field.classList.add('is-valid');
+    } else {
+        field.classList.add('is-invalid');
+        if (result.message) {
+            const feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            feedback.textContent = result.message;
+            field.parentElement.appendChild(feedback);
+        }
+    }
+    
+    return result.valid;
+}
+
 // 匯出工具函數供其他模組使用
 window.Utils = {
     showAlert,
     handleFileUpload,
     readFileAsBase64,
-    validateFriendlyForm
+    validateFriendlyForm,
+    setupLiveValidation,
+    validateField
 };

@@ -5,12 +5,31 @@ let selectedConfig = null;
 
 // 載入配置列表
 async function loadConfigs() {
+    const container = document.getElementById('configList');
+    
+    // 顯示骨架屏
+    container.innerHTML = `
+        <div class="list-group-item border-0 skeleton-card">
+            <div class="skeleton skeleton-header"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text-short"></div>
+        </div>
+        <div class="list-group-item border-0 skeleton-card">
+            <div class="skeleton skeleton-header"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text-short"></div>
+        </div>
+        <div class="list-group-item border-0 skeleton-card">
+            <div class="skeleton skeleton-header"></div>
+            <div class="skeleton skeleton-text"></div>
+            <div class="skeleton skeleton-text-short"></div>
+        </div>
+    `;
+    
     try {
         const response = await fetch('/api/configs');
         const configs = await response.json();
         currentConfigs = configs; // 更新全域變數
-        
-        const container = document.getElementById('configList');
         
         if (currentConfigs.length === 0) {
             container.innerHTML = `
@@ -153,14 +172,14 @@ function showConfigDetails(config) {
             <div class="card border-0 bg-light">
                 <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
                     <h6 class="mb-0 text-secondary">
-                        <i class="fas fa-code me-2"></i>專案內容預覽
+                        <i class="fas fa-eye me-2"></i>專案配置概覽
                     </h6>
                     <button class="btn btn-sm btn-outline-secondary" onclick="ConfigManager.copyConfigContent('${config.id}')">
-                        <i class="fas fa-copy me-1"></i>複製
+                        <i class="fas fa-copy me-1"></i>複製原始配置
                     </button>
                 </div>
                 <div class="card-body">
-                    <pre class="bg-white p-3 rounded border" style="max-height: 400px; overflow-y: auto; font-size: 0.875rem;"><code>${config.content}</code></pre>
+                    ${window.ConfigPreview ? window.ConfigPreview.generateFriendlyPreview(config.content) : `<pre class="bg-white p-3 rounded border" style="max-height: 400px; overflow-y: auto; font-size: 0.875rem;"><code>${config.content}</code></pre>`}
                 </div>
             </div>
         </div>
@@ -231,14 +250,19 @@ async function runConfig(configId) {
 
 // 刪除配置
 async function deleteConfig(configId) {
-    if (confirm('確定要刪除這個配置嗎？')) {
+    // 找到配置名稱
+    const config = currentConfigs.find(c => c.id === configId);
+    const configName = config ? config.name : '此配置';
+    
+    // 使用確認對話框
+    window.ConfirmDialog.confirmDelete(configName, async () => {
         try {
             const response = await fetch(`/api/configs/${configId}`, {
                 method: 'DELETE'
             });
             
             if (response.ok) {
-                showAlert('配置刪除成功！', 'success');
+                Toast.success('配置刪除成功！');
                 await loadConfigs(); // 重新載入配置列表
                 
                 // 如果刪除的是當前選中的配置，清除選中狀態
@@ -249,20 +273,20 @@ async function deleteConfig(configId) {
                     const configFormTitle = document.getElementById('configFormTitle');
                     const configFormActions = document.getElementById('configFormActions');
                     
-                    configDetails.style.display = 'none';
-                    configForm.style.display = 'none';
-                    configFormActions.style.display = 'none';
-                    configFormTitle.textContent = '配置管理';
+                    if (configDetails) configDetails.style.display = 'none';
+                    if (configForm) configForm.style.display = 'none';
+                    if (configFormActions) configFormActions.style.display = 'none';
+                    if (configFormTitle) configFormTitle.textContent = '配置管理';
                 }
             } else {
                 const error = await response.json();
-                showAlert('刪除失敗: ' + error.error, 'danger');
+                Toast.error('刪除失敗: ' + error.error);
             }
         } catch (error) {
             console.error('刪除配置失敗:', error);
-            showAlert('刪除配置失敗: ' + error.message, 'danger');
+            Toast.error('刪除配置失敗: ' + error.message);
         }
-    }
+    });
 }
 
 // 匯出配置管理相關的變數和函數供其他模組使用
