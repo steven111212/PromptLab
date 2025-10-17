@@ -13,12 +13,12 @@ def register_main_routes(app):
     @app.route('/scorelab')
     def scorelab():
         """渲染ScoreLab評分工具頁面"""
-        return render_template('index.html')
+        return render_template('scorelab.html')
 
-    @app.route('/testrunner')
-    def testrunner():
-        """渲染TestRunner測試工具頁面"""
-        return render_template('testrunner.html')
+    @app.route('/redprobe')
+    def redprobe():
+        """渲染Redprobe測試工具頁面"""
+        return render_template('redprobe.html')
 
     @app.route('/attackgen')
     def attackgen():

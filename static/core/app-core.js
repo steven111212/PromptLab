@@ -12,9 +12,13 @@ function setupEventListeners() {
     // 側邊欄導航
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', function(e) {
-            e.preventDefault();
             const tab = this.getAttribute('data-tab');
-            switchTab(tab);
+            // 只有當鏈接有 data-tab 屬性時才阻止默認行為並切換標籤
+            if (tab) {
+                e.preventDefault();
+                switchTab(tab);
+            }
+            // 沒有 data-tab 的鏈接（如「返回主頁」）會正常導航
         });
     });
 }
