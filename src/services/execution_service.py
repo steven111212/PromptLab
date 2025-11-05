@@ -59,6 +59,10 @@ class ExecutionService:
                     
                     print(f"執行命令: {eval_cmd}")
                     
+                    # 設定環境變數
+                    env = os.environ.copy()
+                    env['PROMPTFOO_DISABLE_JSON_AUTOESCAPE'] = 'true'
+                    
                     result = subprocess.run(
                         eval_cmd,
                         cwd=str(config_dir),
@@ -67,7 +71,8 @@ class ExecutionService:
                         text=True,
                         encoding='utf-8',
                         errors='replace',
-                        timeout=300  # 5分鐘超時
+                        timeout=300,  # 5分鐘超時
+                        env=env  # 傳遞環境變數
                     )
                 else:
                     # Linux/Mac
@@ -89,7 +94,34 @@ class ExecutionService:
                 print(f"返回碼: {result.returncode}")
                 
                 # 檢查是否成功執行（即使有測試失敗，只要沒有嚴重錯誤就算成功）
-                if result.returncode == 0 or (result.returncode != 0 and "Evaluation complete" in result.stdout):
+                # 檢查多個可能的成功標誌
+                success_indicators = [
+                    "Evaluation complete",
+                    "Done",
+                    "Writing output",
+                    "Writing results",
+                    "✓",
+                    "Success"
+                ]
+                
+                # 檢查是否有任何成功標誌
+                has_success_indicator = any(indicator in result.stdout or indicator in result.stderr 
+                                          for indicator in success_indicators)
+                
+                # 檢查是否有嚴重錯誤
+                critical_errors = [
+                    "Error: Cannot find module",
+                    "Command not found",
+                    "SyntaxError",
+                    "Fatal error",
+                    "ENOENT"
+                ]
+                
+                has_critical_error = any(error in result.stderr or error in result.stdout 
+                                       for error in critical_errors)
+                
+                # 判斷成功條件：返回碼為0，或有成功標誌且沒有嚴重錯誤
+                if result.returncode == 0 or (has_success_indicator and not has_critical_error):
                     return {
                         'message': '配置執行成功',
                         'output': result.stdout,

@@ -91,6 +91,216 @@ class EvaluationService:
         except Exception as e:
             print(f"獲取評估結果錯誤: {e}")
             return {'error': str(e)}, 500
+
+    def get_scorelab_results(self):
+        """獲取 ScoreLab 評估結果摘要（只包含 is_redteam = 0 的評估）"""
+        try:
+            if not os.path.exists(self.db_path):
+                return {'error': f'找不到資料庫檔案: {self.db_path}'}, 404
+            
+            conn = sqlite3.connect(self.db_path)
+            
+            # 只讀取 is_redteam = 0 的 evals 資料
+            evals_df = pd.read_sql_query("SELECT * FROM evals WHERE is_redteam = 0", conn)
+            
+            # 讀取 eval_results 表格資料以計算統計指標
+            eval_results_df = pd.read_sql_query("SELECT * FROM eval_results", conn)
+            
+            conn.close()
+            
+            print(f"從資料庫讀取到 {len(evals_df)} 個 ScoreLab 評估記錄")
+            
+            if len(evals_df) == 0:
+                print("資料庫中沒有 ScoreLab 評估資料，返回空陣列")
+                return [], 200
+            
+            # 轉換資料格式
+            results = []
+            
+            for _, row in evals_df.iterrows():
+                eval_id = row['id']
+                print(f"處理 ScoreLab 評估: {eval_id}")
+                
+                # 計算該 eval_id 的統計指標
+                eval_data = eval_results_df[eval_results_df['eval_id'] == eval_id]
+                
+                if len(eval_data) == 0:
+                    print(f"跳過評估 {eval_id}，因為沒有對應的評估結果資料")
+                    continue
+                
+                # 計算統計指標
+                dataset_count = len(eval_data)
+                success_count = eval_data['success'].sum()
+                pass_rate = success_count / dataset_count if dataset_count > 0 else 0.0
+                pass_rate_str = f"{pass_rate*100:.2f}%"
+                
+                # 解析時間戳
+                created_time = '未知'
+                if pd.notna(row.get('created_at')):
+                    try:
+                        # 將時間戳從毫秒轉換為日期時間字符串
+                        timestamp_ms = int(row['created_at'])
+                        dt = pd.to_datetime(timestamp_ms, unit='ms')
+                        # 轉換為台灣時區 (UTC+8)
+                        dt_taiwan = dt + pd.Timedelta(hours=8)
+                        created_time = dt_taiwan.strftime('%Y-%m-%d %H:%M:%S')
+                    except:
+                        created_time = str(row.get('created_at', '未知'))
+                
+                # 獲取描述
+                description = str(row.get('description', '')) if pd.notna(row.get('description')) else '無描述'
+                
+                results.append({
+                    'id': eval_id,
+                    'created': created_time,
+                    'description': description,
+                    'pass_rate': pass_rate_str,
+                    'dataset_count': dataset_count
+                })
+            
+            # 按創建時間排序（最新的在前）
+            results.sort(key=lambda x: x['created'], reverse=True)
+            
+            print(f"最終返回 {len(results)} 個 ScoreLab 評估結果")
+            
+            return results, 200
+            
+        except Exception as e:
+            print(f"獲取 ScoreLab 評估結果錯誤: {e}")
+            return {'error': str(e)}, 500
+
+    def get_redprobe_results(self):
+        """獲取 RedProbe 安全測試結果摘要（只包含 is_redteam = 1 的評估）"""
+        try:
+            if not os.path.exists(self.db_path):
+                return {'error': f'找不到資料庫檔案: {self.db_path}'}, 404
+            
+            conn = sqlite3.connect(self.db_path)
+            
+            # 只讀取 is_redteam = 1 的 evals 資料
+            evals_df = pd.read_sql_query("SELECT * FROM evals WHERE is_redteam = 1", conn)
+            
+            # 讀取 eval_results 表格資料以計算統計指標
+            eval_results_df = pd.read_sql_query("SELECT * FROM eval_results", conn)
+            
+            conn.close()
+            
+            print(f"從資料庫讀取到 {len(evals_df)} 個 RedProbe 評估記錄")
+            
+            if len(evals_df) == 0:
+                print("資料庫中沒有 RedProbe 評估資料，返回空陣列")
+                return [], 200
+            
+            # 轉換資料格式
+            results = []
+            
+            for _, row in evals_df.iterrows():
+                eval_id = row['id']
+                print(f"處理 RedProbe 評估: {eval_id}")
+                
+                # 計算該 eval_id 的統計指標
+                eval_data = eval_results_df[eval_results_df['eval_id'] == eval_id]
+                
+                if len(eval_data) == 0:
+                    print(f"跳過評估 {eval_id}，因為沒有對應的評估結果資料")
+                    continue
+                
+                # 計算統計指標
+                dataset_count = len(eval_data)
+                success_count = eval_data['success'].sum()
+                pass_rate = success_count / dataset_count if dataset_count > 0 else 0.0
+                pass_rate_str = f"{pass_rate*100:.2f}%"
+                
+                # 解析時間戳
+                created_time = '未知'
+                if pd.notna(row.get('created_at')):
+                    try:
+                        # 將時間戳從毫秒轉換為日期時間字符串
+                        timestamp_ms = int(row['created_at'])
+                        dt = pd.to_datetime(timestamp_ms, unit='ms')
+                        # 轉換為台灣時區 (UTC+8)
+                        dt_taiwan = dt + pd.Timedelta(hours=8)
+                        created_time = dt_taiwan.strftime('%Y-%m-%d %H:%M:%S')
+                    except:
+                        created_time = str(row.get('created_at', '未知'))
+                
+                # 獲取描述
+                description = str(row.get('description', '')) if pd.notna(row.get('description')) else '無描述'
+                
+                # 解析 redteam 特有資訊
+                redteam_info = self._parse_redteam_info(eval_data)
+                
+                results.append({
+                    'id': eval_id,
+                    'created': created_time,
+                    'description': description,
+                    'pass_rate': pass_rate_str,
+                    'dataset_count': dataset_count,
+                    'redteam_info': redteam_info
+                })
+            
+            # 按創建時間排序（最新的在前）
+            results.sort(key=lambda x: x['created'], reverse=True)
+            
+            print(f"最終返回 {len(results)} 個 RedProbe 評估結果")
+            
+            return results, 200
+            
+        except Exception as e:
+            print(f"獲取 RedProbe 評估結果錯誤: {e}")
+            return {'error': str(e)}, 500
+
+    def _parse_redteam_info(self, eval_data):
+        """解析 redteam 特有資訊"""
+        try:
+            plugin_counts = {}
+            strategy_counts = {}
+            risk_levels = {'high-risk': 0, 'medium-risk': 0, 'low-risk': 0}
+            
+            for _, row in eval_data.iterrows():
+                # 解析 metadata JSON
+                if pd.notna(row.get('metadata')):
+                    try:
+                        metadata = json.loads(row['metadata'])
+                        plugin_id = metadata.get('pluginId', '')
+                        strategy_id = metadata.get('strategyId', '')
+                        
+                        # 統計 plugin 類型
+                        if plugin_id:
+                            plugin_counts[plugin_id] = plugin_counts.get(plugin_id, 0) + 1
+                        
+                        # 統計 strategy 類型
+                        if strategy_id:
+                            strategy_counts[strategy_id] = strategy_counts.get(strategy_id, 0) + 1
+                        
+                        # 根據測試結果計算風險等級
+                        success = bool(row['success'])
+                        score = float(row['score']) if pd.notna(row['score']) else 0.0
+                        
+                        if not success or score < 0.5:
+                            risk_levels['high-risk'] += 1
+                        elif score < 0.8:
+                            risk_levels['medium-risk'] += 1
+                        else:
+                            risk_levels['low-risk'] += 1
+                            
+                    except Exception as e:
+                        print(f"解析 metadata 時發生錯誤: {e}")
+                        continue
+            
+            return {
+                'plugin_counts': plugin_counts,
+                'strategy_counts': strategy_counts,
+                'risk_levels': risk_levels
+            }
+            
+        except Exception as e:
+            print(f"解析 redteam 資訊時發生錯誤: {e}")
+            return {
+                'plugin_counts': {},
+                'strategy_counts': {},
+                'risk_levels': {'high-risk': 0, 'medium-risk': 0, 'low-risk': 0}
+            }
     
     def get_evaluation_detail(self, eval_id):
         """獲取特定評估的詳細結果（直接從資料庫讀取）"""
@@ -104,6 +314,16 @@ class EvaluationService:
                 return {'error': f'找不到資料庫檔案: {self.db_path}'}, 404
             
             conn = sqlite3.connect(self.db_path)
+            
+            # 先查詢這個 eval_id 是否為 redteam
+            eval_info_query = "SELECT is_redteam FROM evals WHERE id = ?"
+            eval_info_df = pd.read_sql_query(eval_info_query, conn, params=[decoded_eval_id])
+            
+            is_redteam = False
+            if len(eval_info_df) > 0:
+                is_redteam = bool(eval_info_df['is_redteam'].iloc[0])
+            
+            print(f"評估 {decoded_eval_id} 是否為 redteam: {is_redteam}")
             
             # 從資料庫讀取特定 eval_id 的詳細資料
             query = "SELECT * FROM eval_results WHERE eval_id = ?"
@@ -162,10 +382,10 @@ class EvaluationService:
                         
                         grading_result = json.loads(grading_result_str)
                         grading_info = {
-                            'pass': grading_result.get('pass', False),
-                            'score': grading_result.get('score', 0),
+                            'pass': bool(grading_result.get('pass', False)),
+                            'score': float(grading_result.get('score', 0)),
                             'reason': grading_result.get('reason', ''),
-                            'overall_pass': grading_result.get('pass', False)
+                            'overall_pass': bool(grading_result.get('pass', False))
                         }
                         
                         # 解析 componentResults 來獲取個別 assertion
@@ -186,8 +406,8 @@ class EvaluationService:
                                 value_display = str(assertion_value)
                             
                             assertions.append({
-                                'pass': component.get('pass', False),
-                                'score': component.get('score', 0),
+                                'pass': bool(component.get('pass', False)),
+                                'score': float(component.get('score', 0)),
                                 'type': assertion_type,
                                 'value': value_display,
                                 'reason': component.get('reason', '')
@@ -200,10 +420,10 @@ class EvaluationService:
                 # 如果沒有 grading_result 或解析失敗，從 test_case 解析 assertions
                 if not grading_info or not assertions:
                     grading_info = {
-                        'pass': row['success'] == 1,
+                        'pass': bool(row['success']),
                         'score': float(row['score']) if pd.notna(row['score']) else 0.0,
                         'reason': str(row['error']) if pd.notna(row['error']) else '',
-                        'overall_pass': row['success'] == 1
+                        'overall_pass': bool(row['success'])
                     }
                     
                     # 嘗試從 test_case 中解析 assertions
@@ -267,13 +487,13 @@ class EvaluationService:
                             elif assertion_type == 'python':
                                 # python 評估 (BERTScore)
                                 if 'get_assert_bert_f1' in value_display:
-                                    assertion_score = bert_scores.get('f1', 0.47)
+                                    assertion_score = float(bert_scores.get('f1', 0.47))
                                     assertion_reason = f'BERTScore F1: {assertion_score:.4f}'
                                 elif 'get_assert_bert_recall' in value_display:
-                                    assertion_score = bert_scores.get('recall', 0.66)
+                                    assertion_score = float(bert_scores.get('recall', 0.66))
                                     assertion_reason = f'BERTScore Recall: {assertion_score:.4f}'
                                 elif 'get_assert_bert_precision' in value_display:
-                                    assertion_score = bert_scores.get('precision', 0.31)
+                                    assertion_score = float(bert_scores.get('precision', 0.31))
                                     assertion_reason = f'BERTScore Precision: {assertion_score:.4f}'
                                 assertion_pass = assertion_score >= threshold
                             
@@ -285,7 +505,7 @@ class EvaluationService:
                             
                             assertions.append({
                                 'pass': assertion_pass,
-                                'score': assertion_score,
+                                'score': float(assertion_score),
                                 'type': assertion_type,
                                 'value': value_display,
                                 'reason': assertion_reason
@@ -293,7 +513,7 @@ class EvaluationService:
                     except:
                         # 如果都解析失敗，創建一個基本的 assertion
                         assertions.append({
-                            'pass': row['success'] == 1,
+                            'pass': bool(row['success']),
                             'score': float(row['score']) if pd.notna(row['score']) else 0.0,
                             'type': 'overall',
                             'value': '整體評估',
@@ -301,7 +521,7 @@ class EvaluationService:
                         })
                 
                 # 判斷狀態
-                success = row['success'] == 1
+                success = bool(row['success'])
                 status = 'PASS' if success else 'FAIL'
                 
                 # 處理錯誤訊息
@@ -309,7 +529,8 @@ class EvaluationService:
                 if not success and pd.notna(row['error']):
                     error_message = str(row['error'])
                 
-                details.append({
+                # 準備基本詳細資訊
+                detail_item = {
                     'variables': variables,
                     'output': output_text,
                     'status': status,
@@ -319,10 +540,61 @@ class EvaluationService:
                     'error': error_message,
                     'grading_info': grading_info,
                     'assertions': assertions
-                })
+                }
+                
+                # 如果是 redteam 測試，加入 redteam 特有資訊
+                if is_redteam and pd.notna(row.get('metadata')):
+                    try:
+                        metadata = json.loads(row['metadata'])
+                        plugin_id = metadata.get('pluginId', '')
+                        strategy_id = metadata.get('strategyId', '')
+                        
+                        # 計算風險等級
+                        score = float(row['score']) if pd.notna(row['score']) else 0.0
+                        if not success or score < 0.5:
+                            risk_level = 'high-risk'
+                        elif score < 0.8:
+                            risk_level = 'medium-risk'
+                        else:
+                            risk_level = 'low-risk'
+                        
+                        # 轉換 pluginId 為中文顯示
+                        plugin_names = {
+                            'harmful': '有害內容',
+                            'pii': '個人資訊',
+                            'bias': '偏見檢測',
+                            'injection': '注入攻擊',
+                            'promptfoo:redteam:harmful': '有害內容',
+                            'promptfoo:redteam:pii': '個人資訊',
+                            'promptfoo:redteam:bias': '偏見檢測',
+                            'promptfoo:redteam:injection': '注入攻擊'
+                        }
+                        
+                        plugin_display = plugin_names.get(plugin_id, plugin_id)
+                        
+                        detail_item['redteam_info'] = {
+                            'plugin_id': plugin_id,
+                            'plugin_display': plugin_display,
+                            'strategy_id': strategy_id,
+                            'risk_level': risk_level,
+                            'metadata': metadata
+                        }
+                        
+                    except Exception as e:
+                        print(f"解析 redteam metadata 時發生錯誤: {e}")
+                        detail_item['redteam_info'] = {
+                            'plugin_id': '',
+                            'plugin_display': '未知',
+                            'strategy_id': '',
+                            'risk_level': 'unknown',
+                            'metadata': {}
+                        }
+                
+                details.append(detail_item)
             
             return {
                 'eval_id': decoded_eval_id,
+                'is_redteam': is_redteam,
                 'total_tests': len(details),
                 'passed_tests': sum(1 for d in details if d['success']),
                 'pass_rate': f"{(sum(1 for d in details if d['success']) / len(details) * 100):.2f}%" if details else "0%",
