@@ -37,6 +37,6 @@ if __name__ == '__main__':
     print("   - ScoreLab: http://localhost:5500/scorelab")
     print("   - RedProbe: http://localhost:5500/redprobe")
     print("   - AttackGen: http://localhost:5500/attackgen")
-    print("📝 請確保已安裝 promptfoo: pip install promptfoo")
+    
     
     app.run(debug=True, host='0.0.0.0', port=5500)
